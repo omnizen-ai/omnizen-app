@@ -37,6 +37,7 @@ import { ChatSDKError } from '@/lib/errors';
 import type { ChatMessage } from '@/lib/types';
 import type { ChatModel } from '@/lib/ai/models';
 import type { VisibilityType } from '@/components/visibility-selector';
+import { mcpClient } from '@/lib/mcp/client';
 
 export const maxDuration = 60;
 
@@ -148,9 +149,33 @@ export async function POST(request: Request) {
 
     const streamId = generateUUID();
     await createStreamId({ streamId, chatId: id });
+    // Get MCP tools dynamically
+    const mcpTools = await mcpClient.getTools().catch((error) => {
+      console.error('Failed to get MCP tools:', error);
+      return {};
+    });
+    
+    console.log('MCP Tools loaded:', Object.keys(mcpTools));
 
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {
+        // Combine existing tools with MCP tools
+        const allTools = {
+          getWeather,
+          createDocument: createDocument({ session, dataStream }),
+          updateDocument: updateDocument({ session, dataStream }),
+          requestSuggestions: requestSuggestions({
+            session,
+            dataStream,
+          }),
+          ...mcpTools, // Add MCP tools dynamically
+        };
+
+        // Get tool names for experimental_activeTools
+        const toolNames = Object.keys(allTools) as any[];
+        
+        console.log('All tools available:', toolNames);
+
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
           system: systemPrompt({ selectedChatModel, requestHints }),
@@ -159,22 +184,9 @@ export async function POST(request: Request) {
           experimental_activeTools:
             selectedChatModel === 'chat-model-reasoning'
               ? []
-              : [
-                  'getWeather',
-                  'createDocument',
-                  'updateDocument',
-                  'requestSuggestions',
-                ],
+              : toolNames,
           experimental_transform: smoothStream({ chunking: 'word' }),
-          tools: {
-            getWeather,
-            createDocument: createDocument({ session, dataStream }),
-            updateDocument: updateDocument({ session, dataStream }),
-            requestSuggestions: requestSuggestions({
-              session,
-              dataStream,
-            }),
-          },
+          tools: allTools,
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,
             functionId: 'stream-text',

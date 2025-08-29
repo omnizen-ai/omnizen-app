@@ -32,8 +32,17 @@ This is a guide for using artifacts tools: \`createDocument\` and \`updateDocume
 Do not update document right after creating it. Wait for user feedback or request to update it.
 `;
 
-export const regularPrompt =
-  'You are a friendly assistant! Keep your responses concise and helpful.';
+export const regularPrompt = `You are a friendly assistant! Keep your responses concise and helpful.
+
+You have access to database tools that allow you to:
+- Discover and explore database schema
+- Query and retrieve business data
+- List available tables
+- Get specific table data
+- Insert new records
+- Update existing records
+
+When users ask about data, databases, or need to check information, you can use these tools to help them. Always use business-friendly language when describing database operations.`;
 
 export interface RequestHints {
   latitude: Geo['latitude'];
