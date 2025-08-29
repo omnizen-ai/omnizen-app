@@ -1,7 +1,6 @@
-import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-
+import { createClient } from '@/lib/supabase/server';
 import { auth } from '@/app/(auth)/auth';
 
 // Use Blob instead of File since File is not available in Node.js environment
@@ -51,12 +50,39 @@ export async function POST(request: Request) {
     const fileBuffer = await file.arrayBuffer();
 
     try {
-      const data = await put(`${filename}`, fileBuffer, {
-        access: 'public',
-      });
+      // Create Supabase client
+      const supabase = createClient();
+      
+      // Generate unique filename to avoid collisions
+      const timestamp = Date.now();
+      const uniqueFilename = `${timestamp}-${filename}`;
+      
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('uploads')
+        .upload(uniqueFilename, fileBuffer, {
+          contentType: file.type,
+          upsert: false,
+        });
 
-      return NextResponse.json(data);
+      if (error) {
+        console.error('Supabase storage error:', error);
+        return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+      }
+
+      // Get public URL for the uploaded file
+      const { data: { publicUrl } } = supabase.storage
+        .from('uploads')
+        .getPublicUrl(data.path);
+
+      // Return in the same format as Vercel Blob
+      return NextResponse.json({
+        url: publicUrl,
+        pathname: data.path,
+        contentType: file.type,
+      });
     } catch (error) {
+      console.error('Upload error:', error);
       return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
     }
   } catch (error) {
