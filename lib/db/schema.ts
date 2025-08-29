@@ -168,3 +168,6 @@ export const stream = pgTable(
 );
 
 export type Stream = InferSelectModel<typeof stream>;
+
+// Export all business schema tables
+export * from './schema/business';

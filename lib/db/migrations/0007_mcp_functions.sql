@@ -98,3 +98,40 @@ $$;
 -- Grant execute permission
 GRANT EXECUTE ON FUNCTION public.get_table_schema TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_table_schema TO service_role;
+
+-- Function to execute arbitrary SQL (with security controls)
+CREATE OR REPLACE FUNCTION public.execute_sql(query text, params jsonb DEFAULT '[]'::jsonb)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  result jsonb;
+  row_count int;
+BEGIN
+  -- Security check: Only allow SELECT statements for now
+  IF NOT (query ~* '^\s*SELECT' OR query ~* '^\s*WITH') THEN
+    RAISE EXCEPTION 'Only SELECT queries are allowed';
+  END IF;
+  
+  -- Execute the query and return results as JSONB
+  EXECUTE format('SELECT jsonb_agg(row_to_json(t)) FROM (%s) t', query)
+  INTO result
+  USING params;
+  
+  -- Get row count
+  GET DIAGNOSTICS row_count = ROW_COUNT;
+  
+  RETURN jsonb_build_object(
+    'data', COALESCE(result, '[]'::jsonb),
+    'row_count', row_count
+  );
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE EXCEPTION 'Query execution failed: %', SQLERRM;
+END;
+$$;
+
+-- Grant execute permission
+GRANT EXECUTE ON FUNCTION public.execute_sql TO authenticated;
+GRANT EXECUTE ON FUNCTION public.execute_sql TO service_role;

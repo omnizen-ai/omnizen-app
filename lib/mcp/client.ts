@@ -61,7 +61,6 @@ export class MCPClient {
         );
 
         const client = await experimental_createMCPClient({
-          name,
           transport,
         });
 
@@ -86,6 +85,7 @@ export class MCPClient {
     for (const [clientName, client] of this.clients.entries()) {
       try {
         const clientTools = await client.tools();
+        console.log(`Tools from ${clientName}:`, Object.keys(clientTools));
         
         for (const [toolName, tool] of Object.entries(clientTools)) {
           // Sanitize names for use as tool IDs
@@ -97,7 +97,9 @@ export class MCPClient {
             ? `db_${sanitizedToolName}`  // Prefix database tools
             : `${sanitizedClientName}_${sanitizedToolName}`;
           
-          result[toolId] = tool;
+          // The MCP tools from experimental_createMCPClient are already in the correct format
+          // They have description, inputSchema, and execute properties
+          result[toolId] = tool as Tool;
         }
       } catch (error) {
         console.error(`Failed to get tools from MCP server ${clientName}:`, error);
