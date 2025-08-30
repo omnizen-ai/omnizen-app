@@ -13,5 +13,6 @@
   "eslint.workingDirectories": [
     { "pattern": "app/*" },
     { "pattern": "packages/*" }
-  ]
+  ],
+  "vsicons.presets.angular": true
 }
