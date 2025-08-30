@@ -110,6 +110,11 @@ const PurePreviewMessage = ({
             {message.parts?.map((part, index) => {
               const { type } = part;
               const key = `message-${message.id}-part-${index}`;
+              
+              // Debug logging to see what parts we're getting
+              if (type === 'reasoning') {
+                console.log('Reasoning part found:', part);
+              }
 
               if (type === 'reasoning' && part.text?.trim().length > 0) {
                 return (
