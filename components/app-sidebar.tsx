@@ -34,8 +34,27 @@ export function AppSidebar({ user }: { user: User | undefined }) {
               }}
               className="flex flex-row gap-3 items-center"
             >
-              <span className="text-lg font-semibold px-2 hover:bg-muted rounded-md cursor-pointer">
-                Chatbot
+              <span className="flex flex-row items-center gap-2 px-2 hover:bg-muted rounded-md cursor-pointer">
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 32 32"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <circle cx="16" cy="16" r="16" fill="#6366F1" />
+                  <path
+                    d="M10 22C10 17.5817 13.5817 14 18 14H22V18C22 22.4183 18.4183 26 14 26H10V22Z"
+                    fill="white"
+                  />
+                  <path
+                    d="M22 10C22 14.4183 18.4183 18 14 18H10V14C10 9.58172 13.5817 6 18 6H22V10Z"
+                    fill="#A5B4FC"
+                  />
+                </svg>
+                <span className="text-lg font-bold tracking-tight">
+                  Omnizen
+                </span>
               </span>
             </Link>
             <Tooltip>
