@@ -1,13 +1,74 @@
-// Supabase Edge Function for MCP Server
+// Supabase Edge Function for MCP Server with Langfuse Observability
 // Implements Streamable HTTP transport (2025-03-26 spec) for stateless operation
+// Features: OpenTelemetry tracing, schema caching, rate limiting, business context
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0'
+
+// OpenTelemetry imports for Langfuse integration
+import {
+  BasicTracerProvider,
+  BatchSpanProcessor,
+} from "npm:@opentelemetry/sdk-trace-base@1.26.0"
+import { OTLPTraceExporter } from "npm:@opentelemetry/exporter-trace-otlp-http@0.53.0"
+import { Resource } from "npm:@opentelemetry/resources@1.26.0"
+import { SemanticResourceAttributes } from "npm:@opentelemetry/semantic-conventions@1.27.0"
+import { trace, SpanStatusCode, context, SpanKind } from "npm:@opentelemetry/api@1.9.0"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-session-id',
   'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+}
+
+// ============================================================================
+// OpenTelemetry & Langfuse Setup
+// ============================================================================
+
+// Configuration from environment variables
+const LANGFUSE_CONFIG = {
+  publicKey: Deno.env.get('LANGFUSE_PUBLIC_KEY') || '',
+  secretKey: Deno.env.get('LANGFUSE_SECRET_KEY') || '',
+  baseUrl: Deno.env.get('LANGFUSE_BASEURL') || 'http://localhost:3000',
+  enabled: !!(Deno.env.get('LANGFUSE_PUBLIC_KEY') && Deno.env.get('LANGFUSE_SECRET_KEY')),
+}
+
+// Initialize OpenTelemetry provider and exporter
+let tracerProvider: BasicTracerProvider | null = null
+let tracer: any = null
+
+if (LANGFUSE_CONFIG.enabled) {
+  console.log('[Observability] Initializing Langfuse tracing via OpenTelemetry')
+  
+  // Configure resource attributes
+  const resource = new Resource({
+    [SemanticResourceAttributes.SERVICE_NAME]: 'mcp-database-server',
+    [SemanticResourceAttributes.SERVICE_VERSION]: '0.2.0',
+    'deployment.environment': Deno.env.get('NODE_ENV') || 'production',
+    'service.namespace': 'omnizen',
+  })
+
+  // Create tracer provider
+  tracerProvider = new BasicTracerProvider({ resource })
+
+  // Configure OTLP exporter for Langfuse
+  const exporter = new OTLPTraceExporter({
+    url: `${LANGFUSE_CONFIG.baseUrl}/api/public/otel/v1/traces`,
+    headers: {
+      Authorization: `Basic ${btoa(`${LANGFUSE_CONFIG.publicKey}:${LANGFUSE_CONFIG.secretKey}`)}`,
+    },
+  })
+
+  // Add batch processor for efficient span export
+  tracerProvider.addSpanProcessor(new BatchSpanProcessor(exporter))
+  tracerProvider.register()
+
+  // Get tracer instance
+  tracer = trace.getTracer('mcp-server', '0.2.0')
+  
+  console.log('[Observability] Langfuse tracing initialized successfully')
+} else {
+  console.log('[Observability] Langfuse tracing disabled (missing credentials)')
 }
 
 // Schema cache - persists for the lifetime of the function instance
@@ -305,22 +366,60 @@ Deno.serve(async (req) => {
           )
         }
 
-        // Handle single request
-        const response = await handleJsonRpc(body, supabase, sessionId)
-        if (response === null) {
-          // Notification (no ID) - return 204 No Content
-          return new Response(null, { 
-            status: 204,
-            headers: corsHeaders 
-          })
+        // Handle single request with tracing context
+        const rootSpan = tracer?.startSpan('mcp.request', {
+          kind: SpanKind.SERVER,
+          attributes: {
+            'http.method': req.method,
+            'http.url': req.url,
+            'http.target': url.pathname,
+            'mcp.session_id': sessionId || 'stateless',
+          },
+        })
+        
+        // Execute request in span context
+        const executeRequest = async () => {
+          const response = await handleJsonRpc(body, supabase, sessionId)
+          if (response === null) {
+            // Notification (no ID) - return 204 No Content
+            return new Response(null, { 
+              status: 204,
+              headers: corsHeaders 
+            })
+          }
+          
+          return new Response(
+            JSON.stringify(response),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          )
         }
         
-        return new Response(
-          JSON.stringify(response),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        )
+        // Run with context if tracing is enabled
+        if (rootSpan) {
+          return context.with(trace.setSpan(context.active(), rootSpan), async () => {
+            try {
+              const result = await executeRequest()
+              rootSpan.setAttribute('http.status_code', result.status)
+              rootSpan.setStatus({ code: SpanStatusCode.OK })
+              return result
+            } catch (error: any) {
+              rootSpan.setStatus({ 
+                code: SpanStatusCode.ERROR, 
+                message: error.message 
+              })
+              rootSpan.setAttribute('error', true)
+              throw error
+            } finally {
+              rootSpan.end()
+              // Ensure spans are flushed
+              await tracerProvider?.forceFlush()
+            }
+          })
+        } else {
+          return executeRequest()
+        }
 
       case 'DELETE':
         // Session cleanup (for stateful mode)
@@ -350,24 +449,54 @@ Deno.serve(async (req) => {
   }
 })
 
-// Handle JSON-RPC requests
+// Handle JSON-RPC requests with OpenTelemetry tracing
 async function handleJsonRpc(
   request: JsonRpcRequest, 
   supabase: any,
   sessionId?: string | null
 ): Promise<JsonRpcResponse | null> {
+  // Start OpenTelemetry span for this request
+  const span = tracer?.startSpan(`mcp.${request.method}`, {
+    kind: SpanKind.SERVER,
+    attributes: {
+      'mcp.method': request.method,
+      'mcp.request_id': request.id?.toString() || 'notification',
+      'mcp.session_id': sessionId || 'stateless',
+      'mcp.jsonrpc_version': request.jsonrpc,
+      // Langfuse-specific attributes
+      'langfuse.trace.name': `mcp.${request.method}`,
+      'langfuse.trace.sessionId': sessionId || undefined,
+      'langfuse.trace.tags': JSON.stringify(['mcp', 'database', request.method]),
+    },
+  })
+
+  // Set input on span
+  if (span && request.params) {
+    span.setAttribute('langfuse.trace.input', JSON.stringify(request.params))
+  }
+
   // Validate request
   if (request.jsonrpc !== '2.0') {
-    return createJsonRpcError(
+    const error = createJsonRpcError(
       request.id || null,
       ErrorCodes.INVALID_REQUEST,
       'Invalid JSON-RPC version'
     )
+    if (span) {
+      span.setStatus({ code: SpanStatusCode.ERROR, message: 'Invalid JSON-RPC version' })
+      span.setAttribute('langfuse.observation.status_message', 'Invalid JSON-RPC version')
+      span.end()
+    }
+    return error
   }
 
   // Notification (no response needed)
   if (request.id === undefined || request.id === null) {
     console.log('Notification received:', request.method)
+    if (span) {
+      span.setAttribute('mcp.notification', true)
+      span.end()
+    }
     return null
   }
 
@@ -416,8 +545,27 @@ async function handleJsonRpc(
         }
         
         const { name, arguments: args } = request.params
+        
+        // Create a child span for tool execution
+        const toolSpan = tracer?.startSpan(`tool.${name}`, {
+          kind: SpanKind.INTERNAL,
+          attributes: {
+            'tool.name': name,
+            'tool.arguments': JSON.stringify(args || {}),
+            'langfuse.observation.name': `tool.${name}`,
+            'langfuse.observation.type': 'GENERATION',
+            'langfuse.observation.model': 'database-tool',
+          },
+        })
+        
         try {
           const toolResult = await executeTool(name, args || {}, supabase)
+          
+          // Set tool output
+          if (toolSpan) {
+            toolSpan.setAttribute('tool.result', JSON.stringify(toolResult))
+            toolSpan.setAttribute('langfuse.observation.output', JSON.stringify(toolResult))
+          }
           
           // Format response based on tool type
           let formattedText = ''
@@ -497,7 +645,21 @@ async function handleJsonRpc(
               }
             ]
           }
-        } catch (error) {
+          
+          // End tool span successfully
+          toolSpan?.end()
+        } catch (error: any) {
+          // Handle tool execution error
+          if (toolSpan) {
+            toolSpan.setStatus({ 
+              code: SpanStatusCode.ERROR, 
+              message: error.message || 'Tool execution failed' 
+            })
+            toolSpan.setAttribute('error', true)
+            toolSpan.setAttribute('error.message', error.message || error.toString())
+            toolSpan.end()
+          }
+          
           response.error = {
             code: ErrorCodes.SERVER_ERROR,
             message: error.message || 'Tool execution failed',
@@ -512,11 +674,45 @@ async function handleJsonRpc(
           message: `Method '${request.method}' not found`,
         }
     }
-  } catch (error) {
+  } catch (error: any) {
+    // Handle unexpected errors
+    if (span) {
+      span.setStatus({ code: SpanStatusCode.ERROR, message: error.message || 'Internal error' })
+      span.setAttribute('error', true)
+      span.setAttribute('error.message', error.message || error.toString())
+    }
     response.error = {
       code: ErrorCodes.INTERNAL_ERROR,
       message: 'Internal error',
       data: error.message,
+    }
+  }
+
+  // Set final span attributes and status
+  if (span) {
+    if (response.error) {
+      span.setStatus({ 
+        code: SpanStatusCode.ERROR, 
+        message: response.error.message 
+      })
+      span.setAttribute('langfuse.trace.output', JSON.stringify(response.error))
+      span.setAttribute('mcp.error', true)
+      span.setAttribute('mcp.error.code', response.error.code)
+    } else {
+      span.setStatus({ code: SpanStatusCode.OK })
+      span.setAttribute('langfuse.trace.output', JSON.stringify(response.result))
+    }
+    
+    // End the span
+    span.end()
+  }
+
+  // Flush spans to ensure they're sent before function terminates
+  if (tracerProvider) {
+    try {
+      await tracerProvider.forceFlush()
+    } catch (flushError) {
+      console.error('[Observability] Failed to flush spans:', flushError)
     }
   }
 

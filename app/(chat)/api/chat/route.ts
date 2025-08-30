@@ -38,6 +38,7 @@ import type { ChatModel } from '@/lib/ai/models';
 import type { VisibilityType } from '@/components/visibility-selector';
 import { observe, updateActiveObservation, updateActiveTrace } from '@langfuse/tracing';
 import { trace } from '@opentelemetry/api';
+import { mcpClient } from '@/lib/mcp/client';
 
 export const maxDuration = 60;
 
@@ -167,6 +168,39 @@ async function handleChatMessage(request: Request) {
     const streamId = generateUUID();
     await createStreamId({ streamId, chatId: id });
 
+    // Get MCP tools dynamically
+    let mcpTools = {};
+    let mcpToolNames: string[] = [];
+    try {
+      mcpTools = await mcpClient.getTools();
+      mcpToolNames = Object.keys(mcpTools);
+      console.log(`[MCP] Loaded ${mcpToolNames.length} tools:`, mcpToolNames);
+    } catch (error) {
+      console.error('[MCP] Failed to load tools:', error);
+      // Continue without MCP tools if they fail to load
+    }
+
+    // Combine static tools with MCP tools
+    const allTools = {
+      getWeather,
+      createDocument: createDocument({ session, dataStream }),
+      updateDocument: updateDocument({ session, dataStream }),
+      requestSuggestions: requestSuggestions({
+        session,
+        dataStream,
+      }),
+      ...mcpTools, // Add MCP tools
+    };
+
+    // Combine tool names
+    const allToolNames = [
+      'getWeather',
+      'createDocument',
+      'updateDocument',
+      'requestSuggestions',
+      ...mcpToolNames, // Add MCP tool names
+    ];
+
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {
         const result = streamText({
@@ -176,23 +210,10 @@ async function handleChatMessage(request: Request) {
           // Enable multi-step tool calling (up to 5 steps)
           stopWhen: stepCountIs(5),
           experimental_transform: smoothStream({ chunking: 'word' }),
-          tools: {
-            getWeather,
-            createDocument: createDocument({ session, dataStream }),
-            updateDocument: updateDocument({ session, dataStream }),
-            requestSuggestions: requestSuggestions({
-              session,
-              dataStream,
-            }),
-          },
+          tools: allTools,
           // Use activeTools instead of experimental_activeTools
           // Enable tools for all models (both support tool calling)
-          activeTools: [
-            'getWeather',
-            'createDocument',
-            'updateDocument',
-            'requestSuggestions',
-          ],
+          activeTools: allToolNames,
           // Allow the model to choose whether to use tools
           toolChoice: 'auto',
           experimental_telemetry: {
