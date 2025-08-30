@@ -1,3 +1,6 @@
-[submodule "langfuse"]
-	path = langfuse
-	url = https://github.com/langfuse/langfuse.git
+[submodule "thirdparty/langfuse"]
+	path = thirdparty/langfuse
+	url = https://github.com/omnizen-ai/langfuse.git
+[submodule "thirdparty/ai"]
+	path = thirdparty/ai
+	url = git@github.com:omnizen-ai/ai.git
