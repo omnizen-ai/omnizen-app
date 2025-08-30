@@ -36,6 +36,8 @@ import { ChatSDKError } from '@/lib/errors';
 import type { ChatMessage } from '@/lib/types';
 import type { ChatModel } from '@/lib/ai/models';
 import type { VisibilityType } from '@/components/visibility-selector';
+import { observe, updateActiveObservation, updateActiveTrace } from '@langfuse/tracing';
+import { trace } from '@opentelemetry/api';
 
 export const maxDuration = 60;
 
@@ -61,7 +63,7 @@ export function getStreamContext() {
   return globalStreamContext;
 }
 
-export async function POST(request: Request) {
+async function handleChatMessage(request: Request) {
   let requestBody: PostRequestBody;
 
   try {
@@ -145,6 +147,23 @@ export async function POST(request: Request) {
       ],
     });
 
+    // Update Langfuse trace with user input
+    const userMessageText = message.parts
+      .filter((part: any) => part.type === 'text')
+      .map((part: any) => part.text)
+      .join(' ');
+    
+    updateActiveTrace({
+      input: userMessageText,
+      userId: session.user.id,
+      sessionId: id,
+      tags: [selectedChatModel, 'chat'],
+    });
+
+    updateActiveObservation({
+      input: userMessageText,
+    });
+
     const streamId = generateUUID();
     await createStreamId({ streamId, chatId: id });
 
@@ -154,7 +173,6 @@ export async function POST(request: Request) {
           model: myProvider.languageModel(selectedChatModel),
           system: systemPrompt({ selectedChatModel, requestHints }),
           messages: convertToModelMessages(uiMessages),
-          maxSteps: 20,
           experimental_activeTools:
             selectedChatModel === 'chat-model-reasoning'
               ? []
@@ -175,8 +193,31 @@ export async function POST(request: Request) {
             }),
           },
           experimental_telemetry: {
-            isEnabled: isProductionEnvironment,
+            isEnabled: true,
             functionId: 'stream-text',
+            metadata: {
+              userId: session.user.id,
+              chatId: id,
+              model: selectedChatModel,
+            },
+          },
+          onFinish: async (result) => {
+            // Update Langfuse traces with the response
+            if (result.text) {
+              updateActiveObservation({ 
+                output: result.text,
+              });
+              updateActiveTrace({ 
+                output: result.text,
+                tags: [selectedChatModel],
+              });
+            }
+            
+            // End the active span
+            const activeSpan = trace.getActiveSpan();
+            if (activeSpan) {
+              activeSpan.end();
+            }
           },
         });
 
@@ -221,8 +262,16 @@ export async function POST(request: Request) {
     if (error instanceof ChatSDKError) {
       return error.toResponse();
     }
+    // Return a generic error response for unexpected errors
+    return new Response('Internal Server Error', { status: 500 });
   }
 }
+
+// Wrap the handler with observe for Langfuse tracing
+export const POST = observe(handleChatMessage, {
+  name: 'handle-chat-message',
+  endOnExit: false,
+});
 
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);

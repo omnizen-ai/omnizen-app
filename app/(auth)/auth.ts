@@ -25,7 +25,7 @@ declare module 'next-auth' {
 
 declare module 'next-auth/jwt' {
   interface JWT extends DefaultJWT {
-    id: string;
+    id?: string;
     type: UserType;
   }
 }
@@ -59,7 +59,7 @@ export const {
 
         if (!passwordsMatch) return null;
 
-        return { ...user, type: 'regular' };
+        return { ...user, type: 'regular' } as any;
       },
     }),
     Credentials({
@@ -67,7 +67,7 @@ export const {
       credentials: {},
       async authorize() {
         const [guestUser] = await createGuestUser();
-        return { ...guestUser, type: 'guest' };
+        return { ...guestUser, type: 'guest' } as any;
       },
     }),
   ],
@@ -82,7 +82,7 @@ export const {
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id;
+        session.user.id = token.id || '';
         session.user.type = token.type;
       }
 
