@@ -11,6 +11,7 @@ import {
   index,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Enums
@@ -25,7 +26,7 @@ export const chartOfAccounts = pgTable('chart_of_accounts', {
   accountNumber: text('account_number').notNull().unique(),
   accountName: text('account_name').notNull(),
   accountType: accountTypeEnum('account_type').notNull(),
-  parentAccountId: uuid('parent_account_id').references(() => chartOfAccounts.id),
+  parentAccountId: uuid('parent_account_id').references((): AnyPgColumn => chartOfAccounts.id),
   description: text('description'),
   isActive: boolean('is_active').default(true),
   balance: decimal('balance', { precision: 20, scale: 2 }).default('0.00'),
