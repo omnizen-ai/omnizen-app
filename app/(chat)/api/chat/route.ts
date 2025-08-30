@@ -36,7 +36,11 @@ import { ChatSDKError } from '@/lib/errors';
 import type { ChatMessage } from '@/lib/types';
 import type { ChatModel } from '@/lib/ai/models';
 import type { VisibilityType } from '@/components/visibility-selector';
-import { observe, updateActiveObservation, updateActiveTrace } from '@langfuse/tracing';
+import {
+  observe,
+  updateActiveObservation,
+  updateActiveTrace,
+} from '@langfuse/tracing';
 import { trace } from '@opentelemetry/api';
 import { mcpClient } from '@/lib/mcp/client';
 
@@ -153,7 +157,7 @@ async function handleChatMessage(request: Request) {
       .filter((part: any) => part.type === 'text')
       .map((part: any) => part.text)
       .join(' ');
-    
+
     updateActiveTrace({
       input: userMessageText,
       userId: session.user.id,
@@ -180,40 +184,40 @@ async function handleChatMessage(request: Request) {
       // Continue without MCP tools if they fail to load
     }
 
-    // Combine static tools with MCP tools
-    const allTools = {
-      getWeather,
-      createDocument: createDocument({ session, dataStream }),
-      updateDocument: updateDocument({ session, dataStream }),
-      requestSuggestions: requestSuggestions({
-        session,
-        dataStream,
-      }),
-      ...mcpTools, // Add MCP tools
-    };
-
-    // Combine tool names
-    const allToolNames = [
-      'getWeather',
-      'createDocument',
-      'updateDocument',
-      'requestSuggestions',
-      ...mcpToolNames, // Add MCP tool names
-    ];
-
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {
+        // Combine static tools with MCP tools - moved inside execute where dataStream is available
+        const allTools = {
+          getWeather,
+          createDocument: createDocument({ session, dataStream }),
+          updateDocument: updateDocument({ session, dataStream }),
+          requestSuggestions: requestSuggestions({
+            session,
+            dataStream,
+          }),
+          ...mcpTools, // Add MCP tools
+        };
+
+        // Combine tool names
+        const allToolNames = [
+          'getWeather',
+          'createDocument',
+          'updateDocument',
+          'requestSuggestions',
+          ...mcpToolNames, // Add MCP tool names
+        ];
+
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
           system: systemPrompt({ selectedChatModel, requestHints }),
           messages: convertToModelMessages(uiMessages),
           // Enable multi-step tool calling (up to 5 steps)
-          stopWhen: stepCountIs(5),
+          stopWhen: stepCountIs(25),
           experimental_transform: smoothStream({ chunking: 'word' }),
           tools: allTools,
           // Use activeTools instead of experimental_activeTools
           // Enable tools for all models (both support tool calling)
-          activeTools: allToolNames,
+          activeTools: allToolNames as any,
           // Allow the model to choose whether to use tools
           toolChoice: 'auto',
           experimental_telemetry: {
@@ -231,7 +235,7 @@ async function handleChatMessage(request: Request) {
             const stepObservation = {
               name: `step-${stepResult.toolCalls?.length ? 'tool-call' : 'text-generation'}`,
               input: stepResult.text || JSON.stringify(stepResult.toolCalls),
-              output: stepResult.toolResults 
+              output: stepResult.toolResults
                 ? JSON.stringify(stepResult.toolResults)
                 : stepResult.text,
               metadata: {
@@ -242,19 +246,25 @@ async function handleChatMessage(request: Request) {
                 usage: stepResult.usage,
               },
             };
-            
+
             // Update active observation with step data
             updateActiveObservation(stepObservation);
-            
+
             // Log tool calls and results for debugging
             if (stepResult.toolCalls?.length) {
-              console.log(`[Step] Tool calls:`, stepResult.toolCalls.map(tc => ({
-                name: tc.toolName,
-                id: tc.toolCallId,
-              })));
+              console.log(
+                `[Step] Tool calls:`,
+                stepResult.toolCalls.map((tc) => ({
+                  name: tc.toolName,
+                  id: tc.toolCallId,
+                })),
+              );
             }
             if (stepResult.toolResults?.length) {
-              console.log(`[Step] Tool results received:`, stepResult.toolResults.length);
+              console.log(
+                `[Step] Tool results received:`,
+                stepResult.toolResults.length,
+              );
             }
           },
           onFinish: async (result) => {
@@ -262,23 +272,24 @@ async function handleChatMessage(request: Request) {
             const finalOutput = {
               text: result.text,
               totalSteps: result.steps?.length || 1,
-              toolCallCount: result.steps?.reduce(
-                (acc, step) => acc + (step.toolCalls?.length || 0), 
-                0
-              ) || 0,
+              toolCallCount:
+                result.steps?.reduce(
+                  (acc, step) => acc + (step.toolCalls?.length || 0),
+                  0,
+                ) || 0,
               totalUsage: result.totalUsage,
             };
-            
+
             // Update Langfuse traces with aggregated response
-            updateActiveObservation({ 
+            updateActiveObservation({
               output: JSON.stringify(finalOutput),
               metadata: {
                 finishReason: result.finishReason,
                 stepCount: result.steps?.length || 1,
               },
             });
-            
-            updateActiveTrace({ 
+
+            updateActiveTrace({
               output: result.text || 'No text generated',
               tags: [
                 selectedChatModel,
@@ -290,7 +301,7 @@ async function handleChatMessage(request: Request) {
                 finishReason: result.finishReason,
               },
             });
-            
+
             // End the active span
             const activeSpan = trace.getActiveSpan();
             if (activeSpan) {
@@ -340,6 +351,12 @@ async function handleChatMessage(request: Request) {
     if (error instanceof ChatSDKError) {
       return error.toResponse();
     }
+    // Log the actual error for debugging
+    console.error('[API/chat] Unexpected error:', error);
+    console.error(
+      '[API/chat] Error stack:',
+      error instanceof Error ? error.stack : 'No stack trace',
+    );
     // Return a generic error response for unexpected errors
     return new Response('Internal Server Error', { status: 500 });
   }

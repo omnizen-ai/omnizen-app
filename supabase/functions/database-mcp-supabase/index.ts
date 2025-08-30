@@ -274,6 +274,13 @@ Deno.serve(async (req) => {
   }
 
   const url = new URL(req.url)
+  
+  // Skip authorization check in development
+  const isDevelopment = Deno.env.get('ENVIRONMENT') === 'development' || 
+                        Deno.env.get('NODE_ENV') === 'development' ||
+                        url.hostname === 'localhost' || 
+                        url.hostname === '127.0.0.1'
+  
   const clientId = req.headers.get('x-client-id') || 
                    req.headers.get('authorization')?.slice(0, 20) || 
                    'anonymous'
