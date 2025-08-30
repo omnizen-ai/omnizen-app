@@ -3,7 +3,6 @@ import {
   createUIMessageStream,
   JsonToSseTransformStream,
   smoothStream,
-  stepCountIs,
   streamText,
 } from 'ai';
 import { auth, type UserType } from '@/app/(auth)/auth';
@@ -155,7 +154,7 @@ export async function POST(request: Request) {
           model: myProvider.languageModel(selectedChatModel),
           system: systemPrompt({ selectedChatModel, requestHints }),
           messages: convertToModelMessages(uiMessages),
-          stopWhen: stepCountIs(5),
+          maxSteps: 20,
           experimental_activeTools:
             selectedChatModel === 'chat-model-reasoning'
               ? []
