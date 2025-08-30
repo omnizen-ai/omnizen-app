@@ -4,6 +4,7 @@ import {
   JsonToSseTransformStream,
   smoothStream,
   streamText,
+  stepCountIs,
 } from 'ai';
 import { auth, type UserType } from '@/app/(auth)/auth';
 import { type RequestHints, systemPrompt } from '@/lib/ai/prompts';
@@ -172,15 +173,8 @@ async function handleChatMessage(request: Request) {
           model: myProvider.languageModel(selectedChatModel),
           system: systemPrompt({ selectedChatModel, requestHints }),
           messages: convertToModelMessages(uiMessages),
-          experimental_activeTools:
-            selectedChatModel === 'chat-model-reasoning'
-              ? []
-              : [
-                  'getWeather',
-                  'createDocument',
-                  'updateDocument',
-                  'requestSuggestions',
-                ],
+          // Enable multi-step tool calling (up to 5 steps)
+          stopWhen: stepCountIs(5),
           experimental_transform: smoothStream({ chunking: 'word' }),
           tools: {
             getWeather,
@@ -191,6 +185,16 @@ async function handleChatMessage(request: Request) {
               dataStream,
             }),
           },
+          // Use activeTools instead of experimental_activeTools
+          // Enable tools for all models (both support tool calling)
+          activeTools: [
+            'getWeather',
+            'createDocument',
+            'updateDocument',
+            'requestSuggestions',
+          ],
+          // Allow the model to choose whether to use tools
+          toolChoice: 'auto',
           experimental_telemetry: {
             isEnabled: true,
             functionId: 'stream-text',
@@ -200,17 +204,71 @@ async function handleChatMessage(request: Request) {
               model: selectedChatModel,
             },
           },
-          onFinish: async (result) => {
-            // Update Langfuse traces with the response
-            if (result.text) {
-              updateActiveObservation({ 
-                output: result.text,
-              });
-              updateActiveTrace({ 
-                output: result.text,
-                tags: [selectedChatModel],
-              });
+          // Track each step separately in Langfuse
+          onStepFinish: async (stepResult) => {
+            // Create a new observation for each step
+            const stepObservation = {
+              name: `step-${stepResult.toolCalls?.length ? 'tool-call' : 'text-generation'}`,
+              input: stepResult.text || JSON.stringify(stepResult.toolCalls),
+              output: stepResult.toolResults 
+                ? JSON.stringify(stepResult.toolResults)
+                : stepResult.text,
+              metadata: {
+                stepNumber: stepResult.warnings?.length || 0,
+                finishReason: stepResult.finishReason,
+                hasToolCalls: !!stepResult.toolCalls?.length,
+                hasToolResults: !!stepResult.toolResults?.length,
+                usage: stepResult.usage,
+              },
+            };
+            
+            // Update active observation with step data
+            updateActiveObservation(stepObservation);
+            
+            // Log tool calls and results for debugging
+            if (stepResult.toolCalls?.length) {
+              console.log(`[Step] Tool calls:`, stepResult.toolCalls.map(tc => ({
+                name: tc.toolName,
+                id: tc.toolCallId,
+              })));
             }
+            if (stepResult.toolResults?.length) {
+              console.log(`[Step] Tool results received:`, stepResult.toolResults.length);
+            }
+          },
+          onFinish: async (result) => {
+            // Final aggregated tracking
+            const finalOutput = {
+              text: result.text,
+              totalSteps: result.steps?.length || 1,
+              toolCallCount: result.steps?.reduce(
+                (acc, step) => acc + (step.toolCalls?.length || 0), 
+                0
+              ) || 0,
+              totalUsage: result.totalUsage,
+            };
+            
+            // Update Langfuse traces with aggregated response
+            updateActiveObservation({ 
+              output: JSON.stringify(finalOutput),
+              metadata: {
+                finishReason: result.finishReason,
+                stepCount: result.steps?.length || 1,
+              },
+            });
+            
+            updateActiveTrace({ 
+              output: result.text || 'No text generated',
+              tags: [
+                selectedChatModel,
+                `steps:${result.steps?.length || 1}`,
+                result.toolCalls?.length ? 'with-tools' : 'text-only',
+              ],
+              metadata: {
+                totalUsage: result.totalUsage,
+                finishReason: result.finishReason,
+              },
+            });
             
             // End the active span
             const activeSpan = trace.getActiveSpan();
