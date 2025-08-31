@@ -42,7 +42,7 @@
         --destructive: 0 84.2% 60.2%;
         --destructive-foreground: 0 0% 98%;
         --border: 30 15% 80%; /* Beige borders #dfd6cc */
-        --input: 30 25% 92%; /* Light beige input #f2ebe3 */
+        --input: 30 20% 88%; /* Darker beige input for better contrast #ede6df */
         --ring: 30 25% 35%; /* Dark beige focus ring */
         --chart-1: 30 25% 35%;
         --chart-2: 173 58% 39%;
@@ -78,7 +78,7 @@
         --destructive: 0 84% 60%;
         --destructive-foreground: 0 0% 98%;
         --border: 0 0% 22%; /* Subtle borders #383838 */
-        --input: 0 0% 16%; /* Input background #292929 */
+        --input: 30 10% 18%; /* Warm beige-tinted dark input #4a453f */
         --ring: 30 30% 72%; /* Beige focus ring */
         --chart-1: 30 30% 72%;
         --chart-2: 173 58% 39%;
