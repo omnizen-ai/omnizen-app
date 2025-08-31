@@ -16,10 +16,10 @@ import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
 import { Share2Icon, RadiobuttonIcon, MaskOnIcon } from '@radix-ui/react-icons';
-import { SquareIcon } from 'lucide-react';
+import { SquareIcon, Plus } from 'lucide-react';
 import { PreviewAttachment } from './preview-attachment';
 import { Button } from './ui/button';
-import { SuggestedActions } from './suggested-actions';
+import { QuickActions } from './quick-actions';
 import {
   PromptInput,
   PromptInputTextarea,
@@ -287,16 +287,6 @@ function PureMultimodalInput({
         )}
       </AnimatePresence>
 
-      {messages.length === 0 &&
-        attachments.length === 0 &&
-        uploadQueue.length === 0 && (
-          <SuggestedActions
-            sendMessage={sendMessage}
-            chatId={chatId}
-            selectedVisibilityType={selectedVisibilityType}
-          />
-        )}
-
       <input
         type="file"
         className="fixed -top-4 -left-4 size-0.5 opacity-0 pointer-events-none"
@@ -394,6 +384,16 @@ function PureMultimodalInput({
           </div>
         </PromptInputToolbar>
       </PromptInput>
+
+      {messages.length === 0 &&
+        attachments.length === 0 &&
+        uploadQueue.length === 0 && (
+          <QuickActions
+            setInput={setInput}
+            chatId={chatId}
+            selectedVisibilityType={selectedVisibilityType}
+          />
+        )}
     </div>
   );
 }
