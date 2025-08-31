@@ -54,21 +54,23 @@ function PureChatHeader({
         </Tooltip>
       )}
 
+      {/* Model selector commented out - using DeepSeek by default
       {!isReadonly && (
         <ModelSelector
           session={session}
           selectedModelId={selectedModelId}
           className="order-1 md:order-2"
         />
-      )}
+      )} */}
 
+      {/* Visibility selector commented out - using default privacy
       {!isReadonly && (
         <VisibilitySelector
           chatId={chatId}
           selectedVisibilityType={selectedVisibilityType}
           className="order-1 md:order-3"
         />
-      )}
+      )} */}
     </header>
   );
 }

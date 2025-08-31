@@ -30,7 +30,7 @@ const geistMono = Geist_Mono({
 });
 
 const LIGHT_THEME_COLOR = 'hsl(0 0% 100%)';
-const DARK_THEME_COLOR = 'hsl(240deg 10% 3.92%)';
+const DARK_THEME_COLOR = 'hsl(0 0% 10%)'; // Updated to match new dark background
 const THEME_COLOR_SCRIPT = `\
 (function() {
   var html = document.documentElement;
@@ -74,7 +74,7 @@ export default async function RootLayout({
       <body className="antialiased">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >

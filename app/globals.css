@@ -24,73 +24,75 @@
 
 @layer base {
     :root {
-        --background: 0 0% 100%;
-        --foreground: 240 10% 3.9%;
-        --card: 0 0% 100%;
-        --card-foreground: 240 10% 3.9%;
-        --popover: 0 0% 100%;
-        --popover-foreground: 240 10% 3.9%;
-        --primary: 240 5.9% 10%;
-        --primary-foreground: 0 0% 98%;
-        --secondary: 240 4.8% 95.9%;
-        --secondary-foreground: 240 5.9% 10%;
-        --muted: 240 4.8% 95.9%;
-        --muted-foreground: 240 3.8% 46.1%;
-        --accent: 240 4.8% 95.9%;
-        --accent-foreground: 240 5.9% 10%;
+        /* Light beige theme - inverse of dark */
+        --background: 30 40% 96%; /* Light beige background #f9f5f1 */
+        --foreground: 0 0% 15%; /* Dark charcoal text #262626 */
+        --card: 30 35% 94%; /* Slightly darker beige card #f5f0e8 */
+        --card-foreground: 0 0% 15%;
+        --popover: 30 35% 92%; /* Popup beige #f2eae0 */
+        --popover-foreground: 0 0% 15%;
+        --primary: 30 25% 35%; /* Dark beige/brown #6b5d4f */
+        --primary-foreground: 30 40% 96%;
+        --secondary: 30 20% 88%; /* Light beige secondary #ede6df */
+        --secondary-foreground: 0 0% 20%;
+        --muted: 30 15% 85%; /* Muted beige #e8dfd6 */
+        --muted-foreground: 0 0% 35%; /* Dark gray text */
+        --accent: 30 25% 35%; /* Dark beige accent */
+        --accent-foreground: 30 40% 96%;
         --destructive: 0 84.2% 60.2%;
         --destructive-foreground: 0 0% 98%;
-        --border: 240 5.9% 90%;
-        --input: 240 5.9% 90%;
-        --ring: 240 10% 3.9%;
-        --chart-1: 12 76% 61%;
+        --border: 30 15% 80%; /* Beige borders #dfd6cc */
+        --input: 30 25% 92%; /* Light beige input #f2ebe3 */
+        --ring: 30 25% 35%; /* Dark beige focus ring */
+        --chart-1: 30 25% 35%;
         --chart-2: 173 58% 39%;
         --chart-3: 197 37% 24%;
         --chart-4: 43 74% 66%;
         --chart-5: 27 87% 67%;
         --radius: 0.5rem;
-        --sidebar-background: 0 0% 98%;
-        --sidebar-foreground: 240 5.3% 26.1%;
-        --sidebar-primary: 240 5.9% 10%;
-        --sidebar-primary-foreground: 0 0% 98%;
-        --sidebar-accent: 240 4.8% 95.9%;
-        --sidebar-accent-foreground: 240 5.9% 10%;
-        --sidebar-border: 220 13% 91%;
-        --sidebar-ring: 217.2 91.2% 59.8%;
+        --sidebar-background: 30 35% 94%; /* Light beige sidebar */
+        --sidebar-foreground: 0 0% 20%;
+        --sidebar-primary: 30 25% 35%; /* Dark beige primary */
+        --sidebar-primary-foreground: 30 40% 96%;
+        --sidebar-accent: 30 20% 88%;
+        --sidebar-accent-foreground: 0 0% 20%;
+        --sidebar-border: 30 15% 82%;
+        --sidebar-ring: 30 25% 35%;
     }
     .dark {
-        --background: 240 10% 3.9%;
-        --foreground: 0 0% 98%;
-        --card: 240 10% 3.9%;
-        --card-foreground: 0 0% 98%;
-        --popover: 240 10% 3.9%;
-        --popover-foreground: 0 0% 98%;
-        --primary: 0 0% 98%;
-        --primary-foreground: 240 5.9% 10%;
-        --secondary: 240 3.7% 15.9%;
-        --secondary-foreground: 0 0% 98%;
-        --muted: 240 3.7% 15.9%;
-        --muted-foreground: 240 5% 64.9%;
-        --accent: 240 3.7% 15.9%;
-        --accent-foreground: 0 0% 98%;
-        --destructive: 0 62.8% 30.6%;
+        /* Claude-inspired dark theme with warm beige tones */
+        --background: 0 0% 10%; /* Deep charcoal #1a1a1a */
+        --foreground: 30 20% 92%; /* Warm beige-white #f5f0ea */
+        --card: 0 0% 13%; /* Slightly lighter charcoal #212121 */
+        --card-foreground: 30 20% 92%;
+        --popover: 0 0% 15%; /* Popup background #262626 */
+        --popover-foreground: 30 20% 92%;
+        --primary: 30 30% 72%; /* Warm beige #d4c4b0 */
+        --primary-foreground: 0 0% 10%;
+        --secondary: 0 0% 18%; /* Dark gray #2e2e2e */
+        --secondary-foreground: 30 15% 85%;
+        --muted: 0 0% 20%; /* Muted dark #333333 */
+        --muted-foreground: 30 10% 60%; /* Muted beige text #a89f91 */
+        --accent: 30 30% 72%; /* Beige accent matching primary */
+        --accent-foreground: 0 0% 10%;
+        --destructive: 0 84% 60%;
         --destructive-foreground: 0 0% 98%;
-        --border: 240 3.7% 15.9%;
-        --input: 240 3.7% 15.9%;
-        --ring: 240 4.9% 83.9%;
-        --chart-1: 220 70% 50%;
-        --chart-2: 160 60% 45%;
-        --chart-3: 30 80% 55%;
-        --chart-4: 280 65% 60%;
-        --chart-5: 340 75% 55%;
-        --sidebar-background: 240 5.9% 10%;
-        --sidebar-foreground: 240 4.8% 95.9%;
-        --sidebar-primary: 224.3 76.3% 48%;
-        --sidebar-primary-foreground: 0 0% 100%;
-        --sidebar-accent: 240 3.7% 15.9%;
-        --sidebar-accent-foreground: 240 4.8% 95.9%;
-        --sidebar-border: 240 3.7% 15.9%;
-        --sidebar-ring: 217.2 91.2% 59.8%;
+        --border: 0 0% 22%; /* Subtle borders #383838 */
+        --input: 0 0% 16%; /* Input background #292929 */
+        --ring: 30 30% 72%; /* Beige focus ring */
+        --chart-1: 30 30% 72%;
+        --chart-2: 173 58% 39%;
+        --chart-3: 197 37% 24%;
+        --chart-4: 43 74% 66%;
+        --chart-5: 27 87% 67%;
+        --sidebar-background: 0 0% 8%; /* Darker sidebar #141414 */
+        --sidebar-foreground: 30 15% 85%;
+        --sidebar-primary: 30 30% 72%; /* Beige primary */
+        --sidebar-primary-foreground: 0 0% 10%;
+        --sidebar-accent: 0 0% 15%;
+        --sidebar-accent-foreground: 30 15% 85%;
+        --sidebar-border: 0 0% 18%;
+        --sidebar-ring: 30 30% 72%;
     }
 }
 
