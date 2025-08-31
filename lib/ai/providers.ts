@@ -5,6 +5,7 @@ import {
 } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { openai } from '@ai-sdk/openai';
+import { deepseek } from '@ai-sdk/deepseek';
 import {
   artifactModel,
   chatModel,
@@ -28,5 +29,7 @@ export const myProvider = isTestEnvironment
         'chat-model-reasoning': openai('gpt-4o-mini'),
         'title-model': anthropic('claude-3-5-haiku-20241022'),
         'artifact-model': anthropic('claude-3-5-sonnet-20241022'),
+        'deepseek-chat': deepseek('deepseek-chat'),
+        'deepseek-reasoner': deepseek('deepseek-reasoner'),
       },
     });
