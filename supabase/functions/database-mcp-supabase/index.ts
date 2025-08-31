@@ -164,6 +164,30 @@ const ErrorCodes = {
 // IMPORTANT: These descriptions include instructions for the LLM to use business-friendly language
 const tools = [
   {
+    name: 'business_metrics',
+    description: 'Get key business metrics and KPIs. REQUIRED: Output "Calculating business metrics..." BEFORE invoking. Returns revenue, cash position, AR/AP, customer counts, etc.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        metrics: {
+          type: 'array',
+          items: {
+            type: 'string',
+            enum: ['revenue_mtd', 'revenue_ytd', 'revenue_last_month', 'outstanding_ar', 'overdue_invoices', 'cash_position', 'customer_count', 'vendor_count', 'expense_mtd', 'expense_ytd', 'gross_profit', 'top_customers', 'pending_invoices']
+          },
+          description: 'List of metrics to calculate'
+        },
+        period: {
+          type: 'string',
+          enum: ['today', 'mtd', 'qtd', 'ytd', 'last_month', 'last_quarter', 'last_year', 'all_time'],
+          default: 'mtd',
+          description: 'Time period for metrics'
+        }
+      },
+      required: ['metrics'],
+    },
+  },
+  {
     name: 'discover_schema',
     description: 'Discover business data structure. REQUIRED: Output "Let me check what business information is available..." or similar BEFORE invoking. NEVER mention database, tables, SQL, or tool names to users.',
     inputSchema: {
@@ -173,16 +197,40 @@ const tools = [
   },
   {
     name: 'query',
-    description: 'Retrieve business data. REQUIRED: Output a contextual message BEFORE invoking, e.g. "Searching for customers...", "Calculating revenue...", "Analyzing cash flow...". NEVER mention SQL, queries, or technical terms.',
+    description: 'Retrieve business data using SQL. REQUIRED: Output a contextual message BEFORE invoking, e.g. "Searching for customers...", "Calculating revenue...". Use the SQL patterns from your training.',
     inputSchema: {
       type: 'object',
       properties: {
         sql: {
           type: 'string',
-          description: 'SQL query (internal use only - never show to user)'
+          description: 'SQL query - use the patterns from your prompt'
         },
       },
       required: ['sql'],
+    },
+  },
+  {
+    name: 'safe_write',
+    description: 'Safely modify business data with preview. First call with dry_run=true to preview changes, then dry_run=false to commit. REQUIRED: Show preview before committing.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        operation: {
+          type: 'string',
+          enum: ['create_invoice', 'update_invoice', 'record_payment', 'create_expense', 'add_customer', 'add_vendor', 'update_contact', 'adjust_inventory'],
+          description: 'Business operation to perform'
+        },
+        data: {
+          type: 'object',
+          description: 'Operation data'
+        },
+        dry_run: {
+          type: 'boolean',
+          default: true,
+          description: 'Preview mode - true shows impact without changes'
+        }
+      },
+      required: ['operation', 'data'],
     },
   },
   {
@@ -527,7 +575,20 @@ async function handleJsonRpc(
             name: 'omnizen/supabase',
             version: '0.2.0',
           },
-          instructions: 'You are a business operations assistant. REQUIRED: Always output a business-friendly action message BEFORE invoking any tool (e.g., "Let me search for your customers...", "Calculating revenue trends..."). Use business terms only. Never mention SQL, database, tables, queries, or technical terms. Instead use: customers, invoices, revenue, products, business data. Be conversational and business-focused.',
+          instructions: `You are Omni's database interface. Follow these rules:
+1. ALWAYS output a business-friendly action message BEFORE invoking any tool
+2. Use business terms only: customers, invoices, revenue, expenses, accounts
+3. NEVER mention SQL, database, tables, or technical terms
+4. Map business concepts to actual tables:
+   - Customers → contacts table (contact_type='customer')
+   - Vendors → contacts table (contact_type='vendor')  
+   - Invoices → invoices table
+   - Expenses → expenses table
+   - Products → inventory table
+   - Accounts → chart_of_accounts table
+   - Transactions → transactions or journal_entries tables
+5. Format all monetary values with currency symbols
+6. Be conversational and business-focused`,
           sessionId: sessionId || undefined,
         }
         break
@@ -731,6 +792,232 @@ async function executeTool(toolName: string, args: any, supabase: any) {
   console.log('Executing tool:', toolName, args)
   
   switch (toolName) {
+    case 'business_metrics': {
+      const { metrics, period = 'mtd' } = args
+      const results: Record<string, any> = {}
+      
+      // Define SQL queries for each metric
+      const metricQueries: Record<string, string> = {
+        revenue_mtd: `SELECT COALESCE(SUM(total_amount), 0) as value FROM invoices WHERE status='paid' AND DATE_TRUNC('month', invoice_date) = DATE_TRUNC('month', CURRENT_DATE)`,
+        revenue_ytd: `SELECT COALESCE(SUM(total_amount), 0) as value FROM invoices WHERE status='paid' AND DATE_TRUNC('year', invoice_date) = DATE_TRUNC('year', CURRENT_DATE)`,
+        revenue_last_month: `SELECT COALESCE(SUM(total_amount), 0) as value FROM invoices WHERE status='paid' AND DATE_TRUNC('month', invoice_date) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')`,
+        outstanding_ar: `SELECT COALESCE(SUM(total_amount - paid_amount), 0) as value FROM invoices WHERE status IN ('sent', 'overdue')`,
+        overdue_invoices: `SELECT COUNT(*) as count, COALESCE(SUM(total_amount - paid_amount), 0) as value FROM invoices WHERE due_date < CURRENT_DATE AND status != 'paid'`,
+        cash_position: `SELECT COALESCE(SUM(balance), 0) as value FROM chart_of_accounts WHERE account_type='asset' AND (account_name ILIKE '%cash%' OR account_name ILIKE '%bank%')`,
+        customer_count: `SELECT COUNT(*) as value FROM contacts WHERE contact_type='customer'`,
+        vendor_count: `SELECT COUNT(*) as value FROM contacts WHERE contact_type='vendor'`,
+        expense_mtd: `SELECT COALESCE(SUM(amount), 0) as value FROM expenses WHERE DATE_TRUNC('month', expense_date) = DATE_TRUNC('month', CURRENT_DATE)`,
+        expense_ytd: `SELECT COALESCE(SUM(amount), 0) as value FROM expenses WHERE DATE_TRUNC('year', expense_date) = DATE_TRUNC('year', CURRENT_DATE)`,
+        gross_profit: `SELECT (SELECT COALESCE(SUM(total_amount), 0) FROM invoices WHERE status='paid' AND DATE_TRUNC('month', invoice_date) = DATE_TRUNC('month', CURRENT_DATE)) - (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE DATE_TRUNC('month', expense_date) = DATE_TRUNC('month', CURRENT_DATE)) as value`,
+        top_customers: `SELECT c.company_name, COALESCE(SUM(i.total_amount), 0) as revenue FROM contacts c LEFT JOIN invoices i ON i.contact_id = c.id WHERE c.contact_type='customer' AND i.status='paid' GROUP BY c.id, c.company_name ORDER BY revenue DESC LIMIT 5`,
+        pending_invoices: `SELECT COUNT(*) as count, COALESCE(SUM(total_amount), 0) as value FROM invoices WHERE status IN ('draft', 'sent')`
+      }
+      
+      // Execute requested metrics
+      for (const metric of metrics) {
+        if (metricQueries[metric]) {
+          try {
+            const { data, error } = await supabase.rpc('execute_sql', {
+              query: metricQueries[metric],
+              params: []
+            })
+            
+            if (error) throw error
+            
+            // Format the result based on metric type
+            if (metric === 'top_customers') {
+              results[metric] = data
+            } else if (metric === 'overdue_invoices' || metric === 'pending_invoices') {
+              results[metric] = data[0] || { count: 0, value: 0 }
+            } else {
+              results[metric] = data[0]?.value || 0
+            }
+          } catch (error) {
+            console.error(`Error calculating ${metric}:`, error)
+            results[metric] = 'Error calculating'
+          }
+        }
+      }
+      
+      // Format response with business context
+      let businessContext = "📊 Business Metrics Summary\n\n"
+      
+      for (const [metric, value] of Object.entries(results)) {
+        if (metric === 'top_customers' && Array.isArray(value)) {
+          businessContext += "**Top Customers:**\n"
+          value.forEach((customer: any, i: number) => {
+            businessContext += `${i + 1}. ${customer.company_name}: $${customer.revenue.toLocaleString()}\n`
+          })
+        } else if (typeof value === 'object' && value.count !== undefined) {
+          const label = metric.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+          businessContext += `**${label}:** ${value.count} items worth $${value.value.toLocaleString()}\n`
+        } else if (typeof value === 'number') {
+          const label = metric.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+          if (metric.includes('count')) {
+            businessContext += `**${label}:** ${value}\n`
+          } else {
+            businessContext += `**${label}:** $${value.toLocaleString()}\n`
+          }
+        }
+      }
+      
+      return {
+        businessContext,
+        metrics: results,
+        period,
+        _debug: {
+          queries: Object.keys(results).map(k => metricQueries[k])
+        }
+      }
+    }
+    
+    case 'safe_write': {
+      const { operation, data, dry_run = true } = args
+      
+      // Transaction wrapper for safe writes
+      if (dry_run) {
+        // Preview mode - show what would happen
+        let preview = "🔍 Preview of changes:\n\n"
+        
+        switch (operation) {
+          case 'create_invoice':
+            preview += `**New Invoice**\n`
+            preview += `- Customer: ${data.customer_name || 'ID: ' + data.contact_id}\n`
+            preview += `- Amount: $${data.total_amount?.toLocaleString() || 0}\n`
+            preview += `- Due Date: ${data.due_date || 'Not set'}\n`
+            preview += `- Status: ${data.status || 'draft'}\n\n`
+            preview += `⚠️ This will create a new invoice. Call again with dry_run=false to confirm.`
+            break
+            
+          case 'record_payment':
+            preview += `**Payment Recording**\n`
+            preview += `- Invoice: ${data.invoice_number || 'ID: ' + data.invoice_id}\n`
+            preview += `- Payment Amount: $${data.amount?.toLocaleString() || 0}\n`
+            preview += `- Payment Date: ${data.payment_date || 'Today'}\n\n`
+            preview += `⚠️ This will update the invoice and create a payment transaction. Call again with dry_run=false to confirm.`
+            break
+            
+          case 'add_customer':
+            preview += `**New Customer**\n`
+            preview += `- Company: ${data.company_name}\n`
+            preview += `- Contact: ${data.first_name} ${data.last_name}\n`
+            preview += `- Email: ${data.email}\n`
+            preview += `- Phone: ${data.phone || 'Not provided'}\n\n`
+            preview += `⚠️ This will create a new customer record. Call again with dry_run=false to confirm.`
+            break
+            
+          default:
+            preview += `Operation: ${operation}\n`
+            preview += `Data: ${JSON.stringify(data, null, 2)}\n\n`
+            preview += `⚠️ Call again with dry_run=false to confirm.`
+        }
+        
+        return {
+          businessContext: preview,
+          dry_run: true,
+          operation,
+          data
+        }
+      } else {
+        // Actual write mode - perform the operation
+        let result: any
+        let businessContext = ""
+        
+        switch (operation) {
+          case 'create_invoice':
+            const { data: invoice, error: invError } = await supabase
+              .from('invoices')
+              .insert({
+                ...data,
+                invoice_number: data.invoice_number || `INV-${Date.now()}`,
+                status: data.status || 'draft',
+                paid_amount: 0,
+                createdAt: new Date()
+              })
+              .select()
+              .single()
+            
+            if (invError) throw invError
+            
+            businessContext = `✅ Invoice ${invoice.invoice_number} created successfully!\n`
+            businessContext += `- Amount: $${invoice.total_amount.toLocaleString()}\n`
+            businessContext += `- Due: ${invoice.due_date}`
+            result = invoice
+            break
+            
+          case 'record_payment':
+            // Update invoice paid amount
+            const { data: updatedInvoice, error: updateError } = await supabase
+              .from('invoices')
+              .update({
+                paid_amount: data.amount,
+                status: data.amount >= data.invoice_total ? 'paid' : 'partial'
+              })
+              .eq('id', data.invoice_id)
+              .select()
+              .single()
+            
+            if (updateError) throw updateError
+            
+            // Create transaction record
+            const { data: transaction, error: transError } = await supabase
+              .from('transactions')
+              .insert({
+                transaction_number: `PAY-${Date.now()}`,
+                transaction_date: data.payment_date || new Date(),
+                transaction_type: 'payment',
+                contact_id: updatedInvoice.contact_id,
+                amount: data.amount,
+                payment_method: data.payment_method || 'bank_transfer',
+                reference_number: updatedInvoice.invoice_number,
+                description: `Payment for invoice ${updatedInvoice.invoice_number}`,
+                status: 'completed'
+              })
+              .select()
+              .single()
+            
+            if (transError) throw transError
+            
+            businessContext = `✅ Payment recorded successfully!\n`
+            businessContext += `- Invoice: ${updatedInvoice.invoice_number}\n`
+            businessContext += `- Payment: $${data.amount.toLocaleString()}\n`
+            businessContext += `- Status: ${updatedInvoice.status}`
+            result = { invoice: updatedInvoice, transaction }
+            break
+            
+          case 'add_customer':
+            const { data: customer, error: custError } = await supabase
+              .from('contacts')
+              .insert({
+                ...data,
+                contact_type: 'customer',
+                is_active: true,
+                createdAt: new Date()
+              })
+              .select()
+              .single()
+            
+            if (custError) throw custError
+            
+            businessContext = `✅ Customer added successfully!\n`
+            businessContext += `- Company: ${customer.company_name}\n`
+            businessContext += `- Email: ${customer.email}`
+            result = customer
+            break
+            
+          default:
+            throw new Error(`Unknown operation: ${operation}`)
+        }
+        
+        return {
+          businessContext,
+          success: true,
+          operation,
+          result
+        }
+      }
+    }
+    
     case 'discover_schema': {
       // Check cache first
       const cached = schemaCache.get()
@@ -739,20 +1026,25 @@ async function executeTool(toolName: string, args: any, supabase: any) {
           cached: true,
           tables: cached.tables,
           mappings: {
-            customers: "entities WHERE type='customer'",
-            vendors: "entities WHERE type='vendor'",
-            invoices: "transactions WHERE type='invoice'",
-            bills: "transactions WHERE type='bill'",
-            payments: "transactions WHERE type='payment'",
-            accounts: "accounts",
-            products: "products"
+            customers: "contacts WHERE contact_type='customer'",
+            vendors: "contacts WHERE contact_type='vendor'",
+            invoices: "invoices",
+            invoice_items: "invoice_line_items",
+            expenses: "expenses",
+            accounts: "chart_of_accounts",
+            products: "inventory",
+            journal_entries: "journal_entries",
+            journal_lines: "journal_entry_lines",
+            transactions: "transactions"
           },
           hints: {
-            "finding_customers": "Customers are in 'entities' table with type='customer'",
-            "pending_items": "Use status IN ('pending', 'draft', 'sent')",
+            "finding_customers": "Customers are in 'contacts' table with contact_type='customer'",
+            "pending_invoices": "Use status IN ('draft', 'sent')",
             "overdue_invoices": "due_date < CURRENT_DATE AND status != 'paid'",
             "date_ranges": "Use DATE_TRUNC for month/quarter/year grouping",
-            "revenue": "SUM(amount) FROM transactions WHERE type='invoice' AND status='paid'"
+            "revenue": "SUM(total_amount) FROM invoices WHERE status='paid'",
+            "customer_balance": "total_amount - paid_amount for each invoice",
+            "account_types": "asset, liability, equity, revenue, expense"
           },
           message: "Schema cached - no need to check again for 5 minutes"
         }
@@ -772,20 +1064,25 @@ async function executeTool(toolName: string, args: any, supabase: any) {
         cached: false,
         tables: tableList,
         mappings: {
-          customers: "entities WHERE type='customer'",
-          vendors: "entities WHERE type='vendor'",
-          invoices: "transactions WHERE type='invoice'",
-          bills: "transactions WHERE type='bill'",
-          payments: "transactions WHERE type='payment'",
-          accounts: "accounts",
-          products: "products"
+          customers: "contacts WHERE contact_type='customer'",
+          vendors: "contacts WHERE contact_type='vendor'",
+          invoices: "invoices",
+          invoice_items: "invoice_line_items",
+          expenses: "expenses",
+          accounts: "chart_of_accounts",
+          products: "inventory",
+          journal_entries: "journal_entries",
+          journal_lines: "journal_entry_lines",
+          transactions: "transactions"
         },
         hints: {
-          "finding_customers": "Customers are in 'entities' table with type='customer'",
-          "pending_items": "Use status IN ('pending', 'draft', 'sent')",
+          "finding_customers": "Customers are in 'contacts' table with contact_type='customer'",
+          "pending_invoices": "Use status IN ('draft', 'sent')",
           "overdue_invoices": "due_date < CURRENT_DATE AND status != 'paid'",
           "date_ranges": "Use DATE_TRUNC for month/quarter/year grouping",
-          "revenue": "SUM(amount) FROM transactions WHERE type='invoice' AND status='paid'"
+          "revenue": "SUM(total_amount) FROM invoices WHERE status='paid'",
+          "customer_balance": "total_amount - paid_amount for each invoice",
+          "account_types": "asset, liability, equity, revenue, expense"
         },
         message: "Schema discovered and cached for 5 minutes"
       }
@@ -838,13 +1135,20 @@ async function executeTool(toolName: string, args: any, supabase: any) {
             if (missingTable === 'customers') {
               throw new Error(
                 `Table "${missingTable}" does not exist. ` +
-                `Customers are in 'entities' table with type='customer'. ` +
-                `Try: SELECT * FROM entities WHERE type='customer'`
+                `Customers are in 'contacts' table with contact_type='customer'. ` +
+                `Try: SELECT * FROM contacts WHERE contact_type='customer'`
+              )
+            }
+            if (missingTable === 'vendors') {
+              throw new Error(
+                `Table "${missingTable}" does not exist. ` +
+                `Vendors are in 'contacts' table with contact_type='vendor'. ` +
+                `Try: SELECT * FROM contacts WHERE contact_type='vendor'`
               )
             }
             throw new Error(
               `Table "${missingTable}" does not exist. ` +
-              `Available: entities, transactions, accounts, products, organizations, users. ` +
+              `Available: contacts, invoices, invoice_line_items, expenses, inventory, chart_of_accounts, journal_entries, transactions. ` +
               `Use 'discover_schema' first.`
             )
           }
@@ -871,7 +1175,7 @@ async function executeTool(toolName: string, args: any, supabase: any) {
         return { 
           tables: cached.tables,
           cached: true,
-          hint: "Customers are in 'entities' table with type='customer'"
+          hint: "Customers are in 'contacts' table with contact_type='customer'"
         }
       }
       
@@ -888,25 +1192,29 @@ async function executeTool(toolName: string, args: any, supabase: any) {
       return { 
         tables,
         cached: false,
-        hint: "Customers are in 'entities' table with type='customer'"
+        hint: "Customers are in 'contacts' table with contact_type='customer'"
       }
     }
 
     case 'get_table_data': {
       // Determine business context
       let businessContext = "📊 Retrieving data..."
-      if (args.table === 'entities' && args.filters?.type === 'customer') {
+      if (args.table === 'contacts' && args.filters?.contact_type === 'customer') {
         businessContext = "🔍 Searching for customers..."
-      } else if (args.table === 'entities' && args.filters?.type === 'vendor') {
+      } else if (args.table === 'contacts' && args.filters?.contact_type === 'vendor') {
         businessContext = "🏢 Looking up vendors..."
-      } else if (args.table === 'transactions' && args.filters?.type === 'invoice') {
+      } else if (args.table === 'invoices') {
         businessContext = "📄 Retrieving invoices..."
-      } else if (args.table === 'transactions' && args.filters?.type === 'payment') {
-        businessContext = "💳 Finding payments..."
-      } else if (args.table === 'products') {
+      } else if (args.table === 'transactions') {
+        businessContext = "💳 Finding transactions..."
+      } else if (args.table === 'inventory') {
         businessContext = "📦 Loading products..."
-      } else if (args.table === 'accounts') {
+      } else if (args.table === 'chart_of_accounts') {
         businessContext = "📊 Fetching accounts..."
+      } else if (args.table === 'expenses') {
+        businessContext = "💸 Retrieving expenses..."
+      } else if (args.table === 'journal_entries') {
+        businessContext = "📓 Loading journal entries..."
       }
       
       let query = supabase.from(args.table).select('*')

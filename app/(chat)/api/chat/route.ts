@@ -21,8 +21,6 @@ import { convertToUIMessages, generateUUID } from '@/lib/utils';
 import { generateTitleFromUserMessage } from '../../actions';
 import { createDocument } from '@/lib/ai/tools/create-document';
 import { updateDocument } from '@/lib/ai/tools/update-document';
-import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
-import { getWeather } from '@/lib/ai/tools/get-weather';
 import { myProvider } from '@/lib/ai/providers';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
 import { postRequestBodySchema, type PostRequestBody } from './schema';
@@ -175,41 +173,53 @@ async function handleChatMessage(request: Request) {
     // Get MCP tools dynamically
     let mcpTools = {};
     let mcpToolNames: string[] = [];
+    let hasBusinessTools = false;
+    
     try {
       mcpTools = await mcpClient.getTools();
       mcpToolNames = Object.keys(mcpTools);
       console.log(`[MCP] Loaded ${mcpToolNames.length} tools:`, mcpToolNames);
+      
+      // Check if we have database/business tools
+      hasBusinessTools = mcpToolNames.some(name => name.startsWith('db_'));
     } catch (error) {
       console.error('[MCP] Failed to load tools:', error);
       // Continue without MCP tools if they fail to load
     }
 
+    // Detect if this is a business-related query
+    const messageText = message.parts
+      .filter((part: any) => part.type === 'text')
+      .map((part: any) => part.text)
+      .join(' ')
+      .toLowerCase();
+    
+    const businessKeywords = ['customer', 'invoice', 'revenue', 'expense', 'payment', 'product', 'inventory', 'account', 'business', 'sales', 'purchase', 'vendor', 'profit', 'cash', 'financial'];
+    const isBusinessQuery = businessKeywords.some(keyword => messageText.includes(keyword)) || hasBusinessTools;
+
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {
-        // Combine static tools with MCP tools - moved inside execute where dataStream is available
+        // Only include necessary tools
         const allTools = {
-          getWeather,
           createDocument: createDocument({ session, dataStream }),
           updateDocument: updateDocument({ session, dataStream }),
-          requestSuggestions: requestSuggestions({
-            session,
-            dataStream,
-          }),
-          ...mcpTools, // Add MCP tools
+          ...mcpTools, // Add MCP tools (database operations)
         };
 
-        // Combine tool names
+        // Combine tool names - removed weather and suggestions
         const allToolNames = [
-          'getWeather',
           'createDocument',
           'updateDocument',
-          'requestSuggestions',
           ...mcpToolNames, // Add MCP tool names
         ];
 
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
-          system: systemPrompt({ selectedChatModel, requestHints }),
+          system: systemPrompt({ 
+            selectedChatModel, 
+            requestHints,
+            useOmniMode: isBusinessQuery // Enable Omni mode for business queries
+          }),
           messages: convertToModelMessages(uiMessages),
           // Enable multi-step tool calling (up to 5 steps)
           stopWhen: stepCountIs(25),
