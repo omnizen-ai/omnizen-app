@@ -204,7 +204,7 @@ export function Chat({
 
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center">
-            <div className="w-full max-w-3xl px-4">
+            <div className="w-full max-w-2xl px-4">
               <div className="text-left mb-8">
                 <StreamingGreeting session={session} />
               </div>

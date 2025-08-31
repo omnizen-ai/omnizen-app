@@ -357,10 +357,14 @@ function PureMultimodalInput({
           placeholder="Send a message..."
           value={input}
           onChange={handleInput}
-          minHeight={80}
-          maxHeight={80}
+          minHeight={messages.length === 0 ? 80 : 40}
+          maxHeight={messages.length === 0 ? 80 : 40}
           disableAutoResize={true}
-          style={{ height: '80px', minHeight: '80px', maxHeight: '80px' }}
+          style={{ 
+            height: messages.length === 0 ? '80px' : '40px', 
+            minHeight: messages.length === 0 ? '80px' : '40px', 
+            maxHeight: messages.length === 0 ? '80px' : '40px' 
+          }}
           className="text-sm resize-none border-b-0 focus:border-0 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
           rows={1}
           autoFocus
