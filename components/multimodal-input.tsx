@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
-import { Share2Icon } from '@radix-ui/react-icons';
+import { Share2Icon, RadiobuttonIcon, MaskOnIcon } from '@radix-ui/react-icons';
 import { SquareIcon } from 'lucide-react';
 import { PreviewAttachment } from './preview-attachment';
 import { Button } from './ui/button';
@@ -112,6 +112,9 @@ function PureMultimodalInput({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   const submitForm = useCallback(() => {
     window.history.replaceState({}, '', `/chat/${chatId}`);
@@ -211,6 +214,51 @@ function PureMultimodalInput({
       scrollToBottom();
     }
   }, [status, scrollToBottom]);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioFile = new File([audioBlob], `voice-note-${Date.now()}.webm`, {
+          type: 'audio/webm',
+        });
+        
+        // Upload the voice note
+        const attachment = await uploadFile(audioFile);
+        if (attachment) {
+          setAttachments((current) => [...current, attachment]);
+          toast.success('Voice note recorded');
+        }
+        
+        // Clean up
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      toast.error('Could not access microphone');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
 
   return (
     <div className="flex relative flex-col gap-4 w-full">
@@ -323,6 +371,12 @@ function PureMultimodalInput({
           </PromptInputTools>
           <div className="flex items-center gap-1">
             <AttachmentsButton fileInputRef={fileInputRef} status={status} />
+            <VoiceButton 
+              isRecording={isRecording}
+              startRecording={startRecording}
+              stopRecording={stopRecording}
+              status={status}
+            />
             {status === 'submitted' || status === 'streaming' ? (
               <StopButton stop={stop} setMessages={setMessages} />
             ) : (
@@ -402,6 +456,48 @@ function PureStopButton({
 }
 
 const StopButton = memo(PureStopButton);
+
+function PureVoiceButton({
+  isRecording,
+  startRecording,
+  stopRecording,
+  status,
+}: {
+  isRecording: boolean;
+  startRecording: () => Promise<void>;
+  stopRecording: () => void;
+  status: UseChatHelpers<ChatMessage>['status'];
+}) {
+  return (
+    <Button
+      data-testid="voice-button"
+      className={`size-8 transition-all ${
+        isRecording 
+          ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
+          : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+      }`}
+      onClick={(event) => {
+        event.preventDefault();
+        if (isRecording) {
+          stopRecording();
+        } else {
+          startRecording();
+        }
+      }}
+      disabled={status !== 'ready'}
+      size="sm"
+      type="button"
+    >
+      {isRecording ? (
+        <MaskOnIcon className="size-4" />
+      ) : (
+        <RadiobuttonIcon className="size-4" />
+      )}
+    </Button>
+  );
+}
+
+const VoiceButton = memo(PureVoiceButton);
 
 function PureSendButton({
   submitForm,
