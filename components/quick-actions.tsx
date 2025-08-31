@@ -1,17 +1,9 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { memo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { memo, useState, useRef, useEffect } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import type { UseChatHelpers } from '@ai-sdk/react';
 import type { VisibilityType } from './visibility-selector';
-import type { ChatMessage } from '@/lib/types';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { 
   TrendingUp, 
@@ -174,53 +166,89 @@ function PureQuickActions({
   setInput,
   selectedVisibilityType,
 }: QuickActionsProps) {
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Handle click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setSelectedCategory(null);
+      }
+    };
+
+    if (selectedCategory) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [selectedCategory]);
+
   const handleActionClick = (prompt: string) => {
     setInput(prompt);
+    setSelectedCategory(null);
   };
 
+  const handleCategoryClick = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+  };
+
+  const selectedCategoryData = actionCategories.find(cat => cat.id === selectedCategory);
+
   return (
-    <div data-testid="quick-actions" className="flex justify-center w-full">
-      <div className="grid grid-cols-4 gap-2 w-[90%]">
-        {actionCategories.map((category, index) => (
-        <motion.div
-          key={category.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          transition={{ delay: 0.05 * index }}
-          className="w-full"
-        >
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full gap-2 rounded-lg border-border/50 hover:border-border transition-all duration-200 justify-center"
-              >
-                {category.icon}
-                <span className="text-sm">{category.label}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent 
-              side="bottom" 
-              align="center"
-              className="w-64 mt-2"
-              sideOffset={8}
+    <div ref={containerRef} data-testid="quick-actions" className="flex justify-center w-full">
+      <div className="w-[90%]">
+        <AnimatePresence mode="wait">
+          {!selectedCategory ? (
+            <motion.div
+              key="buttons"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="grid grid-cols-4 gap-2"
             >
-              {category.actions.map((action) => (
-                <DropdownMenuItem
-                  key={action.prompt}
-                  onClick={() => handleActionClick(action.prompt)}
-                  className="cursor-pointer gap-2 py-2"
+              {actionCategories.map((category, index) => (
+                <motion.div
+                  key={category.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.05 * index }}
                 >
-                  {action.icon && <span className="text-muted-foreground">{action.icon}</span>}
-                  <span className="flex-1">{action.label}</span>
-                </DropdownMenuItem>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCategoryClick(category.id)}
+                    className="w-full gap-2 rounded-lg border-border/50 hover:border-border transition-all duration-200 justify-center"
+                  >
+                    {category.icon}
+                    <span className="text-sm">{category.label}</span>
+                  </Button>
+                </motion.div>
               ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </motion.div>
-        ))}
+            </motion.div>
+          ) : selectedCategoryData ? (
+            <motion.div
+              key="actions"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="border bg-background shadow-lg rounded-xl p-1"
+            >
+              {selectedCategoryData.actions.map((action, index) => (
+                <motion.button
+                  key={action.prompt}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.02 * index }}
+                  onClick={() => handleActionClick(action.prompt)}
+                  className="w-full flex items-center gap-3 py-2.5 px-3 hover:bg-accent rounded-lg transition-colors text-left"
+                >
+                  {action.icon && <span className="text-muted-foreground opacity-70">{action.icon}</span>}
+                  <span className="flex-1 text-sm">{action.label}</span>
+                </motion.button>
+              ))}
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
       </div>
     </div>
   );
