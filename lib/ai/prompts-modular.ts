@@ -20,7 +20,7 @@ OUTPUT FORMAT:
 2. Data (markdown tables)
 3. Decision & next steps
 
-TOOLS: Use db_* for data ops. Format numbers with $, use commas.`;
+TOOLS: Use db_* for data ops. Format numbers with \$, use commas.`;
 
 // ============================================
 // SQL PATTERNS WITH SCHEMA AWARENESS (400 tokens)
@@ -48,7 +48,8 @@ DATA ENTRY:
 Defaults: net-30 terms, draft status, today's date, 8.5% tax
 Show confirmation table before executing:
 | Field | Value | Source |
-Require: name, amount, date`;
+Require: name, amount, date
+Format currency with \\$ escaped`;
 
 // ============================================
 // REPORT FORMATTING MODULE (100 tokens)
