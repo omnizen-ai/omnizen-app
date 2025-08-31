@@ -1,4 +1,5 @@
-import { PreviewMessage, ThinkingMessage } from './message';
+import { PreviewMessage } from './message';
+import { MessageReasoning } from './message-reasoning';
 import { Greeting } from './greeting';
 import { memo } from 'react';
 import type { Vote } from '@/lib/db/schema';
@@ -69,9 +70,21 @@ function PureMessages({
             />
           ))}
 
-          {status === 'submitted' &&
+          {/* Show placeholder reasoning block when waiting for assistant response */}
+          {((status === 'submitted' || status === 'streaming') &&
             messages.length > 0 &&
-            messages[messages.length - 1].role === 'user' && <ThinkingMessage />}
+            messages[messages.length - 1].role === 'user') && (
+              <motion.div
+                className="px-4 mx-auto w-full max-w-3xl"
+                initial={{ y: 5, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+              >
+                <MessageReasoning
+                  isLoading={true}
+                  reasoning="Processing your request..."
+                />
+              </motion.div>
+            )}
 
           <motion.div
             ref={messagesEndRef}

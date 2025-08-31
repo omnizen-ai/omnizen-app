@@ -5,6 +5,8 @@ import {
   smoothStream,
   streamText,
   stepCountIs,
+  wrapLanguageModel,
+  extractReasoningMiddleware,
 } from 'ai';
 import { auth, type UserType } from '@/app/(auth)/auth';
 import { type RequestHints, systemPrompt } from '@/lib/ai/prompts';
@@ -283,8 +285,20 @@ async function handleChatMessage(request: Request) {
           ...mcpToolNames, // Add MCP tool names
         ];
 
+        // Wrap DeepSeek models with extractReasoningMiddleware to handle <process> blocks
+        const model = isDeepSeekModel
+          ? wrapLanguageModel({
+              model: myProvider.languageModel(selectedChatModel),
+              middleware: extractReasoningMiddleware({ 
+                tagName: 'process',
+                separator: '\n',
+                startWithReasoning: false // DeepSeek includes the opening tag
+              }),
+            })
+          : myProvider.languageModel(selectedChatModel);
+
         const result = streamText({
-          model: myProvider.languageModel(selectedChatModel),
+          model,
           system: optimizedSystemPrompt, // Use optimized prompt for token savings
           messages: convertToModelMessages(uiMessages),
           // Enable multi-step tool calling (up to 5 steps)
@@ -307,6 +321,11 @@ async function handleChatMessage(request: Request) {
           },
           // Track each step separately in Langfuse
           onStepFinish: async (stepResult) => {
+            // Log DeepSeek intermediate steps for debugging
+            if (isDeepSeekModel && stepResult.text && !stepResult.toolCalls?.length) {
+              console.log(`[DeepSeek] Intermediate step text: "${stepResult.text.substring(0, 100)}..."`);
+            }
+            
             // Create a new observation for each step
             const stepObservation = {
               name: `step-${stepResult.toolCalls?.length ? 'tool-call' : 'text-generation'}`,

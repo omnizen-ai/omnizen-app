@@ -107,27 +107,218 @@ const PurePreviewMessage = ({
               </div>
             )}
 
-            {message.parts?.map((part, index) => {
-              const { type } = part;
-              const key = `message-${message.id}-part-${index}`;
+            {(() => {
+              // Collect all reasoning parts into a single block
+              const reasoningParts = message.parts?.filter(part => 
+                part.type === 'reasoning' && part.text?.trim().length > 0
+              );
               
-              // Debug logging to see what parts we're getting
-              if (type === 'reasoning') {
-                console.log('Reasoning part found:', part);
-              }
-
-              if (type === 'reasoning' && part.text?.trim().length > 0) {
+              // Show reasoning block for loading assistant messages or when there are reasoning parts
+              const shouldShowReasoning = (message.role === 'assistant' && isLoading) || (reasoningParts && reasoningParts.length > 0);
+              
+              if (shouldShowReasoning) {
+                const combinedReasoning = reasoningParts && reasoningParts.length > 0
+                  ? reasoningParts.map(part => part.text).join('\n')
+                  : 'Processing your request...';
+                
                 return (
-                  <MessageReasoning
-                    key={key}
-                    isLoading={isLoading}
-                    reasoning={part.text}
-                  />
+                  <>
+                    <MessageReasoning
+                      key={`message-${message.id}-reasoning`}
+                      isLoading={isLoading}
+                      reasoning={combinedReasoning}
+                    />
+                    {/* Now render non-reasoning parts */}
+                    {message.parts?.map((part, index) => {
+                      if (part.type === 'reasoning') return null; // Skip reasoning parts as they're already rendered
+                      
+                      const { type } = part;
+                      const key = `message-${message.id}-part-${index}`;
+                      
+                      if (type === 'text') {
+                        if (mode === 'view') {
+                          return (
+                            <div key={key} className="flex flex-row gap-2 items-start">
+                              {message.role === 'user' && !isReadonly && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      data-testid="message-edit-button"
+                                      variant="ghost"
+                                      className="px-2 rounded-full opacity-0 h-fit text-muted-foreground group-hover/message:opacity-100"
+                                      onClick={() => {
+                                        setMode('edit');
+                                      }}
+                                    >
+                                      <PencilEditIcon />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Edit message</TooltipContent>
+                                </Tooltip>
+                              )}
+
+                              <MessageContent
+                                data-testid="message-content"
+                                className={cn('justify-start items-start text-left', {
+                                  'bg-primary text-primary-foreground':
+                                    message.role === 'user',
+                                  'bg-transparent': message.role === 'assistant',
+                                })}
+                              >
+                                <Response>{sanitizeText(part.text)}</Response>
+                              </MessageContent>
+                            </div>
+                          );
+                        }
+
+                        if (mode === 'edit') {
+                          return (
+                            <div key={key} className="flex flex-row gap-2 items-start">
+                              <div className="size-8" />
+
+                              <MessageEditor
+                                key={message.id}
+                                message={message}
+                                setMode={setMode}
+                                setMessages={setMessages}
+                                regenerate={regenerate}
+                              />
+                            </div>
+                          );
+                        }
+                      }
+                      
+                      // Handle tool parts
+                      if (type === 'tool-getWeather') {
+                        const { toolCallId, state } = part;
+
+                        return (
+                          <Tool key={toolCallId} defaultOpen={true}>
+                            <ToolHeader type="tool-getWeather" state={state} />
+                            <ToolContent>
+                              {state === 'input-available' && (
+                                <ToolInput input={part.input} />
+                              )}
+                              {state === 'output-available' && (
+                                <ToolOutput
+                                  output={<Weather weatherAtLocation={part.output} />}
+                                  errorText={undefined}
+                                />
+                              )}
+                            </ToolContent>
+                          </Tool>
+                        );
+                      }
+
+                      if (type === 'tool-createDocument') {
+                        const { toolCallId, state } = part;
+
+                        return (
+                          <Tool key={toolCallId} defaultOpen={true}>
+                            <ToolHeader type="tool-createDocument" state={state} />
+                            <ToolContent>
+                              {state === 'input-available' && (
+                                <ToolInput input={part.input} />
+                              )}
+                              {state === 'output-available' && (
+                                <ToolOutput
+                                  output={
+                                    'error' in part.output ? (
+                                      <div className="p-2 text-red-500 rounded border">
+                                        Error: {String(part.output.error)}
+                                      </div>
+                                    ) : (
+                                      <DocumentPreview
+                                        isReadonly={isReadonly}
+                                        result={part.output}
+                                      />
+                                    )
+                                  }
+                                  errorText={undefined}
+                                />
+                              )}
+                            </ToolContent>
+                          </Tool>
+                        );
+                      }
+
+                      if (type === 'tool-updateDocument') {
+                        const { toolCallId, state } = part;
+
+                        return (
+                          <Tool key={toolCallId} defaultOpen={true}>
+                            <ToolHeader type="tool-updateDocument" state={state} />
+                            <ToolContent>
+                              {state === 'input-available' && (
+                                <ToolInput input={part.input} />
+                              )}
+                              {state === 'output-available' && (
+                                <ToolOutput
+                                  output={
+                                    'error' in part.output ? (
+                                      <div className="p-2 text-red-500 rounded border">
+                                        Error: {String(part.output.error)}
+                                      </div>
+                                    ) : (
+                                      <DocumentToolResult
+                                        type="update"
+                                        result={part.output}
+                                        isReadonly={isReadonly}
+                                      />
+                                    )
+                                  }
+                                  errorText={undefined}
+                                />
+                              )}
+                            </ToolContent>
+                          </Tool>
+                        );
+                      }
+
+                      if (type === 'tool-requestSuggestions') {
+                        const { toolCallId, state } = part;
+
+                        return (
+                          <Tool key={toolCallId} defaultOpen={true}>
+                            <ToolHeader type="tool-requestSuggestions" state={state} />
+                            <ToolContent>
+                              {state === 'input-available' && (
+                                <ToolInput input={part.input} />
+                              )}
+                              {state === 'output-available' && (
+                                <ToolOutput
+                                  output={
+                                    'error' in part.output ? (
+                                      <div className="p-2 text-red-500 rounded border">
+                                        Error: {String(part.output.error)}
+                                      </div>
+                                    ) : (
+                                      <DocumentToolResult
+                                        type="request-suggestions"
+                                        result={part.output}
+                                        isReadonly={isReadonly}
+                                      />
+                                    )
+                                  }
+                                  errorText={undefined}
+                                />
+                              )}
+                            </ToolContent>
+                          </Tool>
+                        );
+                      }
+                    })}
+                  </>
                 );
               }
+              
+              // No reasoning parts, render normally
+              return message.parts?.map((part, index) => {
+                const { type } = part;
+                const key = `message-${message.id}-part-${index}`;
 
-              if (type === 'text') {
-                if (mode === 'view') {
+                if (type === 'text') {
+                  if (mode === 'view') {
                   return (
                     <div key={key} className="flex flex-row gap-2 items-start">
                       {message.role === 'user' && !isReadonly && (
@@ -296,8 +487,9 @@ const PurePreviewMessage = ({
                     </ToolContent>
                   </Tool>
                 );
-              }
-            })}
+                }
+              });
+            })()}
 
             {!isReadonly && (
               <MessageActions
@@ -329,35 +521,4 @@ export const PreviewMessage = memo(
   },
 );
 
-export const ThinkingMessage = () => {
-  const role = 'assistant';
-
-  return (
-    <motion.div
-      data-testid="message-assistant-loading"
-      className="px-4 mx-auto w-full max-w-3xl group/message min-h-96"
-      initial={{ y: 5, opacity: 0 }}
-      animate={{ y: 0, opacity: 1, transition: { delay: 1 } }}
-      data-role={role}
-    >
-      <div
-        className={cx(
-          'flex gap-4 group-data-[role=user]/message:px-3 w-full group-data-[role=user]/message:w-fit group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:py-2 rounded-xl',
-          {
-            'group-data-[role=user]/message:bg-muted': true,
-          },
-        )}
-      >
-        <div className="flex justify-center items-center rounded-full ring-1 size-8 shrink-0 ring-border">
-          <SparklesIcon size={14} />
-        </div>
-
-        <div className="flex flex-col gap-2 w-full">
-          <div className="flex flex-col gap-4 text-muted-foreground">
-            Hmm...
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
+// ThinkingMessage removed - now using MessageReasoning directly

@@ -17,6 +17,7 @@ type ReasoningContextValue = {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   duration: number;
+  reasoning?: string;
 };
 
 const ReasoningContext = createContext<ReasoningContextValue | null>(null);
@@ -35,6 +36,7 @@ export type ReasoningProps = ComponentProps<typeof Collapsible> & {
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   duration?: number;
+  reasoning?: string;
 };
 
 const AUTO_CLOSE_DELAY = 1000;
@@ -45,9 +47,10 @@ export const Reasoning = memo(
     className,
     isStreaming = false,
     open,
-    defaultOpen = true,
+    defaultOpen = false,
     onOpenChange,
     duration: durationProp,
+    reasoning,
     children,
     ...props
   }: ReasoningProps) => {
@@ -95,7 +98,7 @@ export const Reasoning = memo(
 
     return (
       <ReasoningContext.Provider
-        value={{ isStreaming, isOpen, setIsOpen, duration }}
+        value={{ isStreaming, isOpen, setIsOpen, duration, reasoning }}
       >
         <Collapsible
           className={cn('not-prose mb-4', className)}
@@ -114,7 +117,7 @@ export type ReasoningTriggerProps = ComponentProps<typeof CollapsibleTrigger>;
 
 export const ReasoningTrigger = memo(
   ({ className, children, ...props }: ReasoningTriggerProps) => {
-    const { isStreaming, isOpen, duration } = useReasoning();
+    const { isStreaming, isOpen, duration, reasoning } = useReasoning();
 
     return (
       <CollapsibleTrigger
@@ -126,9 +129,14 @@ export const ReasoningTrigger = memo(
       >
         {children ?? (
           <>
-            <BrainIcon className="size-4" />
+            <span className="relative flex h-2 w-2">
+              {(isStreaming || duration === 0) && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-muted-foreground opacity-75"></span>
+              )}
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-muted-foreground"></span>
+            </span>
             {isStreaming || duration === 0 ? (
-              <p>Thinking...</p>
+              <p className="truncate max-w-lg">{reasoning || 'Processing...'}</p>
             ) : (
               <p>Thought for {duration} seconds</p>
             )}
