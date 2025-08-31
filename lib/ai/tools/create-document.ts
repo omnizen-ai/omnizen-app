@@ -16,12 +16,14 @@ interface CreateDocumentProps {
 export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
   tool({
     description:
-      'Create a document for a writing or content creation activities. This tool will call other functions that will generate the contents of the document based on the title and kind.',
+      'Create a document for a writing or content creation activities. For financial reports, include data from database queries.',
     inputSchema: z.object({
       title: z.string(),
       kind: z.enum(artifactKinds),
+      instructions: z.string().optional().describe('Specific formatting instructions'),
+      data: z.any().optional().describe('Data to be formatted (for reports/sheets)'),
     }),
-    execute: async ({ title, kind }) => {
+    execute: async ({ title, kind, instructions, data }) => {
       const id = generateUUID();
 
       dataStream.write({
@@ -60,6 +62,8 @@ export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
       await documentHandler.onCreateDocument({
         id,
         title,
+        instructions,
+        data,
         dataStream,
         session,
       });

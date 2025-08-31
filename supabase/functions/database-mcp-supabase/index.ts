@@ -946,7 +946,7 @@ async function executeTool(toolName: string, args: any, supabase: any) {
         dateFilter = `invoice_date BETWEEN '${start_date}' AND '${end_date}'`
       }
       
-      let csvContent = ''
+      let reportData: any = {}
       let businessContext = '📊 Financial Report Generated\n\n'
       
       switch (report_type) {
@@ -993,25 +993,23 @@ async function executeTool(toolName: string, args: any, supabase: any) {
           const totalExpenses = expenses.reduce((sum: number, e: any) => sum + parseFloat(e.amount), 0)
           const netIncome = totalRevenue - totalExpenses
           
-          // Generate CSV
-          if (format === 'formatted_csv') {
-            csvContent = `INCOME STATEMENT\n`
-            csvContent += `For the Period: ${period === 'custom' ? `${start_date} to ${end_date}` : period}\n`
-            csvContent += `\n`
-            csvContent += `Category,Amount\n`
-            csvContent += `REVENUE,\n`
-            revenues.forEach((r: any) => {
-              csvContent += `  ${r.category},$${parseFloat(r.amount).toFixed(2)}\n`
-            })
-            csvContent += `Total Revenue,$${totalRevenue.toFixed(2)}\n`
-            csvContent += `\n`
-            csvContent += `EXPENSES,\n`
-            expenses.forEach((e: any) => {
-              csvContent += `  ${e.category},$${parseFloat(e.amount).toFixed(2)}\n`
-            })
-            csvContent += `Total Expenses,$${totalExpenses.toFixed(2)}\n`
-            csvContent += `\n`
-            csvContent += `NET INCOME,$${netIncome.toFixed(2)}\n`
+          // Return structured data instead of CSV
+          reportData = {
+            type: 'income_statement',
+            period: period === 'custom' ? `${start_date} to ${end_date}` : period,
+            revenues: revenues.map((r: any) => ({
+              category: r.category,
+              amount: parseFloat(r.amount)
+            })),
+            expenses: expenses.map((e: any) => ({
+              category: e.category,
+              amount: parseFloat(e.amount)
+            })),
+            totals: {
+              totalRevenue,
+              totalExpenses,
+              netIncome
+            }
           }
           
           businessContext += `**Income Statement Generated**\n`
@@ -1045,31 +1043,28 @@ async function executeTool(toolName: string, args: any, supabase: any) {
           const totalLiabilities = liabilities.reduce((sum: number, a: any) => sum + parseFloat(a.balance), 0)
           const totalEquity = equity.reduce((sum: number, a: any) => sum + parseFloat(a.balance), 0)
           
-          // Generate CSV
-          if (format === 'formatted_csv') {
-            csvContent = `BALANCE SHEET\n`
-            csvContent += `As of: ${new Date().toLocaleDateString()}\n`
-            csvContent += `\n`
-            csvContent += `Account,Balance\n`
-            csvContent += `ASSETS,\n`
-            assets.forEach((a: any) => {
-              csvContent += `  ${a.account_name},$${parseFloat(a.balance).toFixed(2)}\n`
-            })
-            csvContent += `Total Assets,$${totalAssets.toFixed(2)}\n`
-            csvContent += `\n`
-            csvContent += `LIABILITIES,\n`
-            liabilities.forEach((l: any) => {
-              csvContent += `  ${l.account_name},$${parseFloat(l.balance).toFixed(2)}\n`
-            })
-            csvContent += `Total Liabilities,$${totalLiabilities.toFixed(2)}\n`
-            csvContent += `\n`
-            csvContent += `EQUITY,\n`
-            equity.forEach((e: any) => {
-              csvContent += `  ${e.account_name},$${parseFloat(e.balance).toFixed(2)}\n`
-            })
-            csvContent += `Total Equity,$${totalEquity.toFixed(2)}\n`
-            csvContent += `\n`
-            csvContent += `TOTAL LIABILITIES & EQUITY,$${(totalLiabilities + totalEquity).toFixed(2)}\n`
+          // Return structured data instead of CSV
+          reportData = {
+            type: 'balance_sheet',
+            asOfDate: new Date().toLocaleDateString(),
+            assets: assets.map((a: any) => ({
+              account_name: a.account_name,
+              balance: parseFloat(a.balance)
+            })),
+            liabilities: liabilities.map((l: any) => ({
+              account_name: l.account_name,
+              balance: parseFloat(l.balance)
+            })),
+            equity: equity.map((e: any) => ({
+              account_name: e.account_name,
+              balance: parseFloat(e.balance)
+            })),
+            totals: {
+              totalAssets,
+              totalLiabilities,
+              totalEquity,
+              totalLiabilitiesAndEquity: totalLiabilities + totalEquity
+            }
           }
           
           businessContext += `**Balance Sheet Generated**\n`
@@ -1120,23 +1115,32 @@ async function executeTool(toolName: string, args: any, supabase: any) {
             customerAging[inv.company_name][inv.aging_bucket] += parseFloat(inv.balance)
           })
           
-          // Generate CSV
-          if (format === 'formatted_csv') {
-            csvContent = `ACCOUNTS RECEIVABLE AGING REPORT\n`
-            csvContent += `As of: ${new Date().toLocaleDateString()}\n`
-            csvContent += `\n`
-            csvContent += `Customer,Current,1-30 Days,31-60 Days,61-90 Days,90+ Days,Total\n`
-            
-            Object.entries(customerAging).forEach(([customer, buckets]) => {
-              const total = Object.values(buckets).reduce((sum, val) => sum + val, 0)
-              csvContent += `${customer},`
-              csvContent += `$${buckets['Current'].toFixed(2)},`
-              csvContent += `$${buckets['1-30 Days'].toFixed(2)},`
-              csvContent += `$${buckets['31-60 Days'].toFixed(2)},`
-              csvContent += `$${buckets['61-90 Days'].toFixed(2)},`
-              csvContent += `$${buckets['90+ Days'].toFixed(2)},`
-              csvContent += `$${total.toFixed(2)}\n`
-            })
+          // Return structured data instead of CSV
+          const agingData = Object.entries(customerAging).map(([customer, buckets]) => {
+            const total = Object.values(buckets).reduce((sum, val) => sum + val, 0)
+            return {
+              customer,
+              current: buckets['Current'],
+              days_1_30: buckets['1-30 Days'],
+              days_31_60: buckets['31-60 Days'],
+              days_61_90: buckets['61-90 Days'],
+              days_90_plus: buckets['90+ Days'],
+              total
+            }
+          })
+          
+          reportData = {
+            type: 'aging_report',
+            asOfDate: new Date().toLocaleDateString(),
+            customers: agingData,
+            invoices: invoices.map((inv: any) => ({
+              company_name: inv.company_name,
+              invoice_number: inv.invoice_number,
+              invoice_date: inv.invoice_date,
+              due_date: inv.due_date,
+              balance: parseFloat(inv.balance),
+              aging_bucket: inv.aging_bucket
+            }))
           }
           
           const totalAR = invoices.reduce((sum: number, inv: any) => sum + parseFloat(inv.balance), 0)
@@ -1152,7 +1156,7 @@ async function executeTool(toolName: string, args: any, supabase: any) {
       
       const result = {
         businessContext,
-        csvContent,
+        data: reportData, // Return structured data instead of CSV
         reportType: report_type,
         period,
         generatedAt: new Date().toISOString(),

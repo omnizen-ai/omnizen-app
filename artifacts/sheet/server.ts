@@ -6,15 +6,32 @@ import { z } from 'zod';
 
 export const sheetDocumentHandler = createDocumentHandler<'sheet'>({
   kind: 'sheet',
-  onCreateDocument: async ({ title, dataStream }) => {
+  onCreateDocument: async ({ title, instructions, data, dataStream }) => {
     let draftContent = '';
 
+    // Sheet artifacts REQUIRE data - no generation without data
+    if (!data) {
+      // Inform the user that data is required
+      const errorMessage = 'Error: Sheet artifact requires data to be provided. Please fetch the data first using appropriate database tools.';
+      
+      dataStream.write({
+        type: 'data-sheetDelta',
+        data: errorMessage,
+        transient: true,
+      });
+      
+      return errorMessage;
+    }
+
+    // Use AI to format the provided data into a professional spreadsheet
     const { fullStream } = streamObject({
       model: myProvider.languageModel('artifact-model'),
       system: sheetPrompt,
-      prompt: title,
+      prompt: `Title: ${title}
+Instructions: ${instructions || 'Format this data into a professional spreadsheet'}
+Data: ${JSON.stringify(data)}`,
       schema: z.object({
-        csv: z.string().describe('CSV data'),
+        csv: z.string().describe('CSV formatted data'),
       }),
     });
 
@@ -48,6 +65,7 @@ export const sheetDocumentHandler = createDocumentHandler<'sheet'>({
   onUpdateDocument: async ({ document, description, dataStream }) => {
     let draftContent = '';
 
+    // For updates, work with existing content
     const { fullStream } = streamObject({
       model: myProvider.languageModel('artifact-model'),
       system: updateDocumentPrompt(document.content, 'sheet'),
