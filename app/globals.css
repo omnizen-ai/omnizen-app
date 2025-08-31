@@ -42,7 +42,7 @@
         --destructive: 0 84.2% 60.2%;
         --destructive-foreground: 0 0% 98%;
         --border: 30 15% 80%; /* Beige borders #dfd6cc */
-        --input: 30 20% 88%; /* Darker beige input for better contrast #ede6df */
+        --input: 30 18% 84%; /* Even darker beige input for more contrast #e0d7cd */
         --ring: 30 25% 35%; /* Dark beige focus ring */
         --chart-1: 30 25% 35%;
         --chart-2: 173 58% 39%;
