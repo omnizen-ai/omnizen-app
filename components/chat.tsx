@@ -2,7 +2,7 @@
 
 import { DefaultChatTransport } from 'ai';
 import { useChat } from '@ai-sdk/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 import { ChatHeader } from '@/components/chat-header';
 import type { Vote } from '@/lib/db/schema';
@@ -23,6 +23,70 @@ import { ChatSDKError } from '@/lib/errors';
 import type { Attachment, ChatMessage, CustomUIDataTypes } from '@/lib/types';
 import type { DataUIPart } from 'ai';
 import { useDataStream } from './data-stream-provider';
+
+// Streaming greeting component
+function StreamingGreeting({ session }: { session: Session | null }) {
+  const [displayedText, setDisplayedText] = useState('');
+  
+  const fullText = useMemo(() => {
+    // Get greeting based on user session and day (consistent per day)
+    const firstName = session?.user?.name?.split(' ')[0];
+    const day = new Date().getDate();
+    
+    // Use day as seed for consistent daily greeting
+    const greetings = firstName 
+      ? [`Hey ${firstName}`, `Hi ${firstName}`, `Morning ${firstName}`, `Afternoon ${firstName}`, firstName]
+      : ['Hey boss', 'Hey partner', 'Boss', 'Chief', 'Captain', 'Hey there', 'Morning boss'];
+    const greetingIndex = day % greetings.length;
+    const greeting = greetings[greetingIndex];
+    
+    // Get question based on day of month
+    let question = '';
+    if (day <= 5) question = "how's the cash flow looking?";
+    else if (day <= 10) question = "time to review last month's numbers?";
+    else if (day <= 15) question = "need to check on pending invoices?";
+    else if (day <= 20) question = "how's the team performance this month?";
+    else if (day <= 25) question = "ready to prep for month-end close?";
+    else question = "time to close the books?";
+    
+    return `${greeting}! ${question}`;
+  }, [session]);
+
+  useEffect(() => {
+    let currentIndex = 0;
+    const interval = setInterval(() => {
+      if (currentIndex <= fullText.length) {
+        setDisplayedText(fullText.slice(0, currentIndex));
+        currentIndex++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 30); // Typing speed in milliseconds
+
+    return () => clearInterval(interval);
+  }, [fullText]);
+
+  // Split the text to apply styling to greeting part
+  const greetingEnd = displayedText.indexOf('!') + 1;
+  const hasGreeting = greetingEnd > 0;
+  
+  return (
+    <p className="text-2xl text-zinc-600">
+      {hasGreeting ? (
+        <>
+          <span className="font-medium text-amber-700/70 dark:text-amber-200/80">
+            {displayedText.slice(0, greetingEnd)}
+          </span>
+          <span>{displayedText.slice(greetingEnd)}</span>
+        </>
+      ) : (
+        <span className="font-medium text-amber-700/70 dark:text-amber-200/80">
+          {displayedText}
+        </span>
+      )}
+    </p>
+  );
+}
 
 export function Chat({
   id,
@@ -141,9 +205,8 @@ export function Chat({
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center">
             <div className="w-full max-w-3xl px-4">
-              <div className="text-center mb-8">
-                <h1 className="text-2xl font-semibold mb-2">Hello there!</h1>
-                <p className="text-2xl text-zinc-500">How can I help you today?</p>
+              <div className="text-left mb-8">
+                <StreamingGreeting session={session} />
               </div>
               {!isReadonly && (
                 <MultimodalInput

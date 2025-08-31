@@ -15,6 +15,8 @@ import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
+import { Share2Icon } from '@radix-ui/react-icons';
+import { SquareIcon } from 'lucide-react';
 import { PreviewAttachment } from './preview-attachment';
 import { Button } from './ui/button';
 import { SuggestedActions } from './suggested-actions';
@@ -317,18 +319,21 @@ function PureMultimodalInput({
         />
         <PromptInputToolbar className="px-2 py-1 border-t-0">
           <PromptInputTools className="gap-2">
-            <AttachmentsButton fileInputRef={fileInputRef} status={status} />
+            {/* Empty left side */}
           </PromptInputTools>
-          {status === 'submitted' ? (
-            <StopButton stop={stop} setMessages={setMessages} />
-          ) : (
-            <PromptInputSubmit
-              status={status}
-              disabled={!input.trim() || uploadQueue.length > 0}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground size-8"
-              size="sm"
-            />
-          )}
+          <div className="flex items-center gap-1">
+            <AttachmentsButton fileInputRef={fileInputRef} status={status} />
+            {status === 'submitted' || status === 'streaming' ? (
+              <StopButton stop={stop} setMessages={setMessages} />
+            ) : (
+              <PromptInputSubmit
+                status={status}
+                disabled={!input.trim() || uploadQueue.length > 0}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground size-8"
+                size="sm"
+              />
+            )}
+          </div>
         </PromptInputToolbar>
       </PromptInput>
     </div>
@@ -358,15 +363,15 @@ function PureAttachmentsButton({
   return (
     <Button
       data-testid="attachments-button"
-      className="rounded-md rounded-bl-lg p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200"
+      className="bg-primary hover:bg-primary/90 text-primary-foreground size-8"
       onClick={(event) => {
         event.preventDefault();
         fileInputRef.current?.click();
       }}
       disabled={status !== 'ready'}
-      variant="ghost"
+      size="sm"
     >
-      <PaperclipIcon size={14} />
+      <Share2Icon className="size-4" />
     </Button>
   );
 }
@@ -383,14 +388,15 @@ function PureStopButton({
   return (
     <Button
       data-testid="stop-button"
-      className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
+      className="bg-destructive hover:bg-destructive/90 text-destructive-foreground size-8"
       onClick={(event) => {
         event.preventDefault();
         stop();
         setMessages((messages) => messages);
       }}
+      size="sm"
     >
-      <StopIcon size={14} />
+      <SquareIcon className="size-3" />
     </Button>
   );
 }
