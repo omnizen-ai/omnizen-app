@@ -52,23 +52,38 @@ const actionCategories: ActionCategory[] = [
     icon: <TrendingUp className="h-4 w-4" />,
     actions: [
       { 
-        label: 'Revenue Report', 
-        prompt: 'Show me a detailed revenue report for the current period',
+        label: 'What were my top selling products last month?', 
+        prompt: 'What were my top selling products last month and which categories performed best?',
         icon: <ChartBar className="h-4 w-4" />
       },
       { 
-        label: 'Customer Insights', 
-        prompt: 'Analyze my customer data and provide key insights',
+        label: 'Which customers generated the most revenue this quarter?', 
+        prompt: 'Which customers generated the most revenue this quarter and what is their average order value?',
         icon: <Users className="h-4 w-4" />
       },
       { 
-        label: 'Performance Metrics', 
-        prompt: 'Display key performance metrics and KPIs',
+        label: 'How is my revenue trending compared to last year?', 
+        prompt: 'How is my revenue trending compared to the same period last year?',
         icon: <TrendingUp className="h-4 w-4" />
       },
       { 
-        label: 'Trend Analysis', 
-        prompt: 'Analyze business trends and patterns over time',
+        label: 'What is my customer retention rate?', 
+        prompt: 'What is my customer retention rate and churn rate over the past 6 months?',
+        icon: <Users className="h-4 w-4" />
+      },
+      {
+        label: 'Which marketing channels drive the most conversions?',
+        prompt: 'Which marketing channels are driving the most conversions and what is the ROI for each?',
+        icon: <TrendingUp className="h-4 w-4" />
+      },
+      {
+        label: 'What is my average customer lifetime value?',
+        prompt: 'What is my average customer lifetime value and how has it changed over time?',
+        icon: <Calculator className="h-4 w-4" />
+      },
+      {
+        label: 'Show me hourly sales patterns for optimization',
+        prompt: 'Show me hourly and daily sales patterns to identify peak business hours for staffing optimization',
         icon: <FileText className="h-4 w-4" />
       },
     ],
@@ -79,29 +94,39 @@ const actionCategories: ActionCategory[] = [
     icon: <DollarSign className="h-4 w-4" />,
     actions: [
       { 
-        label: 'Cash Flow Analysis', 
-        prompt: 'Analyze cash flow for the current quarter',
+        label: 'What is my current cash position and runway?', 
+        prompt: 'What is my current daily cash position and how many months of runway do I have at current burn rate?',
         icon: <Calculator className="h-4 w-4" />
       },
       { 
-        label: 'Invoice Management', 
-        prompt: 'Show all pending invoices and their status',
+        label: 'Create an invoice for a new client', 
+        prompt: 'Create a professional invoice for ',
         icon: <CreditCard className="h-4 w-4" />
       },
       { 
-        label: 'Budget Planning', 
-        prompt: 'Help me plan and optimize my budget',
-        icon: <PiggyBank className="h-4 w-4" />
-      },
-      { 
-        label: 'Expense Tracking', 
-        prompt: 'Track and categorize business expenses',
+        label: 'Which invoices are overdue for collection?', 
+        prompt: 'Which invoices are overdue and what is the total amount pending collection?',
         icon: <Receipt className="h-4 w-4" />
       },
+      { 
+        label: 'What are my biggest expense categories this month?', 
+        prompt: 'What are my biggest expense categories this month and how do they compare to budget?',
+        icon: <PiggyBank className="h-4 w-4" />
+      },
       {
-        label: 'Financial Summary',
-        prompt: 'Provide a comprehensive financial summary',
+        label: 'Calculate my gross profit margin',
+        prompt: 'Calculate my gross profit margin and net profit margin for this quarter',
+        icon: <Calculator className="h-4 w-4" />
+      },
+      {
+        label: 'How much should I save for quarterly taxes?',
+        prompt: 'How much should I save for quarterly tax payments based on current revenue?',
         icon: <Wallet className="h-4 w-4" />
+      },
+      {
+        label: 'Create a financial forecast for next quarter',
+        prompt: 'Create a financial forecast for next quarter based on current trends and seasonality',
+        icon: <TrendingUp className="h-4 w-4" />
       },
     ],
   },
@@ -111,24 +136,39 @@ const actionCategories: ActionCategory[] = [
     icon: <Settings className="h-4 w-4" />,
     actions: [
       { 
-        label: 'Inventory Status', 
-        prompt: 'Check current inventory levels and alerts',
+        label: 'Which products are running low on inventory?', 
+        prompt: 'Which products are running low on inventory and need to be reordered?',
         icon: <Package className="h-4 w-4" />
       },
       { 
-        label: 'Task Management', 
-        prompt: 'Show all active tasks and their priorities',
+        label: 'Create a task for team member', 
+        prompt: 'Create a new task: ',
         icon: <CheckSquare className="h-4 w-4" />
       },
       { 
-        label: 'Process Optimization', 
-        prompt: 'Identify areas for process improvement',
-        icon: <Cpu className="h-4 w-4" />
+        label: 'What is my inventory turnover rate?', 
+        prompt: 'What is my inventory turnover rate and which products are moving slowly?',
+        icon: <Package className="h-4 w-4" />
       },
       { 
-        label: 'Resource Allocation', 
-        prompt: 'Analyze and optimize resource allocation',
+        label: 'Show me productivity metrics by department', 
+        prompt: 'Show me productivity metrics by department and identify any bottlenecks',
+        icon: <Cpu className="h-4 w-4" />
+      },
+      {
+        label: 'Which suppliers have the best delivery performance?',
+        prompt: 'Which suppliers have the best on-time delivery performance and pricing?',
         icon: <UserCheck className="h-4 w-4" />
+      },
+      {
+        label: 'Calculate optimal reorder points for products',
+        prompt: 'Calculate optimal reorder points for my top products based on sales velocity',
+        icon: <Calculator className="h-4 w-4" />
+      },
+      {
+        label: 'Create a project timeline for new initiative',
+        prompt: 'Create a project timeline with milestones for ',
+        icon: <Calendar className="h-4 w-4" />
       },
     ],
   },
@@ -138,24 +178,39 @@ const actionCategories: ActionCategory[] = [
     icon: <ClipboardList className="h-4 w-4" />,
     actions: [
       { 
-        label: 'Goal Setting', 
-        prompt: 'Help me set and track business goals',
+        label: 'Create quarterly goals with KPIs', 
+        prompt: 'Create SMART goals for next quarter with specific KPIs to track',
         icon: <Target className="h-4 w-4" />
       },
       { 
-        label: 'Forecasting', 
-        prompt: 'Generate business forecasts based on current data',
-        icon: <Calendar className="h-4 w-4" />
+        label: 'What should be my revenue target next month?', 
+        prompt: 'What should be my revenue target for next month based on historical growth and seasonality?',
+        icon: <TrendingUp className="h-4 w-4" />
       },
       { 
-        label: 'Risk Assessment', 
-        prompt: 'Identify and assess business risks',
+        label: 'Build a hiring plan for scaling', 
+        prompt: 'Build a hiring plan for the next 6 months based on projected growth',
+        icon: <Users className="h-4 w-4" />
+      },
+      { 
+        label: 'What are my biggest business risks right now?', 
+        prompt: 'What are my biggest business risks and how can I mitigate them?',
         icon: <AlertTriangle className="h-4 w-4" />
       },
-      { 
-        label: 'Strategy Development', 
-        prompt: 'Develop strategic plans for business growth',
+      {
+        label: 'Create a marketing campaign strategy',
+        prompt: 'Create a marketing campaign strategy for ',
         icon: <Lightbulb className="h-4 w-4" />
+      },
+      {
+        label: 'How much funding do I need for expansion?',
+        prompt: 'How much funding do I need for expansion and what are my best financing options?',
+        icon: <Calculator className="h-4 w-4" />
+      },
+      {
+        label: 'Develop a customer acquisition strategy',
+        prompt: 'Develop a customer acquisition strategy to reduce CAC and increase CLV',
+        icon: <Users className="h-4 w-4" />
       },
     ],
   },
