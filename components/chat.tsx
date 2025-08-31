@@ -138,34 +138,62 @@ export function Chat({
           session={session}
         />
 
-        <Messages
-          chatId={id}
-          status={status}
-          votes={votes}
-          messages={messages}
-          setMessages={setMessages}
-          regenerate={regenerate}
-          isReadonly={isReadonly}
-          isArtifactVisible={isArtifactVisible}
-        />
-
-        <div className="sticky bottom-0 flex gap-2 px-4 pb-4 mx-auto w-full bg-background md:pb-6 md:max-w-3xl z-[1] border-t-0">
-          {!isReadonly && (
-            <MultimodalInput
+        {messages.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <div className="w-full max-w-3xl px-4">
+              <div className="text-center mb-8">
+                <h1 className="text-2xl font-semibold mb-2">Hello there!</h1>
+                <p className="text-2xl text-zinc-500">How can I help you today?</p>
+              </div>
+              {!isReadonly && (
+                <MultimodalInput
+                  chatId={id}
+                  input={input}
+                  setInput={setInput}
+                  status={status}
+                  stop={stop}
+                  attachments={attachments}
+                  setAttachments={setAttachments}
+                  messages={messages}
+                  setMessages={setMessages}
+                  sendMessage={sendMessage}
+                  selectedVisibilityType={visibilityType}
+                />
+              )}
+            </div>
+          </div>
+        ) : (
+          <>
+            <Messages
               chatId={id}
-              input={input}
-              setInput={setInput}
               status={status}
-              stop={stop}
-              attachments={attachments}
-              setAttachments={setAttachments}
+              votes={votes}
               messages={messages}
               setMessages={setMessages}
-              sendMessage={sendMessage}
-              selectedVisibilityType={visibilityType}
+              regenerate={regenerate}
+              isReadonly={isReadonly}
+              isArtifactVisible={isArtifactVisible}
             />
-          )}
-        </div>
+
+            <div className="sticky bottom-0 flex gap-2 px-4 pb-4 mx-auto w-full bg-background md:pb-6 md:max-w-3xl z-[1] border-t-0">
+              {!isReadonly && (
+                <MultimodalInput
+                  chatId={id}
+                  input={input}
+                  setInput={setInput}
+                  status={status}
+                  stop={stop}
+                  attachments={attachments}
+                  setAttachments={setAttachments}
+                  messages={messages}
+                  setMessages={setMessages}
+                  sendMessage={sendMessage}
+                  selectedVisibilityType={visibilityType}
+                />
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       <Artifact

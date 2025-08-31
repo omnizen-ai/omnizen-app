@@ -213,7 +213,7 @@ function PureMultimodalInput({
   return (
     <div className="flex relative flex-col gap-4 w-full">
       <AnimatePresence>
-        {!isAtBottom && (
+        {!isAtBottom && messages.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -257,7 +257,7 @@ function PureMultimodalInput({
       />
 
       <PromptInput
-        className="border border-transparent shadow-lg transition-all duration-200 shadow-black/10 hover:border-primary/20 focus-within:border-primary/30 focus-within:shadow-xl focus-within:shadow-primary/20"
+        className="border-2 border-border/50 rounded-3xl shadow-sm transition-all duration-200 hover:border-border focus-within:border-muted-foreground/50"
         onSubmit={(event) => {
           event.preventDefault();
           if (status !== 'ready') {
@@ -307,15 +307,15 @@ function PureMultimodalInput({
           placeholder="Send a message..."
           value={input}
           onChange={handleInput}
-          minHeight={48}
-          maxHeight={48}
+          minHeight={80}
+          maxHeight={80}
           disableAutoResize={true}
-          style={{ height: '48px', minHeight: '48px', maxHeight: '48px' }}
-          className="text-sm resize-none py-1 px-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          style={{ height: '80px', minHeight: '80px', maxHeight: '80px' }}
+          className="text-sm resize-none border-b-0 focus:border-0 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
           rows={1}
           autoFocus
         />
-        <PromptInputToolbar className="px-2 py-1">
+        <PromptInputToolbar className="px-2 py-1 border-t-0">
           <PromptInputTools className="gap-2">
             <AttachmentsButton fileInputRef={fileInputRef} status={status} />
           </PromptInputTools>
