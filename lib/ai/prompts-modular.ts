@@ -23,7 +23,7 @@ OUTPUT FORMAT:
 TOOLS: Use db_* for data ops. Format numbers with \$, use commas.`;
 
 // ============================================
-// SQL PATTERNS WITH SCHEMA AWARENESS (400 tokens)
+// SQL PATTERNS WITH QUERY INTELLIGENCE (450 tokens)
 // ============================================
 export const sqlPatterns = `
 SCHEMA RULES:
@@ -31,13 +31,21 @@ SCHEMA RULES:
 - Vendors: FROM contacts WHERE contact_type='vendor' (NOT "vendors" table)
 - Use company_name NOT "name", total_amount NOT "invoice_amount"
 - Status values MUST be quoted: status='paid' NOT status=paid
-- Dates: DATE_TRUNC('month', field) for period queries
+
+INTELLIGENT QUERY STRATEGY:
+1. When user mentions company name for invoices:
+   - FIRST: Find customer ID: SELECT id FROM contacts WHERE company_name ILIKE '%name%'
+   - THEN: Query invoices with that contact_id
+   - ALWAYS JOIN contacts to show company_name
+
+2. Use ILIKE for fuzzy matching: company_name ILIKE '%Acme%'
+3. Calculate balances: (total_amount - paid_amount) as balance_due
+4. Include customer info in all invoice queries
 
 VERIFIED TEMPLATES:
-- Revenue: SELECT SUM(total_amount) FROM invoices WHERE status='paid' AND DATE_TRUNC('month', invoice_date) = DATE_TRUNC('month', CURRENT_DATE)
-- Customers: SELECT * FROM contacts WHERE contact_type='customer' ORDER BY company_name
-- Overdue: SELECT i.*, c.company_name FROM invoices i JOIN contacts c ON i.contact_id=c.id WHERE due_date < CURRENT_DATE AND status!='paid'
-- Expenses: SELECT ca.account_name, SUM(e.amount) FROM expenses e JOIN chart_of_accounts ca ON e.category_account_id=ca.id GROUP BY ca.account_name
+- Find Customer: SELECT id, company_name FROM contacts WHERE contact_type='customer' AND company_name ILIKE ?
+- Customer Invoices: SELECT i.*, c.company_name FROM invoices i JOIN contacts c ON i.contact_id=c.id WHERE i.contact_id=?
+- Overdue: SELECT i.*, c.company_name, (i.total_amount - i.paid_amount) as balance_due FROM invoices i JOIN contacts c ON i.contact_id=c.id WHERE due_date < CURRENT_DATE AND status!='paid'
 `;
 
 // ============================================
