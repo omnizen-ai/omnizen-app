@@ -681,12 +681,11 @@ async function handleJsonRpc(
             // Start with business context message
             formattedText = `${toolResult.businessContext}`
             
-            // Check if this is a financial report with CSV content
-            if (toolResult._sheet_ready && toolResult.csvContent) {
-              // Add the CSV content as a formatted block for sheet creation
-              formattedText += '\n\n**Report Data (CSV Format):**\n```csv\n'
-              formattedText += toolResult.csvContent
-              formattedText += '\n```'
+            // Check if this is a financial report with structured data
+            if (toolResult._sheet_ready && toolResult.data) {
+              // Return the raw data for the main agent to pass to sheet handler
+              // The data will be available in toolResult for the agent to use
+              formattedText += '\n\n**Report data has been generated and is ready for sheet creation.**'
             } else if (toolResult.metrics) {
               // Business metrics tool already formats everything in businessContext
               // No need to add more formatting
@@ -755,13 +754,33 @@ async function handleJsonRpc(
           }
           
           // Convert tool result to MCP standard format with content array
-          response.result = {
-            content: [
-              {
-                type: 'text',
-                text: formattedText
+          // For financial reports, include the structured data
+          if (toolResult._sheet_ready && toolResult.data) {
+            response.result = {
+              content: [
+                {
+                  type: 'text',
+                  text: formattedText
+                }
+              ],
+              // Include the raw data for the agent to use
+              data: toolResult.data,
+              metadata: {
+                reportType: toolResult.reportType,
+                period: toolResult.period,
+                generatedAt: toolResult.generatedAt,
+                _sheet_ready: true
               }
-            ]
+            }
+          } else {
+            response.result = {
+              content: [
+                {
+                  type: 'text',
+                  text: formattedText
+                }
+              ]
+            }
           }
           
           // End tool span successfully
@@ -1116,7 +1135,7 @@ async function executeTool(toolName: string, args: any, supabase: any) {
           })
           
           // Return structured data instead of CSV
-          const agingData = Object.entries(customerAging).map(([customer, buckets]) => {
+          const customersAgingData = Object.entries(customerAging).map(([customer, buckets]) => {
             const total = Object.values(buckets).reduce((sum, val) => sum + val, 0)
             return {
               customer,
@@ -1132,7 +1151,7 @@ async function executeTool(toolName: string, args: any, supabase: any) {
           reportData = {
             type: 'aging_report',
             asOfDate: new Date().toLocaleDateString(),
-            customers: agingData,
+            customers: customersAgingData,
             invoices: invoices.map((inv: any) => ({
               company_name: inv.company_name,
               invoice_number: inv.invoice_number,
