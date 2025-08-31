@@ -7,7 +7,6 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
-import { BrainIcon, ChevronDownIcon } from 'lucide-react';
 import type { ComponentProps } from 'react';
 import { createContext, memo, useContext, useEffect, useState } from 'react';
 import { Response } from './response';
@@ -101,7 +100,7 @@ export const Reasoning = memo(
         value={{ isStreaming, isOpen, setIsOpen, duration, reasoning }}
       >
         <Collapsible
-          className={cn('not-prose mb-4', className)}
+          className={cn('not-prose mb-0.5', className)}
           onOpenChange={handleOpenChange}
           open={isOpen}
           {...props}
@@ -140,12 +139,6 @@ export const ReasoningTrigger = memo(
             ) : (
               <p>Thought for {duration} seconds</p>
             )}
-            <ChevronDownIcon
-              className={cn(
-                'size-4 text-muted-foreground transition-transform',
-                isOpen ? 'rotate-180' : 'rotate-0',
-              )}
-            />
           </>
         )}
       </CollapsibleTrigger>

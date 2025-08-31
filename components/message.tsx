@@ -163,6 +163,7 @@ const PurePreviewMessage = ({
                                   'bg-primary text-primary-foreground':
                                     message.role === 'user',
                                   'bg-transparent': message.role === 'assistant',
+                                  'pt-0': message.role === 'assistant' && reasoningParts && reasoningParts.length > 0,
                                 })}
                               >
                                 <Response>{sanitizeText(part.text)}</Response>
