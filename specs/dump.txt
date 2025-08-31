@@ -1,0 +1,3 @@
+evaluate the busiess schema for omnizen, its a saas, for individual and business -> individual will use    │
+│   the agent for their daily personal finance needs and advice, like expense tracking, utility bills,         │
+│   financial planning like investments, savings, goals  
