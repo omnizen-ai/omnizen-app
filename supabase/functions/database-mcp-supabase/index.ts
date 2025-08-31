@@ -754,23 +754,18 @@ async function handleJsonRpc(
           }
           
           // Convert tool result to MCP standard format with content array
-          // For financial reports, include the structured data
+          // For financial reports, include the structured data in the text
           if (toolResult._sheet_ready && toolResult.data) {
+            // Include the data as JSON in the text response so the AI can parse it
+            const dataText = `${formattedText}\n\n<report_data>\n${JSON.stringify(toolResult.data, null, 2)}\n</report_data>`;
+            
             response.result = {
               content: [
                 {
                   type: 'text',
-                  text: formattedText
+                  text: dataText
                 }
-              ],
-              // Include the raw data for the agent to use
-              data: toolResult.data,
-              metadata: {
-                reportType: toolResult.reportType,
-                period: toolResult.period,
-                generatedAt: toolResult.generatedAt,
-                _sheet_ready: true
-              }
+              ]
             }
           } else {
             response.result = {
