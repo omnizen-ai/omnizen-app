@@ -8,6 +8,7 @@ import {
 } from 'ai';
 import { auth, type UserType } from '@/app/(auth)/auth';
 import { type RequestHints, systemPrompt } from '@/lib/ai/prompts';
+import { buildOptimizedPrompt, classifyQuery, estimateTokens } from '@/lib/ai/prompts-modular';
 import {
   createStreamId,
   deleteChatById,
@@ -196,6 +197,26 @@ async function handleChatMessage(request: Request) {
     
     const businessKeywords = ['customer', 'invoice', 'revenue', 'expense', 'payment', 'product', 'inventory', 'account', 'business', 'sales', 'purchase', 'vendor', 'profit', 'cash', 'financial'];
     const isBusinessQuery = businessKeywords.some(keyword => messageText.includes(keyword)) || hasBusinessTools;
+    
+    // Use modular prompt system for token optimization
+    const useModularPrompts = true; // Feature flag for gradual rollout
+    let optimizedSystemPrompt: string;
+    
+    if (useModularPrompts) {
+      // Classify query and build optimized prompt
+      const promptConfig = classifyQuery(messageText);
+      optimizedSystemPrompt = buildOptimizedPrompt(promptConfig);
+      
+      // Log token savings for monitoring
+      const originalTokens = estimateTokens(systemPrompt({ selectedChatModel, requestHints, useOmniMode: isBusinessQuery }));
+      const optimizedTokens = estimateTokens(optimizedSystemPrompt);
+      const savings = Math.round((1 - optimizedTokens / originalTokens) * 100);
+      
+      console.log(`[Token Optimization] Query type: ${promptConfig.queryType}, Tokens: ${optimizedTokens} (saved ${savings}%)`);
+    } else {
+      // Fallback to original prompt
+      optimizedSystemPrompt = systemPrompt({ selectedChatModel, requestHints, useOmniMode: isBusinessQuery });
+    }
 
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {
@@ -216,11 +237,7 @@ async function handleChatMessage(request: Request) {
 
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
-          system: systemPrompt({ 
-            selectedChatModel, 
-            requestHints,
-            useOmniMode: isBusinessQuery // Enable Omni mode for business queries
-          }),
+          system: optimizedSystemPrompt, // Use optimized prompt for token savings
           messages: convertToModelMessages(uiMessages),
           // Enable multi-step tool calling (up to 5 steps)
           stopWhen: stepCountIs(25),
