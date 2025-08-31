@@ -683,9 +683,8 @@ async function handleJsonRpc(
             
             // Check if this is a financial report with structured data
             if (toolResult._sheet_ready && toolResult.data) {
-              // Return the raw data for the main agent to pass to sheet handler
-              // The data will be available in toolResult for the agent to use
-              formattedText += '\n\n**Report data has been generated and is ready for sheet creation.**'
+              // Just indicate that raw data is available - AI will format it
+              formattedText += '\n\n**Report data generated successfully.**'
             } else if (toolResult.metrics) {
               // Business metrics tool already formats everything in businessContext
               // No need to add more formatting

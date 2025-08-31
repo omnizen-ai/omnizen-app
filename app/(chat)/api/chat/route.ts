@@ -201,15 +201,16 @@ async function handleChatMessage(request: Request) {
       execute: ({ writer: dataStream }) => {
         // Only include necessary tools
         const allTools = {
-          createDocument: createDocument({ session, dataStream }),
-          updateDocument: updateDocument({ session, dataStream }),
+          // Temporarily disable document tools to focus on text formatting
+          // createDocument: createDocument({ session, dataStream }),
+          // updateDocument: updateDocument({ session, dataStream }),
           ...mcpTools, // Add MCP tools (database operations)
         };
 
         // Combine tool names - removed weather and suggestions
         const allToolNames = [
-          'createDocument',
-          'updateDocument',
+          // 'createDocument',
+          // 'updateDocument',
           ...mcpToolNames, // Add MCP tool names
         ];
 
