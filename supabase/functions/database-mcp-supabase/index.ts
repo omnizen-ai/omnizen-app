@@ -30,7 +30,7 @@ const LANGFUSE_CONFIG = {
   publicKey: Deno.env.get('LANGFUSE_PUBLIC_KEY') || '',
   secretKey: Deno.env.get('LANGFUSE_SECRET_KEY') || '',
   baseUrl: Deno.env.get('LANGFUSE_BASEURL') || 'http://localhost:3000',
-  enabled: !!(Deno.env.get('LANGFUSE_PUBLIC_KEY') && Deno.env.get('LANGFUSE_SECRET_KEY')),
+  enabled: false, // Disabled for local development
 }
 
 // Initialize OpenTelemetry provider and exporter
@@ -234,6 +234,41 @@ const tools = [
     },
   },
   {
+    name: 'generate_financial_report',
+    description: 'Generate professional financial reports in CSV format. REQUIRED: Output "Generating financial report..." BEFORE invoking. Returns formatted CSV data ready for spreadsheet display.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        report_type: {
+          type: 'string',
+          enum: ['income_statement', 'balance_sheet', 'cash_flow', 'trial_balance', 'aging_report', 'budget_vs_actual', 'customer_statement', 'vendor_summary'],
+          description: 'Type of financial report to generate'
+        },
+        period: {
+          type: 'string',
+          enum: ['month', 'quarter', 'year', 'custom'],
+          default: 'month',
+          description: 'Reporting period'
+        },
+        start_date: {
+          type: 'string',
+          description: 'Start date for custom period (YYYY-MM-DD)'
+        },
+        end_date: {
+          type: 'string',
+          description: 'End date for custom period (YYYY-MM-DD)'
+        },
+        format: {
+          type: 'string',
+          enum: ['csv', 'formatted_csv'],
+          default: 'formatted_csv',
+          description: 'Output format - formatted includes headers and subtotals'
+        }
+      },
+      required: ['report_type'],
+    },
+  },
+  {
     name: 'list_tables',
     description: 'List available data. REQUIRED: Output "Checking available business information..." BEFORE invoking. NEVER mention tables or database structure.',
     inputSchema: {
@@ -344,9 +379,13 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Get Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    // Get Supabase client - use kong:8000 for internal Docker network communication
+    // Kong is the API gateway that routes requests to the appropriate services
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'http://kong:8000'
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || 
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU'
+    
+    console.log('[Database] Connecting to:', supabaseUrl)
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // Check Accept header for content type negotiation
@@ -640,12 +679,22 @@ async function handleJsonRpc(
           
           if (toolResult.businessContext) {
             // Start with business context message
-            formattedText = `${toolResult.businessContext}\n\n`
+            formattedText = `${toolResult.businessContext}`
             
-            // Format the data in a user-friendly way
-            const dataRows = toolResult.rows || toolResult.data || []
-            
-            if (dataRows.length > 0) {
+            // Check if this is a financial report with CSV content
+            if (toolResult._sheet_ready && toolResult.csvContent) {
+              // Add the CSV content as a formatted block for sheet creation
+              formattedText += '\n\n**Report Data (CSV Format):**\n```csv\n'
+              formattedText += toolResult.csvContent
+              formattedText += '\n```'
+            } else if (toolResult.metrics) {
+              // Business metrics tool already formats everything in businessContext
+              // No need to add more formatting
+            } else {
+              // Format the data in a user-friendly way for other tools
+              const dataRows = toolResult.rows || toolResult.data || []
+              
+              if (dataRows.length > 0) {
               // Don't show raw JSON, format it nicely
               
               // Check if it's a simple count query
@@ -686,8 +735,9 @@ async function handleJsonRpc(
                   formattedText += '\n```\n</details>'
                 }
               }
-            } else {
-              formattedText += 'No results found.'
+              } else {
+                formattedText += 'No results found.'
+              }
             }
             
             // Only add debug info if explicitly in debug mode (optional - can be controlled by env var)
@@ -817,20 +867,25 @@ async function executeTool(toolName: string, args: any, supabase: any) {
       for (const metric of metrics) {
         if (metricQueries[metric]) {
           try {
+            console.log(`[Metric] Executing ${metric}:`, metricQueries[metric])
             const { data, error } = await supabase.rpc('execute_sql', {
               query: metricQueries[metric],
               params: []
             })
             
+            console.log(`[Metric] Result for ${metric}:`, { data, error })
             if (error) throw error
+            
+            // Extract actual data from RPC response
+            const actualData = data?.data || data || []
             
             // Format the result based on metric type
             if (metric === 'top_customers') {
-              results[metric] = data
+              results[metric] = actualData
             } else if (metric === 'overdue_invoices' || metric === 'pending_invoices') {
-              results[metric] = data[0] || { count: 0, value: 0 }
+              results[metric] = actualData[0] || { count: 0, value: 0 }
             } else {
-              results[metric] = data[0]?.value || 0
+              results[metric] = actualData[0]?.value || 0
             }
           } catch (error) {
             console.error(`Error calculating ${metric}:`, error)
@@ -869,6 +924,244 @@ async function executeTool(toolName: string, args: any, supabase: any) {
           queries: Object.keys(results).map(k => metricQueries[k])
         }
       }
+    }
+    
+    case 'generate_financial_report': {
+      const { report_type, period = 'month', start_date, end_date, format = 'formatted_csv' } = args
+      
+      console.log('[Financial Report] Generating:', report_type, 'for period:', period)
+      console.log('[Financial Report] Real-time query - NO CACHE USED')
+      
+      // Determine date range
+      let dateFilter = ''
+      const now = new Date()
+      
+      if (period === 'month') {
+        dateFilter = `DATE_TRUNC('month', CURRENT_DATE) = DATE_TRUNC('month', invoice_date)`
+      } else if (period === 'quarter') {
+        dateFilter = `DATE_TRUNC('quarter', CURRENT_DATE) = DATE_TRUNC('quarter', invoice_date)`
+      } else if (period === 'year') {
+        dateFilter = `DATE_TRUNC('year', CURRENT_DATE) = DATE_TRUNC('year', invoice_date)`
+      } else if (period === 'custom' && start_date && end_date) {
+        dateFilter = `invoice_date BETWEEN '${start_date}' AND '${end_date}'`
+      }
+      
+      let csvContent = ''
+      let businessContext = '📊 Financial Report Generated\n\n'
+      
+      switch (report_type) {
+        case 'income_statement': {
+          // Fetch revenue data
+          const revenueQuery = `
+            SELECT 
+              'Sales Revenue' as category,
+              COALESCE(SUM(total_amount), 0) as amount 
+            FROM invoices 
+            WHERE status='paid' AND ${dateFilter || 'TRUE'}
+            UNION ALL
+            SELECT 
+              'Service Revenue' as category,
+              COALESCE(SUM(total_amount), 0) as amount 
+            FROM invoices 
+            WHERE status='paid' AND ${dateFilter || 'TRUE'} AND invoice_type='service'
+          `
+          
+          // Fetch expense data
+          const expenseQuery = `
+            SELECT 
+              ca.account_name as category,
+              COALESCE(SUM(e.amount), 0) as amount
+            FROM expenses e
+            JOIN chart_of_accounts ca ON e.category_account_id = ca.id
+            WHERE ${dateFilter ? dateFilter.replace('invoice_date', 'expense_date') : 'TRUE'}
+            GROUP BY ca.account_name
+            ORDER BY amount DESC
+          `
+          
+          console.log('[SQL Query - Revenue]:', revenueQuery)
+          const { data: revenueData } = await supabase.rpc('execute_sql', { query: revenueQuery, params: [] })
+          
+          console.log('[SQL Query - Expenses]:', expenseQuery)
+          const { data: expenseData } = await supabase.rpc('execute_sql', { query: expenseQuery, params: [] })
+          
+          console.log('[Query Results] Revenue rows:', revenueData?.data?.length || 0, 'Expense rows:', expenseData?.data?.length || 0)
+          
+          const revenues = revenueData?.data || []
+          const expenses = expenseData?.data || []
+          
+          const totalRevenue = revenues.reduce((sum: number, r: any) => sum + parseFloat(r.amount), 0)
+          const totalExpenses = expenses.reduce((sum: number, e: any) => sum + parseFloat(e.amount), 0)
+          const netIncome = totalRevenue - totalExpenses
+          
+          // Generate CSV
+          if (format === 'formatted_csv') {
+            csvContent = `INCOME STATEMENT\n`
+            csvContent += `For the Period: ${period === 'custom' ? `${start_date} to ${end_date}` : period}\n`
+            csvContent += `\n`
+            csvContent += `Category,Amount\n`
+            csvContent += `REVENUE,\n`
+            revenues.forEach((r: any) => {
+              csvContent += `  ${r.category},$${parseFloat(r.amount).toFixed(2)}\n`
+            })
+            csvContent += `Total Revenue,$${totalRevenue.toFixed(2)}\n`
+            csvContent += `\n`
+            csvContent += `EXPENSES,\n`
+            expenses.forEach((e: any) => {
+              csvContent += `  ${e.category},$${parseFloat(e.amount).toFixed(2)}\n`
+            })
+            csvContent += `Total Expenses,$${totalExpenses.toFixed(2)}\n`
+            csvContent += `\n`
+            csvContent += `NET INCOME,$${netIncome.toFixed(2)}\n`
+          }
+          
+          businessContext += `**Income Statement Generated**\n`
+          businessContext += `- Total Revenue: $${totalRevenue.toLocaleString()}\n`
+          businessContext += `- Total Expenses: $${totalExpenses.toLocaleString()}\n`
+          businessContext += `- Net Income: $${netIncome.toLocaleString()}`
+          break
+        }
+        
+        case 'balance_sheet': {
+          // Fetch account balances by type
+          const balanceQuery = `
+            SELECT 
+              account_type,
+              account_name,
+              COALESCE(balance, 0) as balance
+            FROM chart_of_accounts
+            ORDER BY account_type, account_number
+          `
+          
+          console.log('[SQL Query - Balance Sheet]:', balanceQuery)
+          const { data: accountData } = await supabase.rpc('execute_sql', { query: balanceQuery, params: [] })
+          const accounts = accountData?.data || []
+          console.log('[Query Results] Accounts found:', accounts.length)
+          
+          const assets = accounts.filter((a: any) => a.account_type === 'asset')
+          const liabilities = accounts.filter((a: any) => a.account_type === 'liability')
+          const equity = accounts.filter((a: any) => a.account_type === 'equity')
+          
+          const totalAssets = assets.reduce((sum: number, a: any) => sum + parseFloat(a.balance), 0)
+          const totalLiabilities = liabilities.reduce((sum: number, a: any) => sum + parseFloat(a.balance), 0)
+          const totalEquity = equity.reduce((sum: number, a: any) => sum + parseFloat(a.balance), 0)
+          
+          // Generate CSV
+          if (format === 'formatted_csv') {
+            csvContent = `BALANCE SHEET\n`
+            csvContent += `As of: ${new Date().toLocaleDateString()}\n`
+            csvContent += `\n`
+            csvContent += `Account,Balance\n`
+            csvContent += `ASSETS,\n`
+            assets.forEach((a: any) => {
+              csvContent += `  ${a.account_name},$${parseFloat(a.balance).toFixed(2)}\n`
+            })
+            csvContent += `Total Assets,$${totalAssets.toFixed(2)}\n`
+            csvContent += `\n`
+            csvContent += `LIABILITIES,\n`
+            liabilities.forEach((l: any) => {
+              csvContent += `  ${l.account_name},$${parseFloat(l.balance).toFixed(2)}\n`
+            })
+            csvContent += `Total Liabilities,$${totalLiabilities.toFixed(2)}\n`
+            csvContent += `\n`
+            csvContent += `EQUITY,\n`
+            equity.forEach((e: any) => {
+              csvContent += `  ${e.account_name},$${parseFloat(e.balance).toFixed(2)}\n`
+            })
+            csvContent += `Total Equity,$${totalEquity.toFixed(2)}\n`
+            csvContent += `\n`
+            csvContent += `TOTAL LIABILITIES & EQUITY,$${(totalLiabilities + totalEquity).toFixed(2)}\n`
+          }
+          
+          businessContext += `**Balance Sheet Generated**\n`
+          businessContext += `- Total Assets: $${totalAssets.toLocaleString()}\n`
+          businessContext += `- Total Liabilities: $${totalLiabilities.toLocaleString()}\n`
+          businessContext += `- Total Equity: $${totalEquity.toLocaleString()}`
+          break
+        }
+        
+        case 'aging_report': {
+          const agingQuery = `
+            SELECT 
+              c.company_name,
+              i.invoice_number,
+              i.invoice_date,
+              i.due_date,
+              (i.total_amount - i.paid_amount) as balance,
+              CASE 
+                WHEN i.due_date >= CURRENT_DATE THEN 'Current'
+                WHEN i.due_date >= CURRENT_DATE - INTERVAL '30 days' THEN '1-30 Days'
+                WHEN i.due_date >= CURRENT_DATE - INTERVAL '60 days' THEN '31-60 Days'
+                WHEN i.due_date >= CURRENT_DATE - INTERVAL '90 days' THEN '61-90 Days'
+                ELSE '90+ Days'
+              END as aging_bucket
+            FROM invoices i
+            JOIN contacts c ON i.contact_id = c.id
+            WHERE i.status != 'paid' AND (i.total_amount - i.paid_amount) > 0
+            ORDER BY c.company_name, i.due_date
+          `
+          
+          console.log('[SQL Query - Aging Report]:', agingQuery)
+          const { data: agingData } = await supabase.rpc('execute_sql', { query: agingQuery, params: [] })
+          const invoices = agingData?.data || []
+          console.log('[Query Results] Outstanding invoices:', invoices.length)
+          
+          // Group by customer and aging bucket
+          const customerAging: Record<string, Record<string, number>> = {}
+          invoices.forEach((inv: any) => {
+            if (!customerAging[inv.company_name]) {
+              customerAging[inv.company_name] = {
+                'Current': 0,
+                '1-30 Days': 0,
+                '31-60 Days': 0,
+                '61-90 Days': 0,
+                '90+ Days': 0
+              }
+            }
+            customerAging[inv.company_name][inv.aging_bucket] += parseFloat(inv.balance)
+          })
+          
+          // Generate CSV
+          if (format === 'formatted_csv') {
+            csvContent = `ACCOUNTS RECEIVABLE AGING REPORT\n`
+            csvContent += `As of: ${new Date().toLocaleDateString()}\n`
+            csvContent += `\n`
+            csvContent += `Customer,Current,1-30 Days,31-60 Days,61-90 Days,90+ Days,Total\n`
+            
+            Object.entries(customerAging).forEach(([customer, buckets]) => {
+              const total = Object.values(buckets).reduce((sum, val) => sum + val, 0)
+              csvContent += `${customer},`
+              csvContent += `$${buckets['Current'].toFixed(2)},`
+              csvContent += `$${buckets['1-30 Days'].toFixed(2)},`
+              csvContent += `$${buckets['31-60 Days'].toFixed(2)},`
+              csvContent += `$${buckets['61-90 Days'].toFixed(2)},`
+              csvContent += `$${buckets['90+ Days'].toFixed(2)},`
+              csvContent += `$${total.toFixed(2)}\n`
+            })
+          }
+          
+          const totalAR = invoices.reduce((sum: number, inv: any) => sum + parseFloat(inv.balance), 0)
+          businessContext += `**Aging Report Generated**\n`
+          businessContext += `- Total Outstanding: $${totalAR.toLocaleString()}\n`
+          businessContext += `- Customer Count: ${Object.keys(customerAging).length}`
+          break
+        }
+        
+        default:
+          throw new Error(`Report type '${report_type}' not yet implemented`)
+      }
+      
+      const result = {
+        businessContext,
+        csvContent,
+        reportType: report_type,
+        period,
+        generatedAt: new Date().toISOString(),
+        _sheet_ready: true, // Flag for UI to know this can be displayed as a sheet
+        _realtime: true // Confirms this is real-time data, not cached
+      }
+      
+      console.log('[Financial Report] Generated at:', result.generatedAt)
+      return result
     }
     
     case 'safe_write': {
@@ -1121,10 +1414,16 @@ async function executeTool(toolName: string, args: any, supabase: any) {
       }
       
       // Execute SQL query
+      console.log('[Query] Executing SQL:', args.sql)
       const { data, error } = await supabase.rpc('execute_sql', {
         query: args.sql,
         params: args.params || []
       })
+      
+      console.log('[Query] Result:', { data, error })
+      
+      // Extract actual data from RPC response
+      const actualData = data?.data || data || []
       
       if (error) {
         // Provide helpful error messages
@@ -1158,8 +1457,8 @@ async function executeTool(toolName: string, args: any, supabase: any) {
       
       return {
         businessContext,
-        rows: data || [],
-        rowCount: data ? data.length : 0,
+        rows: actualData,
+        rowCount: actualData.length,
         // Include SQL for debugging but it can be hidden in UI
         _debug: {
           sql: args.sql,
