@@ -423,7 +423,7 @@ Deno.serve(async (req) => {
           headers: corsHeaders 
         })
 
-      case 'POST':
+      case 'POST': {
         // Handle JSON-RPC requests (single or batch)
         const contentType = req.headers.get('content-type') || ''
         if (!contentType.includes('application/json')) {
@@ -514,6 +514,7 @@ Deno.serve(async (req) => {
         } else {
           return executeRequest()
         }
+      }
 
       case 'DELETE':
         // Session cleanup (for stateful mode)
@@ -642,7 +643,7 @@ async function handleJsonRpc(
         response.result = { tools }
         break
 
-      case 'tools/call':
+      case 'tools/call': {
         if (!request.params?.name) {
           response.error = {
             code: ErrorCodes.INVALID_PARAMS,
@@ -798,6 +799,7 @@ async function handleJsonRpc(
           }
         }
         break
+      }
 
       default:
         response.error = {
@@ -1002,8 +1004,8 @@ async function executeTool(toolName: string, args: any, supabase: any) {
           const revenues = revenueData?.data || []
           const expenses = expenseData?.data || []
           
-          const totalRevenue = revenues.reduce((sum: number, r: any) => sum + parseFloat(r.amount), 0)
-          const totalExpenses = expenses.reduce((sum: number, e: any) => sum + parseFloat(e.amount), 0)
+          const totalRevenue = revenues.reduce((sum: number, r: any) => sum + Number.parseFloat(r.amount), 0)
+          const totalExpenses = expenses.reduce((sum: number, e: any) => sum + Number.parseFloat(e.amount), 0)
           const netIncome = totalRevenue - totalExpenses
           
           // Return structured data instead of CSV
@@ -1012,11 +1014,11 @@ async function executeTool(toolName: string, args: any, supabase: any) {
             period: period === 'custom' ? `${start_date} to ${end_date}` : period,
             revenues: revenues.map((r: any) => ({
               category: r.category,
-              amount: parseFloat(r.amount)
+              amount: Number.parseFloat(r.amount)
             })),
             expenses: expenses.map((e: any) => ({
               category: e.category,
-              amount: parseFloat(e.amount)
+              amount: Number.parseFloat(e.amount)
             })),
             totals: {
               totalRevenue,
@@ -1052,9 +1054,9 @@ async function executeTool(toolName: string, args: any, supabase: any) {
           const liabilities = accounts.filter((a: any) => a.account_type === 'liability')
           const equity = accounts.filter((a: any) => a.account_type === 'equity')
           
-          const totalAssets = assets.reduce((sum: number, a: any) => sum + parseFloat(a.balance), 0)
-          const totalLiabilities = liabilities.reduce((sum: number, a: any) => sum + parseFloat(a.balance), 0)
-          const totalEquity = equity.reduce((sum: number, a: any) => sum + parseFloat(a.balance), 0)
+          const totalAssets = assets.reduce((sum: number, a: any) => sum + Number.parseFloat(a.balance), 0)
+          const totalLiabilities = liabilities.reduce((sum: number, a: any) => sum + Number.parseFloat(a.balance), 0)
+          const totalEquity = equity.reduce((sum: number, a: any) => sum + Number.parseFloat(a.balance), 0)
           
           // Return structured data instead of CSV
           reportData = {
@@ -1062,15 +1064,15 @@ async function executeTool(toolName: string, args: any, supabase: any) {
             asOfDate: new Date().toLocaleDateString(),
             assets: assets.map((a: any) => ({
               account_name: a.account_name,
-              balance: parseFloat(a.balance)
+              balance: Number.parseFloat(a.balance)
             })),
             liabilities: liabilities.map((l: any) => ({
               account_name: l.account_name,
-              balance: parseFloat(l.balance)
+              balance: Number.parseFloat(l.balance)
             })),
             equity: equity.map((e: any) => ({
               account_name: e.account_name,
-              balance: parseFloat(e.balance)
+              balance: Number.parseFloat(e.balance)
             })),
             totals: {
               totalAssets,
@@ -1125,7 +1127,7 @@ async function executeTool(toolName: string, args: any, supabase: any) {
                 '90+ Days': 0
               }
             }
-            customerAging[inv.company_name][inv.aging_bucket] += parseFloat(inv.balance)
+            customerAging[inv.company_name][inv.aging_bucket] += Number.parseFloat(inv.balance)
           })
           
           // Return structured data instead of CSV
@@ -1133,7 +1135,7 @@ async function executeTool(toolName: string, args: any, supabase: any) {
             const total = Object.values(buckets).reduce((sum, val) => sum + val, 0)
             return {
               customer,
-              current: buckets['Current'],
+              current: buckets.Current,
               days_1_30: buckets['1-30 Days'],
               days_31_60: buckets['31-60 Days'],
               days_61_90: buckets['61-90 Days'],
@@ -1151,12 +1153,12 @@ async function executeTool(toolName: string, args: any, supabase: any) {
               invoice_number: inv.invoice_number,
               invoice_date: inv.invoice_date,
               due_date: inv.due_date,
-              balance: parseFloat(inv.balance),
+              balance: Number.parseFloat(inv.balance),
               aging_bucket: inv.aging_bucket
             }))
           }
           
-          const totalAR = invoices.reduce((sum: number, inv: any) => sum + parseFloat(inv.balance), 0)
+          const totalAR = invoices.reduce((sum: number, inv: any) => sum + Number.parseFloat(inv.balance), 0)
           businessContext += `**Aging Report Generated**\n`
           businessContext += `- Total Outstanding: $${totalAR.toLocaleString()}\n`
           businessContext += `- Customer Count: ${Object.keys(customerAging).length}`
@@ -1192,7 +1194,7 @@ async function executeTool(toolName: string, args: any, supabase: any) {
         switch (operation) {
           case 'create_invoice':
             preview += `**New Invoice**\n`
-            preview += `- Customer: ${data.customer_name || 'ID: ' + data.contact_id}\n`
+            preview += `- Customer: ${data.customer_name || `ID: ${data.contact_id}`}\n`
             preview += `- Amount: $${data.total_amount?.toLocaleString() || 0}\n`
             preview += `- Due Date: ${data.due_date || 'Not set'}\n`
             preview += `- Status: ${data.status || 'draft'}\n\n`
@@ -1201,7 +1203,7 @@ async function executeTool(toolName: string, args: any, supabase: any) {
             
           case 'record_payment':
             preview += `**Payment Recording**\n`
-            preview += `- Invoice: ${data.invoice_number || 'ID: ' + data.invoice_id}\n`
+            preview += `- Invoice: ${data.invoice_number || `ID: ${data.invoice_id}`}\n`
             preview += `- Payment Amount: $${data.amount?.toLocaleString() || 0}\n`
             preview += `- Payment Date: ${data.payment_date || 'Today'}\n\n`
             preview += `⚠️ This will update the invoice and create a payment transaction. Call again with dry_run=false to confirm.`
@@ -1234,7 +1236,7 @@ async function executeTool(toolName: string, args: any, supabase: any) {
         let businessContext = ""
         
         switch (operation) {
-          case 'create_invoice':
+          case 'create_invoice': {
             const { data: invoice, error: invError } = await supabase
               .from('invoices')
               .insert({
@@ -1254,8 +1256,9 @@ async function executeTool(toolName: string, args: any, supabase: any) {
             businessContext += `- Due: ${invoice.due_date}`
             result = invoice
             break
+          }
             
-          case 'record_payment':
+          case 'record_payment': {
             // Update invoice paid amount
             const { data: updatedInvoice, error: updateError } = await supabase
               .from('invoices')
@@ -1294,8 +1297,9 @@ async function executeTool(toolName: string, args: any, supabase: any) {
             businessContext += `- Status: ${updatedInvoice.status}`
             result = { invoice: updatedInvoice, transaction }
             break
+          }
             
-          case 'add_customer':
+          case 'add_customer': {
             const { data: customer, error: custError } = await supabase
               .from('contacts')
               .insert({
@@ -1314,6 +1318,7 @@ async function executeTool(toolName: string, args: any, supabase: any) {
             businessContext += `- Email: ${customer.email}`
             result = customer
             break
+          }
             
           default:
             throw new Error(`Unknown operation: ${operation}`)
@@ -1450,22 +1455,16 @@ async function executeTool(toolName: string, args: any, supabase: any) {
             const missingTable = tableMatch[1]
             if (missingTable === 'customers') {
               throw new Error(
-                `Table "${missingTable}" does not exist. ` +
-                `Customers are in 'contacts' table with contact_type='customer'. ` +
-                `Try: SELECT * FROM contacts WHERE contact_type='customer'`
+                `Table "${missingTable}" does not exist. Customers are in 'contacts' table with contact_type='customer'. Try: SELECT * FROM contacts WHERE contact_type='customer'`
               )
             }
             if (missingTable === 'vendors') {
               throw new Error(
-                `Table "${missingTable}" does not exist. ` +
-                `Vendors are in 'contacts' table with contact_type='vendor'. ` +
-                `Try: SELECT * FROM contacts WHERE contact_type='vendor'`
+                `Table "${missingTable}" does not exist. Vendors are in 'contacts' table with contact_type='vendor'. Try: SELECT * FROM contacts WHERE contact_type='vendor'`
               )
             }
             throw new Error(
-              `Table "${missingTable}" does not exist. ` +
-              `Available: contacts, invoices, invoice_line_items, expenses, inventory, chart_of_accounts, journal_entries, transactions. ` +
-              `Use 'discover_schema' first.`
+              `Table "${missingTable}" does not exist. Available: contacts, invoices, invoice_line_items, expenses, inventory, chart_of_accounts, journal_entries, transactions. Use 'discover_schema' first.`
             )
           }
         }
@@ -1668,7 +1667,7 @@ function createErrorResponse(
   id: string | number | null,
   code: number,
   message: string,
-  httpStatus: number = 200 // JSON-RPC errors typically return 200
+  httpStatus = 200 // JSON-RPC errors typically return 200
 ) {
   const response = createJsonRpcError(id, code, message)
   return new Response(

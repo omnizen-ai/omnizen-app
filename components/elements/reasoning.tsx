@@ -128,11 +128,11 @@ export const ReasoningTrigger = memo(
       >
         {children ?? (
           <>
-            <span className="relative flex h-2 w-2">
+            <span className="relative flex size-2">
               {(isStreaming || duration === 0) && (
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-muted-foreground opacity-75"></span>
+                <span className="animate-ping absolute inline-flex size-full rounded-full bg-muted-foreground opacity-75" />
               )}
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-muted-foreground"></span>
+              <span className="relative inline-flex rounded-full size-2 bg-muted-foreground" />
             </span>
             {isStreaming || duration === 0 ? (
               <p className="truncate max-w-lg">{reasoning || 'Processing...'}</p>

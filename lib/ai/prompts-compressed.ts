@@ -137,7 +137,7 @@ export class AdaptiveCompressor {
   private tokenBudget: number;
   private context: Map<string, any> = new Map();
   
-  constructor(maxTokens: number = 100) {
+  constructor(maxTokens = 100) {
     this.tokenBudget = maxTokens;
   }
   
@@ -161,7 +161,7 @@ export class AdaptiveCompressor {
     for (const p of priority) {
       const component = components[p];
       if (component && tokensUsed + component.tokens <= this.tokenBudget) {
-        prompt += " " + component.text;
+        prompt += ` ${component.text}`;
         tokensUsed += component.tokens;
       }
     }

@@ -31,13 +31,11 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   Sidebar,
@@ -119,7 +117,7 @@ export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsD
                           onClick={() => setActiveItem(item.name)}
                           isActive={item.name === activeItem}
                         >
-                          <item.icon className="h-4 w-4" />
+                          <item.icon className="size-4" />
                           <span>{item.name}</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -134,7 +132,7 @@ export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsD
                           onClick={() => setActiveItem(item.name)}
                           isActive={item.name === activeItem}
                         >
-                          <item.icon className="h-4 w-4" />
+                          <item.icon className="size-4" />
                           <span>{item.name}</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -149,7 +147,7 @@ export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsD
                           onClick={() => setActiveItem(item.name)}
                           isActive={item.name === activeItem}
                         >
-                          <item.icon className="h-4 w-4" />
+                          <item.icon className="size-4" />
                           <span>{item.name}</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -164,7 +162,7 @@ export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsD
                           onClick={() => setActiveItem(item.name)}
                           isActive={item.name === activeItem}
                         >
-                          <item.icon className="h-4 w-4" />
+                          <item.icon className="size-4" />
                           <span>{item.name}</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -179,7 +177,7 @@ export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsD
                           onClick={() => setActiveItem(item.name)}
                           isActive={item.name === activeItem}
                         >
-                          <item.icon className="h-4 w-4" />
+                          <item.icon className="size-4" />
                           <span>{item.name}</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>

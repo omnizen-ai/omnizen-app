@@ -14,9 +14,9 @@ import {
 import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
-import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
+import { ArrowUpIcon, } from './icons';
 import { Share2Icon, RadiobuttonIcon, MaskOnIcon } from '@radix-ui/react-icons';
-import { SquareIcon, Plus } from 'lucide-react';
+import { SquareIcon, ArrowDown } from 'lucide-react';
 import { PreviewAttachment } from './preview-attachment';
 import { Button } from './ui/button';
 import { QuickActions } from './quick-actions';
@@ -30,7 +30,6 @@ import {
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowDown } from 'lucide-react';
 import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 import type { VisibilityType } from './visibility-selector';
 import type { Attachment, ChatMessage } from '@/lib/types';

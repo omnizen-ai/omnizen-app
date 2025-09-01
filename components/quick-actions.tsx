@@ -50,168 +50,168 @@ const actionCategories: ActionCategory[] = [
   {
     id: 'analytics',
     label: 'Analytics',
-    icon: <TrendingUp className="h-4 w-4" />,
+    icon: <TrendingUp className="size-4" />,
     actions: [
       { 
         label: 'What were my top selling products last month?', 
         prompt: 'What were my top selling products last month and which categories performed best?',
-        icon: <ChartBar className="h-4 w-4" />
+        icon: <ChartBar className="size-4" />
       },
       { 
         label: 'Which customers generated the most revenue this quarter?', 
         prompt: 'Which customers generated the most revenue this quarter and what is their average order value?',
-        icon: <Users className="h-4 w-4" />
+        icon: <Users className="size-4" />
       },
       { 
         label: 'How is my revenue trending compared to last year?', 
         prompt: 'How is my revenue trending compared to the same period last year?',
-        icon: <TrendingUp className="h-4 w-4" />
+        icon: <TrendingUp className="size-4" />
       },
       { 
         label: 'What is my customer retention rate?', 
         prompt: 'What is my customer retention rate and churn rate over the past 6 months?',
-        icon: <Users className="h-4 w-4" />
+        icon: <Users className="size-4" />
       },
       {
         label: 'Which marketing channels drive the most conversions?',
         prompt: 'Which marketing channels are driving the most conversions and what is the ROI for each?',
-        icon: <TrendingUp className="h-4 w-4" />
+        icon: <TrendingUp className="size-4" />
       },
       {
         label: 'What is my average customer lifetime value?',
         prompt: 'What is my average customer lifetime value and how has it changed over time?',
-        icon: <Calculator className="h-4 w-4" />
+        icon: <Calculator className="size-4" />
       },
       {
         label: 'Show me hourly sales patterns for optimization',
         prompt: 'Show me hourly and daily sales patterns to identify peak business hours for staffing optimization',
-        icon: <FileText className="h-4 w-4" />
+        icon: <FileText className="size-4" />
       },
     ],
   },
   {
     id: 'financial',
     label: 'Financial',
-    icon: <DollarSign className="h-4 w-4" />,
+    icon: <DollarSign className="size-4" />,
     actions: [
       { 
         label: 'What is my current cash position and runway?', 
         prompt: 'What is my current daily cash position and how many months of runway do I have at current burn rate?',
-        icon: <Calculator className="h-4 w-4" />
+        icon: <Calculator className="size-4" />
       },
       { 
         label: 'Create an invoice for a new client', 
         prompt: 'Create a professional invoice for ',
-        icon: <CreditCard className="h-4 w-4" />
+        icon: <CreditCard className="size-4" />
       },
       { 
         label: 'Which invoices are overdue for collection?', 
         prompt: 'Which invoices are overdue and what is the total amount pending collection?',
-        icon: <Receipt className="h-4 w-4" />
+        icon: <Receipt className="size-4" />
       },
       { 
         label: 'What are my biggest expense categories this month?', 
         prompt: 'What are my biggest expense categories this month and how do they compare to budget?',
-        icon: <PiggyBank className="h-4 w-4" />
+        icon: <PiggyBank className="size-4" />
       },
       {
         label: 'Calculate my gross profit margin',
         prompt: 'Calculate my gross profit margin and net profit margin for this quarter',
-        icon: <Calculator className="h-4 w-4" />
+        icon: <Calculator className="size-4" />
       },
       {
         label: 'How much should I save for quarterly taxes?',
         prompt: 'How much should I save for quarterly tax payments based on current revenue?',
-        icon: <Wallet className="h-4 w-4" />
+        icon: <Wallet className="size-4" />
       },
       {
         label: 'Create a financial forecast for next quarter',
         prompt: 'Create a financial forecast for next quarter based on current trends and seasonality',
-        icon: <TrendingUp className="h-4 w-4" />
+        icon: <TrendingUp className="size-4" />
       },
     ],
   },
   {
     id: 'operations',
     label: 'Operations',
-    icon: <Settings className="h-4 w-4" />,
+    icon: <Settings className="size-4" />,
     actions: [
       { 
         label: 'Which products are running low on inventory?', 
         prompt: 'Which products are running low on inventory and need to be reordered?',
-        icon: <Package className="h-4 w-4" />
+        icon: <Package className="size-4" />
       },
       { 
         label: 'Create a task for team member', 
         prompt: 'Create a new task: ',
-        icon: <CheckSquare className="h-4 w-4" />
+        icon: <CheckSquare className="size-4" />
       },
       { 
         label: 'What is my inventory turnover rate?', 
         prompt: 'What is my inventory turnover rate and which products are moving slowly?',
-        icon: <Package className="h-4 w-4" />
+        icon: <Package className="size-4" />
       },
       { 
         label: 'Show me productivity metrics by department', 
         prompt: 'Show me productivity metrics by department and identify any bottlenecks',
-        icon: <Cpu className="h-4 w-4" />
+        icon: <Cpu className="size-4" />
       },
       {
         label: 'Which suppliers have the best delivery performance?',
         prompt: 'Which suppliers have the best on-time delivery performance and pricing?',
-        icon: <UserCheck className="h-4 w-4" />
+        icon: <UserCheck className="size-4" />
       },
       {
         label: 'Calculate optimal reorder points for products',
         prompt: 'Calculate optimal reorder points for my top products based on sales velocity',
-        icon: <Calculator className="h-4 w-4" />
+        icon: <Calculator className="size-4" />
       },
       {
         label: 'Create a project timeline for new initiative',
         prompt: 'Create a project timeline with milestones for ',
-        icon: <Calendar className="h-4 w-4" />
+        icon: <Calendar className="size-4" />
       },
     ],
   },
   {
     id: 'planning',
     label: 'Planning',
-    icon: <ClipboardList className="h-4 w-4" />,
+    icon: <ClipboardList className="size-4" />,
     actions: [
       { 
         label: 'Create quarterly goals with KPIs', 
         prompt: 'Create SMART goals for next quarter with specific KPIs to track',
-        icon: <Target className="h-4 w-4" />
+        icon: <Target className="size-4" />
       },
       { 
         label: 'What should be my revenue target next month?', 
         prompt: 'What should be my revenue target for next month based on historical growth and seasonality?',
-        icon: <TrendingUp className="h-4 w-4" />
+        icon: <TrendingUp className="size-4" />
       },
       { 
         label: 'Build a hiring plan for scaling', 
         prompt: 'Build a hiring plan for the next 6 months based on projected growth',
-        icon: <Users className="h-4 w-4" />
+        icon: <Users className="size-4" />
       },
       { 
         label: 'What are my biggest business risks right now?', 
         prompt: 'What are my biggest business risks and how can I mitigate them?',
-        icon: <AlertTriangle className="h-4 w-4" />
+        icon: <AlertTriangle className="size-4" />
       },
       {
         label: 'Create a marketing campaign strategy',
         prompt: 'Create a marketing campaign strategy for ',
-        icon: <Lightbulb className="h-4 w-4" />
+        icon: <Lightbulb className="size-4" />
       },
       {
         label: 'How much funding do I need for expansion?',
         prompt: 'How much funding do I need for expansion and what are my best financing options?',
-        icon: <Calculator className="h-4 w-4" />
+        icon: <Calculator className="size-4" />
       },
       {
         label: 'Develop a customer acquisition strategy',
         prompt: 'Develop a customer acquisition strategy to reduce CAC and increase CLV',
-        icon: <Users className="h-4 w-4" />
+        icon: <Users className="size-4" />
       },
     ],
   },

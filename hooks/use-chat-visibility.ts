@@ -1,13 +1,9 @@
 'use client';
 
 import { useMemo } from 'react';
-import useSWR, { useSWRConfig } from 'swr';
-import { unstable_serialize } from 'swr/infinite';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { updateChatVisibility } from '@/app/(chat)/actions';
-import {
-  getChatHistoryPaginationKey,
-  type ChatHistory,
-} from '@/components/sidebar-history';
+import { useChatHistory } from '@/lib/api/hooks/use-chat-history';
 import type { VisibilityType } from '@/components/visibility-selector';
 
 export function useChatVisibility({
@@ -17,27 +13,27 @@ export function useChatVisibility({
   chatId: string;
   initialVisibilityType: VisibilityType;
 }) {
-  const { mutate, cache } = useSWRConfig();
-  const history: ChatHistory = cache.get('/api/history')?.data;
-
-  const { data: localVisibility, mutate: setLocalVisibility } = useSWR(
-    `${chatId}-visibility`,
-    null,
-    {
-      fallbackData: initialVisibilityType,
-    },
-  );
+  const queryClient = useQueryClient();
+  const { data: chatHistory } = useChatHistory();
+  
+  const { data: localVisibility } = useQuery({
+    queryKey: [`${chatId}-visibility`],
+    queryFn: () => initialVisibilityType,
+    initialData: initialVisibilityType,
+    staleTime: Number.POSITIVE_INFINITY,
+  });
 
   const visibilityType = useMemo(() => {
-    if (!history) return localVisibility;
-    const chat = history.chats.find((chat) => chat.id === chatId);
-    if (!chat) return 'private';
+    if (!chatHistory?.pages) return localVisibility;
+    const allChats = chatHistory.pages.flatMap(page => page.chats);
+    const chat = allChats.find((chat) => chat.id === chatId);
+    if (!chat) return localVisibility || 'private';
     return chat.visibility;
-  }, [history, chatId, localVisibility]);
+  }, [chatHistory, chatId, localVisibility]);
 
   const setVisibilityType = (updatedVisibilityType: VisibilityType) => {
-    setLocalVisibility(updatedVisibilityType);
-    mutate(unstable_serialize(getChatHistoryPaginationKey));
+    queryClient.setQueryData([`${chatId}-visibility`], updatedVisibilityType);
+    queryClient.invalidateQueries({ queryKey: ['chat-history'] });
 
     updateChatVisibility({
       chatId: chatId,

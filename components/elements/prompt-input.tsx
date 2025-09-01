@@ -11,7 +11,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import type { ChatStatus } from 'ai';
-import { Loader2Icon, SendIcon, SquareIcon, XIcon } from 'lucide-react';
+import { Loader2Icon, SquareIcon, XIcon } from 'lucide-react';
 import { VercelLogoIcon } from '@radix-ui/react-icons';
 import type {
   ComponentProps,

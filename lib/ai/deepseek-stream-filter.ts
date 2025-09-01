@@ -48,7 +48,7 @@ export function transformToThinkingBlocks() {
   ];
 
   let buffer = '';
-  let isIntermediate = false;
+  const isIntermediate = false;
 
   return createStreamDataTransformer({
     transform: (chunk, controller) => {
@@ -66,7 +66,7 @@ export function transformToThinkingBlocks() {
             // Wrap in thinking tags
             processedBuffer += `<thinking>${line}</thinking>\n`;
           } else {
-            processedBuffer += line + '\n';
+            processedBuffer += `${line}\n`;
           }
         }
         

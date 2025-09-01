@@ -8,10 +8,10 @@ import {
   useEffect,
   useState,
 } from 'react';
-import useSWR, { useSWRConfig } from 'swr';
+import { useQueryClient } from '@tanstack/react-query';
 import { useDebounceCallback, useWindowSize } from 'usehooks-ts';
 import type { Document, Vote } from '@/lib/db/schema';
-import { fetcher } from '@/lib/utils';
+import { useDocuments, useUpdateDocument } from '@/lib/api/hooks/use-documents';
 import { MultimodalInput } from './multimodal-input';
 import { Toolbar } from './toolbar';
 import { VersionFooter } from './version-footer';
@@ -88,12 +88,9 @@ function PureArtifact({
   const {
     data: documents,
     isLoading: isDocumentsFetching,
-    mutate: mutateDocuments,
-  } = useSWR<Array<Document>>(
-    artifact.documentId !== 'init' && artifact.status !== 'streaming'
-      ? `/api/document?id=${artifact.documentId}`
-      : null,
-    fetcher,
+    refetch: refetchDocuments,
+  } = useDocuments(
+    artifact.documentId !== 'init' && artifact.status !== 'streaming' ? artifact.documentId : null
   );
 
   const [mode, setMode] = useState<'edit' | 'diff'>('edit');
@@ -118,54 +115,35 @@ function PureArtifact({
   }, [documents, setArtifact]);
 
   useEffect(() => {
-    mutateDocuments();
-  }, [artifact.status, mutateDocuments]);
+    if (artifact.status !== 'streaming') {
+      refetchDocuments();
+    }
+  }, [artifact.status, refetchDocuments]);
 
-  const { mutate } = useSWRConfig();
+  const queryClient = useQueryClient();
+  const updateDocument = useUpdateDocument();
   const [isContentDirty, setIsContentDirty] = useState(false);
 
   const handleContentChange = useCallback(
     (updatedContent: string) => {
       if (!artifact) return;
 
-      mutate<Array<Document>>(
-        `/api/document?id=${artifact.documentId}`,
-        async (currentDocuments) => {
-          if (!currentDocuments) return undefined;
+      const currentDocument = documents?.at(-1);
+      if (!currentDocument || currentDocument.content === updatedContent) {
+        setIsContentDirty(false);
+        return;
+      }
 
-          const currentDocument = currentDocuments.at(-1);
+      updateDocument.mutate({
+        documentId: artifact.documentId,
+        title: artifact.title,
+        content: updatedContent,
+        kind: artifact.kind,
+      });
 
-          if (!currentDocument || !currentDocument.content) {
-            setIsContentDirty(false);
-            return currentDocuments;
-          }
-
-          if (currentDocument.content !== updatedContent) {
-            await fetch(`/api/document?id=${artifact.documentId}`, {
-              method: 'POST',
-              body: JSON.stringify({
-                title: artifact.title,
-                content: updatedContent,
-                kind: artifact.kind,
-              }),
-            });
-
-            setIsContentDirty(false);
-
-            const newDocument = {
-              ...currentDocument,
-              content: updatedContent,
-              createdAt: new Date(),
-            };
-
-            return [...currentDocuments, newDocument];
-          }
-          return currentDocuments;
-        },
-        { revalidate: false },
-      );
+      setIsContentDirty(false);
     },
-    [artifact, mutate],
+    [artifact, documents, updateDocument],
   );
 
   const debouncedHandleContentChange = useDebounceCallback(

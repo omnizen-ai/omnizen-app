@@ -1,10 +1,7 @@
 'use client';
-
-import { isAfter } from 'date-fns';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
-import { useSWRConfig } from 'swr';
 import { useWindowSize } from 'usehooks-ts';
+import { useRestoreDocumentVersion } from '@/lib/api/hooks/use-documents';
 
 import type { Document } from '@/lib/db/schema';
 import { getDocumentTimestampByIndex } from '@/lib/utils';
@@ -29,8 +26,7 @@ export const VersionFooter = ({
   const { width } = useWindowSize();
   const isMobile = width < 768;
 
-  const { mutate } = useSWRConfig();
-  const [isMutating, setIsMutating] = useState(false);
+  const restoreVersion = useRestoreDocumentVersion();
 
   if (!documents) return;
 
@@ -51,43 +47,30 @@ export const VersionFooter = ({
 
       <div className="flex flex-row gap-4">
         <Button
-          disabled={isMutating}
-          onClick={async () => {
-            setIsMutating(true);
-
-            mutate(
-              `/api/document?id=${artifact.documentId}`,
-              await fetch(
-                `/api/document?id=${artifact.documentId}&timestamp=${getDocumentTimestampByIndex(
-                  documents,
-                  currentVersionIndex,
-                )}`,
-                {
-                  method: 'DELETE',
-                },
-              ),
-              {
-                optimisticData: documents
-                  ? [
-                      ...documents.filter((document) =>
-                        isAfter(
-                          new Date(document.createdAt),
-                          new Date(
-                            getDocumentTimestampByIndex(
-                              documents,
-                              currentVersionIndex,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ]
-                  : [],
-              },
+          disabled={restoreVersion.isPending}
+          onClick={() => {
+            const timestamp = getDocumentTimestampByIndex(
+              documents,
+              currentVersionIndex,
             );
+            
+            if (timestamp) {
+              restoreVersion.mutate(
+                { 
+                  documentId: artifact.documentId, 
+                  timestamp 
+                },
+                {
+                  onSuccess: () => {
+                    handleVersionChange('latest');
+                  }
+                }
+              );
+            }
           }}
         >
           <div>Restore this version</div>
-          {isMutating && (
+          {restoreVersion.isPending && (
             <div className="animate-spin">
               <LoaderIcon />
             </div>

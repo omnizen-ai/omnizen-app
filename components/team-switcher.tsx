@@ -29,7 +29,7 @@ export function TeamSwitcher() {
             style={{ height: 'auto', padding: '0.5rem' }}
           >
             <div className="flex items-center gap-3">
-              <div className="flex size-8 items-center justify-center flex-shrink-0">
+              <div className="flex size-8 items-center justify-center shrink-0">
                 <svg
                   width="32"
                   height="32"

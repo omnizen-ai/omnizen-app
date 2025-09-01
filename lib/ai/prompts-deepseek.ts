@@ -410,7 +410,7 @@ Remember: No "customers" table - use contacts WHERE contact_type='customer'
 // ============================================
 // PROMPT SELECTOR FOR DEEPSEEK
 // ============================================
-export function getDeepSeekPrompt(queryType: string, useFullContext: boolean = true): string {
+export function getDeepSeekPrompt(queryType: string, useFullContext = true): string {
   // For DeepSeek, default to context-rich prompts
   if (!useFullContext) {
     return deepseekBalancedPrompt; // 400 tokens - still reasonable

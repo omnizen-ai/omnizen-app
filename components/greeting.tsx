@@ -48,7 +48,7 @@ export const Greeting = () => {
         transition={{ delay: 0.6 }}
         className="text-2xl text-zinc-500"
       >
-        Try asking: "{suggestion}"
+        Try asking: &quot;{suggestion}&quot;
       </motion.div>
     </div>
   );
