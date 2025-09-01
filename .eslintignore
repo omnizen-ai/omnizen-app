@@ -1,0 +1,15 @@
+# Third-party libraries - not maintained by us
+thirdparty/ai
+thirdparty/langfuse
+
+# Build outputs
+.next
+out
+dist
+build
+
+# Dependencies
+node_modules
+
+# Other generated files
+*.tsbuildinfo
