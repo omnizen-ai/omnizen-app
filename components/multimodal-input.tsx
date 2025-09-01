@@ -392,6 +392,7 @@ function PureMultimodalInput({
             setInput={setInput}
             chatId={chatId}
             selectedVisibilityType={selectedVisibilityType}
+            inputRef={textareaRef}
           />
         )}
     </div>

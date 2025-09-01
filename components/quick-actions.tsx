@@ -32,6 +32,7 @@ interface QuickActionsProps {
   chatId: string;
   setInput: Dispatch<SetStateAction<string>>;
   selectedVisibilityType: VisibilityType;
+  inputRef?: React.RefObject<HTMLTextAreaElement>;
 }
 
 interface ActionCategory {
@@ -220,6 +221,7 @@ function PureQuickActions({
   chatId,
   setInput,
   selectedVisibilityType,
+  inputRef,
 }: QuickActionsProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -241,6 +243,16 @@ function PureQuickActions({
   const handleActionClick = (prompt: string) => {
     setInput(prompt);
     setSelectedCategory(null);
+    
+    // Focus the input and move cursor to the end
+    setTimeout(() => {
+      if (inputRef?.current) {
+        inputRef.current.focus();
+        // Move cursor to the end of the text
+        const length = inputRef.current.value.length;
+        inputRef.current.setSelectionRange(length, length);
+      }
+    }, 0);
   };
 
   const handleCategoryClick = (categoryId: string) => {
