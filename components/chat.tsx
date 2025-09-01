@@ -74,13 +74,13 @@ function StreamingGreeting({ session }: { session: Session | null }) {
     <p className="text-2xl text-zinc-600">
       {hasGreeting ? (
         <>
-          <span className="font-medium text-amber-700/70 dark:text-amber-200/80">
+          <span className="font-medium text-yellow-700/60 dark:text-amber-200/80">
             {displayedText.slice(0, greetingEnd)}
           </span>
           <span>{displayedText.slice(greetingEnd)}</span>
         </>
       ) : (
-        <span className="font-medium text-amber-700/70 dark:text-amber-200/80">
+        <span className="font-medium text-yellow-700/60 dark:text-amber-200/80">
           {displayedText}
         </span>
       )}

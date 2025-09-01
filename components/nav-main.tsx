@@ -2,6 +2,7 @@
 
 import { ChevronRight, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
+import { useState } from 'react';
 
 import {
   Collapsible,
@@ -17,6 +18,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from '@/components/ui/sidebar';
 
 export function NavMain({
@@ -34,6 +36,24 @@ export function NavMain({
     }[];
   }[];
 }) {
+  const { state, setOpen } = useSidebar();
+  const [expandedItems, setExpandedItems] = useState<string[]>(() => 
+    items.filter(item => item.isActive).map(item => item.title)
+  );
+
+  const handleCollapsedClick = (e: React.MouseEvent, item: any) => {
+    // If sidebar is collapsed and item has sub-items (not Omni), expand sidebar
+    if (state === 'collapsed' && item.items && item.items.length > 0 && item.title !== 'Omni') {
+      e.preventDefault();
+      e.stopPropagation();
+      setOpen(true);
+      // Delay the expansion to allow sidebar animation to complete
+      setTimeout(() => {
+        setExpandedItems(prev => [...prev, item.title]);
+      }, 150);
+    }
+  };
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Navigation</SidebarGroupLabel>
@@ -43,12 +63,22 @@ export function NavMain({
             <Collapsible
               key={item.title}
               asChild
-              defaultOpen={item.isActive}
+              open={expandedItems.includes(item.title)}
+              onOpenChange={(open) => {
+                if (open) {
+                  setExpandedItems(prev => [...prev, item.title]);
+                } else {
+                  setExpandedItems(prev => prev.filter(i => i !== item.title));
+                }
+              }}
               className="group/collapsible"
             >
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
-                  <SidebarMenuButton tooltip={item.title}>
+                  <SidebarMenuButton 
+                    tooltip={item.title}
+                    onClick={(e) => handleCollapsedClick(e, item)}
+                  >
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
                     <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
