@@ -10,4 +10,16 @@ export * from './finance/transactions';
 export * from './ai/agents';
 
 // Legacy schemas (for backward compatibility)
-export * from '../schema'; // Original chat, document, etc. tables
+// Re-export specific items to avoid conflicts
+export { 
+  chat, 
+  type Chat,
+  message,
+  type DBMessage,
+  document,
+  type Document,
+  vote,
+  type Vote,
+  suggestion,
+  type Suggestion
+} from '../schema';

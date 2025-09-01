@@ -37,18 +37,13 @@ export const migrationDb = drizzle(migrationClient, { schema: fullSchema });
 
 // Export all schemas for use in other files
 export * from './schema';
-export * from './schema/core/organizations';
-export * from './schema/core/users';
-export * from './schema/finance/accounts';
-export * from './schema/finance/transactions';
-export * from './schema/ai/agents';
 
 // Helper function to set auth context for RLS
 export async function setAuthContext(
   userId: string,
   organizationId: string,
   workspaceId?: string,
-  role: string = 'employee'
+  role = 'employee'
 ) {
   await db.execute(`
     SELECT set_auth_context(
@@ -73,44 +68,5 @@ export async function getAuthContext() {
   return result.rows[0];
 }
 
-// Type exports
-export type {
-  // Core types
-  Organization,
-  Workspace,
-  User,
-  OrganizationMember,
-  AuditLog,
-  
-  // Finance types
-  Account,
-  Journal,
-  JournalEntry,
-  JournalLine,
-  Currency,
-  ExchangeRate,
-  TaxCode,
-  Contact,
-  Product,
-  Invoice,
-  InvoiceLine,
-  Bill,
-  BillLine,
-  Payment,
-  PaymentAllocation,
-  
-  // AI types
-  AIAgent,
-  AgentExecution,
-  AgentConversation,
-  ConversationMessage,
-  AgentSchedule,
-  KnowledgeBase,
-  
-  // Legacy types
-  Chat,
-  DBMessage,
-  Document,
-  Suggestion,
-  Vote,
-} from './schema/index';
+// Types are already exported via export * from './schema'
+// No need for duplicate type exports

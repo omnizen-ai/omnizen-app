@@ -14,7 +14,7 @@ import {
 import { relations } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
 import { organizations, workspaces } from '../core/organizations';
-import { accounts, journalEntries } from './accounts';
+import { chartAccounts, journalEntries } from './accounts';
 
 // Contact types
 export const contactTypeEnum = pgEnum('contact_type', [
@@ -63,8 +63,8 @@ export const contacts = pgTable('contacts', {
   creditLimit: decimal('credit_limit', { precision: 20, scale: 2 }),
   
   // Default accounts
-  defaultSalesAccountId: uuid('default_sales_account_id').references(() => accounts.id),
-  defaultPurchaseAccountId: uuid('default_purchase_account_id').references(() => accounts.id),
+  defaultSalesAccountId: uuid('default_sales_account_id').references(() => chartAccounts.id),
+  defaultPurchaseAccountId: uuid('default_purchase_account_id').references(() => chartAccounts.id),
   
   // Status and metadata
   isActive: boolean('is_active').notNull().default(true),
@@ -107,9 +107,9 @@ export const products = pgTable('products', {
   isTaxable: boolean('is_taxable').notNull().default(true),
   
   // GL accounts
-  incomeAccountId: uuid('income_account_id').references(() => accounts.id),
-  expenseAccountId: uuid('expense_account_id').references(() => accounts.id),
-  inventoryAccountId: uuid('inventory_account_id').references(() => accounts.id),
+  incomeAccountId: uuid('income_account_id').references(() => chartAccounts.id),
+  expenseAccountId: uuid('expense_account_id').references(() => chartAccounts.id),
+  inventoryAccountId: uuid('inventory_account_id').references(() => chartAccounts.id),
   
   // Inventory tracking
   isTrackedInventory: boolean('is_tracked_inventory').notNull().default(false),
@@ -228,7 +228,7 @@ export const invoiceLines = pgTable('invoice_lines', {
   lineTotal: decimal('line_total', { precision: 20, scale: 2 }).notNull(),
   
   // GL account
-  accountId: uuid('account_id').references(() => accounts.id),
+  accountId: uuid('account_id').references(() => chartAccounts.id),
   
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => ({
@@ -330,7 +330,7 @@ export const billLines = pgTable('bill_lines', {
   lineTotal: decimal('line_total', { precision: 20, scale: 2 }).notNull(),
   
   // GL account
-  accountId: uuid('account_id').references(() => accounts.id),
+  accountId: uuid('account_id').references(() => chartAccounts.id),
   
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => ({
@@ -376,7 +376,7 @@ export const payments = pgTable('payments', {
   referenceNumber: text('reference_number'),
   
   // Bank account (for reconciliation)
-  bankAccountId: uuid('bank_account_id').references(() => accounts.id),
+  bankAccountId: uuid('bank_account_id').references(() => chartAccounts.id),
   
   // Status
   status: text('status').notNull().default('posted'), // draft, posted, reconciled, void

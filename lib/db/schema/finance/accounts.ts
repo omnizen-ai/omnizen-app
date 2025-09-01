@@ -28,7 +28,7 @@ export const accountTypeEnum = pgEnum('account_type', [
 ]);
 
 // Chart of Accounts - Core financial structure
-export const accounts = pgTable('accounts', {
+export const chartAccounts = pgTable('chart_accounts', {
   id: uuid('id').primaryKey().defaultRandom(),
   
   // Organization scope
@@ -41,7 +41,7 @@ export const accounts = pgTable('accounts', {
   type: accountTypeEnum('type').notNull(),
   
   // Hierarchy
-  parentId: uuid('parent_id').references((): AnyPgColumn => accounts.id),
+  parentId: uuid('parent_id').references((): AnyPgColumn => chartAccounts.id),
   
   // Properties
   description: text('description'),
@@ -162,7 +162,7 @@ export const journalLines = pgTable('journal_lines', {
   lineNumber: integer('line_number').notNull(),
   
   // Account and amounts
-  accountId: uuid('account_id').notNull().references(() => accounts.id),
+  accountId: uuid('account_id').notNull().references(() => chartAccounts.id),
   debit: decimal('debit', { precision: 20, scale: 2 }).notNull().default('0.00'),
   credit: decimal('credit', { precision: 20, scale: 2 }).notNull().default('0.00'),
   
@@ -237,8 +237,8 @@ export const taxCodes = pgTable('tax_codes', {
   isPurchase: boolean('is_purchase').notNull().default(true),
   
   // GL accounts
-  salesAccountId: uuid('sales_account_id').references(() => accounts.id),
-  purchaseAccountId: uuid('purchase_account_id').references(() => accounts.id),
+  salesAccountId: uuid('sales_account_id').references(() => chartAccounts.id),
+  purchaseAccountId: uuid('purchase_account_id').references(() => chartAccounts.id),
   
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -247,21 +247,21 @@ export const taxCodes = pgTable('tax_codes', {
 }));
 
 // Relations
-export const accountsRelations = relations(accounts, ({ one, many }) => ({
+export const chartAccountsRelations = relations(chartAccounts, ({ one, many }) => ({
   organization: one(organizations, {
-    fields: [accounts.organizationId],
+    fields: [chartAccounts.organizationId],
     references: [organizations.id],
   }),
   workspace: one(workspaces, {
-    fields: [accounts.workspaceId],
+    fields: [chartAccounts.workspaceId],
     references: [workspaces.id],
   }),
-  parent: one(accounts, {
-    fields: [accounts.parentId],
-    references: [accounts.id],
+  parent: one(chartAccounts, {
+    fields: [chartAccounts.parentId],
+    references: [chartAccounts.id],
     relationName: 'accountHierarchy',
   }),
-  children: many(accounts, { relationName: 'accountHierarchy' }),
+  children: many(chartAccounts, { relationName: 'accountHierarchy' }),
   journalLines: many(journalLines),
 }));
 
@@ -286,14 +286,14 @@ export const journalLinesRelations = relations(journalLines, ({ one }) => ({
     fields: [journalLines.journalEntryId],
     references: [journalEntries.id],
   }),
-  account: one(accounts, {
+  account: one(chartAccounts, {
     fields: [journalLines.accountId],
-    references: [accounts.id],
+    references: [chartAccounts.id],
   }),
 }));
 
 // Types
-export type Account = InferSelectModel<typeof accounts>;
+export type ChartAccount = InferSelectModel<typeof chartAccounts>;
 export type Journal = InferSelectModel<typeof journals>;
 export type JournalEntry = InferSelectModel<typeof journalEntries>;
 export type JournalLine = InferSelectModel<typeof journalLines>;

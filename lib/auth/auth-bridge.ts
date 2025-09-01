@@ -1,8 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
-import { getServerSession } from 'next-auth';
 import { auth } from '@/app/(auth)/auth';
 import { cookies } from 'next/headers';
-import { type Session } from 'next-auth';
+import type { Session } from 'next-auth';
 
 // Types
 interface SupabaseAuthContext {
@@ -105,7 +104,7 @@ export class AuthBridge {
    * Create a Supabase client with NextAuth session context
    */
   async createAuthenticatedClient(session?: Session | null) {
-    const currentSession = session || await getServerSession();
+    const currentSession = session || await auth();
     
     if (!currentSession) {
       throw new Error('No authenticated session');
@@ -167,7 +166,7 @@ export class AuthBridge {
 
     // Check if user exists in Supabase
     const { data: existingUser } = await this.supabaseAdmin
-      .from('users')
+      .from('User')
       .select('id')
       .eq('id', user.id)
       .single();
@@ -175,7 +174,7 @@ export class AuthBridge {
     if (!existingUser) {
       // Create user in Supabase if doesn't exist
       const { error } = await this.supabaseAdmin
-        .from('users')
+        .from('User')
         .insert({
           id: user.id,
           email: user.email,
@@ -190,7 +189,7 @@ export class AuthBridge {
 
     // Update last active timestamp
     await this.supabaseAdmin
-      .from('users')
+      .from('User')
       .update({ last_active_at: new Date().toISOString() })
       .eq('id', user.id);
   }
@@ -199,14 +198,14 @@ export class AuthBridge {
    * Get current user's organization context
    */
   async getCurrentContext(session?: Session | null): Promise<SupabaseAuthContext | null> {
-    const currentSession = session || await getServerSession();
+    const currentSession = session || await auth();
     
     if (!currentSession?.user?.id) {
       return null;
     }
 
     // Get current organization from user preferences or cookies
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const orgCookie = cookieStore.get('current-org');
     
     const { data } = await this.supabaseAdmin
@@ -245,7 +244,7 @@ export class AuthBridge {
    */
   async ensureAuthenticated(request: Request) {
     // Check NextAuth session
-    const session = await getServerSession();
+    const session = await auth();
     
     if (!session) {
       return new Response('Unauthorized', { status: 401 });
@@ -286,7 +285,7 @@ export function useAuthBridge() {
  * Server-side helper to get authenticated Supabase client
  */
 export async function getAuthenticatedSupabase() {
-  const session = await getServerSession();
+  const session = await auth();
   if (!session) {
     throw new Error('No authenticated session');
   }

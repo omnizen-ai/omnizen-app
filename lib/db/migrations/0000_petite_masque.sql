@@ -201,26 +201,6 @@ CREATE TABLE IF NOT EXISTS "workspaces" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "accounts" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"organization_id" uuid NOT NULL,
-	"workspace_id" uuid,
-	"code" text NOT NULL,
-	"name" text NOT NULL,
-	"type" "account_type" NOT NULL,
-	"parent_id" uuid,
-	"description" text,
-	"is_postable" boolean DEFAULT true NOT NULL,
-	"is_active" boolean DEFAULT true NOT NULL,
-	"is_system_account" boolean DEFAULT false NOT NULL,
-	"currency_code" text DEFAULT 'USD' NOT NULL,
-	"normal_balance" text NOT NULL,
-	"current_balance" numeric(20, 2) DEFAULT '0.00' NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL,
-	"created_by" uuid
-);
---> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "audit_logs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"organization_id" uuid NOT NULL,
@@ -232,6 +212,21 @@ CREATE TABLE IF NOT EXISTS "audit_logs" (
 	"changes" jsonb,
 	"metadata" jsonb,
 	"created_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "auth_accounts" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"type" text NOT NULL,
+	"provider" text NOT NULL,
+	"provider_account_id" text NOT NULL,
+	"refresh_token" text,
+	"access_token" text,
+	"expires_at" integer,
+	"token_type" text,
+	"scope" text,
+	"id_token" text,
+	"session_state" text
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "organization_members" (
@@ -254,6 +249,26 @@ CREATE TABLE IF NOT EXISTS "sessions" (
 	"organization_id" uuid,
 	"workspace_id" uuid,
 	CONSTRAINT "sessions_session_token_unique" UNIQUE("session_token")
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "chart_accounts" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"organization_id" uuid NOT NULL,
+	"workspace_id" uuid,
+	"code" text NOT NULL,
+	"name" text NOT NULL,
+	"type" "account_type" NOT NULL,
+	"parent_id" uuid,
+	"description" text,
+	"is_postable" boolean DEFAULT true NOT NULL,
+	"is_active" boolean DEFAULT true NOT NULL,
+	"is_system_account" boolean DEFAULT false NOT NULL,
+	"currency_code" text DEFAULT 'USD' NOT NULL,
+	"normal_balance" text NOT NULL,
+	"current_balance" numeric(20, 2) DEFAULT '0.00' NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"created_by" uuid
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "currencies" (
@@ -764,24 +779,6 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "accounts" ADD CONSTRAINT "accounts_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE cascade ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "accounts" ADD CONSTRAINT "accounts_workspace_id_workspaces_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."workspaces"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "accounts" ADD CONSTRAINT "accounts_parent_id_accounts_id_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."accounts"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
  ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
@@ -795,6 +792,12 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_user_id_User_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "auth_accounts" ADD CONSTRAINT "auth_accounts_user_id_User_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."User"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -831,6 +834,24 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "sessions" ADD CONSTRAINT "sessions_workspace_id_workspaces_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."workspaces"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "chart_accounts" ADD CONSTRAINT "chart_accounts_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "chart_accounts" ADD CONSTRAINT "chart_accounts_workspace_id_workspaces_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."workspaces"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "chart_accounts" ADD CONSTRAINT "chart_accounts_parent_id_chart_accounts_id_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."chart_accounts"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -890,7 +911,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "journal_lines" ADD CONSTRAINT "journal_lines_account_id_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."accounts"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "journal_lines" ADD CONSTRAINT "journal_lines_account_id_chart_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."chart_accounts"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -914,13 +935,13 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "tax_codes" ADD CONSTRAINT "tax_codes_sales_account_id_accounts_id_fk" FOREIGN KEY ("sales_account_id") REFERENCES "public"."accounts"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "tax_codes" ADD CONSTRAINT "tax_codes_sales_account_id_chart_accounts_id_fk" FOREIGN KEY ("sales_account_id") REFERENCES "public"."chart_accounts"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "tax_codes" ADD CONSTRAINT "tax_codes_purchase_account_id_accounts_id_fk" FOREIGN KEY ("purchase_account_id") REFERENCES "public"."accounts"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "tax_codes" ADD CONSTRAINT "tax_codes_purchase_account_id_chart_accounts_id_fk" FOREIGN KEY ("purchase_account_id") REFERENCES "public"."chart_accounts"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -938,7 +959,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "bill_lines" ADD CONSTRAINT "bill_lines_account_id_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."accounts"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "bill_lines" ADD CONSTRAINT "bill_lines_account_id_chart_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."chart_accounts"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -980,13 +1001,13 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "contacts" ADD CONSTRAINT "contacts_default_sales_account_id_accounts_id_fk" FOREIGN KEY ("default_sales_account_id") REFERENCES "public"."accounts"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "contacts" ADD CONSTRAINT "contacts_default_sales_account_id_chart_accounts_id_fk" FOREIGN KEY ("default_sales_account_id") REFERENCES "public"."chart_accounts"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "contacts" ADD CONSTRAINT "contacts_default_purchase_account_id_accounts_id_fk" FOREIGN KEY ("default_purchase_account_id") REFERENCES "public"."accounts"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "contacts" ADD CONSTRAINT "contacts_default_purchase_account_id_chart_accounts_id_fk" FOREIGN KEY ("default_purchase_account_id") REFERENCES "public"."chart_accounts"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -1004,7 +1025,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "invoice_lines" ADD CONSTRAINT "invoice_lines_account_id_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."accounts"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "invoice_lines" ADD CONSTRAINT "invoice_lines_account_id_chart_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."chart_accounts"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -1058,7 +1079,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "payments" ADD CONSTRAINT "payments_bank_account_id_accounts_id_fk" FOREIGN KEY ("bank_account_id") REFERENCES "public"."accounts"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "payments" ADD CONSTRAINT "payments_bank_account_id_chart_accounts_id_fk" FOREIGN KEY ("bank_account_id") REFERENCES "public"."chart_accounts"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -1082,19 +1103,19 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "products" ADD CONSTRAINT "products_income_account_id_accounts_id_fk" FOREIGN KEY ("income_account_id") REFERENCES "public"."accounts"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "products" ADD CONSTRAINT "products_income_account_id_chart_accounts_id_fk" FOREIGN KEY ("income_account_id") REFERENCES "public"."chart_accounts"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "products" ADD CONSTRAINT "products_expense_account_id_accounts_id_fk" FOREIGN KEY ("expense_account_id") REFERENCES "public"."accounts"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "products" ADD CONSTRAINT "products_expense_account_id_chart_accounts_id_fk" FOREIGN KEY ("expense_account_id") REFERENCES "public"."chart_accounts"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "products" ADD CONSTRAINT "products_inventory_account_id_accounts_id_fk" FOREIGN KEY ("inventory_account_id") REFERENCES "public"."accounts"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "products" ADD CONSTRAINT "products_inventory_account_id_chart_accounts_id_fk" FOREIGN KEY ("inventory_account_id") REFERENCES "public"."chart_accounts"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -1209,19 +1230,21 @@ CREATE INDEX IF NOT EXISTS "core_org_plan_tier_idx" ON "organizations" USING btr
 CREATE INDEX IF NOT EXISTS "core_org_active_idx" ON "organizations" USING btree ("is_active");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "core_org_workspace_idx" ON "workspaces" USING btree ("organization_id","slug");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "core_workspace_type_idx" ON "workspaces" USING btree ("workspace_type");--> statement-breakpoint
-CREATE UNIQUE INDEX IF NOT EXISTS "fin_account_org_code_idx" ON "accounts" USING btree ("organization_id","code");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "fin_account_type_idx" ON "accounts" USING btree ("type");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "fin_account_parent_idx" ON "accounts" USING btree ("parent_id");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "fin_account_active_idx" ON "accounts" USING btree ("is_active");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "core_audit_org_idx" ON "audit_logs" USING btree ("organization_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "core_audit_user_idx" ON "audit_logs" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "core_audit_entity_idx" ON "audit_logs" USING btree ("entity_type","entity_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "core_audit_created_idx" ON "audit_logs" USING btree ("created_at");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "core_provider_unique_idx" ON "auth_accounts" USING btree ("provider","provider_account_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "core_accounts_user_idx" ON "auth_accounts" USING btree ("user_id");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "core_org_member_unique_idx" ON "organization_members" USING btree ("organization_id","user_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "core_org_member_user_idx" ON "organization_members" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "core_org_member_role_idx" ON "organization_members" USING btree ("role");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "core_session_token_idx" ON "sessions" USING btree ("session_token");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "core_sessions_user_idx" ON "sessions" USING btree ("user_id");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "fin_account_org_code_idx" ON "chart_accounts" USING btree ("organization_id","code");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "fin_account_type_idx" ON "chart_accounts" USING btree ("type");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "fin_account_parent_idx" ON "chart_accounts" USING btree ("parent_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "fin_account_active_idx" ON "chart_accounts" USING btree ("is_active");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "fin_fx_rate_unique_idx" ON "exchange_rates" USING btree ("organization_id","rate_date","from_currency","to_currency");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "fin_entry_org_number_idx" ON "journal_entries" USING btree ("organization_id","entry_number");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "fin_entry_date_idx" ON "journal_entries" USING btree ("entry_date");--> statement-breakpoint

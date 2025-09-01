@@ -86,7 +86,7 @@ export const organizationMembers = pgTable('organization_members', {
 }));
 
 // NextAuth specific tables (keeping compatibility)
-export const accounts = pgTable('accounts', {
+export const authAccounts = pgTable('auth_accounts', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   type: text('type').notNull(),
@@ -152,7 +152,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     references: [workspaces.id],
   }),
   organizationMemberships: many(organizationMembers),
-  accounts: many(accounts),
+  authAccounts: many(authAccounts),
   sessions: many(sessions),
   auditLogs: many(auditLogs),
 }));
@@ -175,6 +175,6 @@ export const organizationMembersRelations = relations(organizationMembers, ({ on
 // Types
 export type User = InferSelectModel<typeof users>;
 export type OrganizationMember = InferSelectModel<typeof organizationMembers>;
-export type Account = InferSelectModel<typeof accounts>;
+export type AuthAccount = InferSelectModel<typeof authAccounts>;
 export type Session = InferSelectModel<typeof sessions>;
 export type AuditLog = InferSelectModel<typeof auditLogs>;
