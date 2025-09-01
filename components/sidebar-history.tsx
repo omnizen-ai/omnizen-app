@@ -94,7 +94,7 @@ export function getChatHistoryPaginationKey(
 }
 
 export function SidebarHistory({ user }: { user: User | undefined }) {
-  const { setOpenMobile } = useSidebar();
+  const { setOpenMobile, state } = useSidebar();
   const { id } = useParams();
 
   const {
@@ -147,6 +147,11 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
       router.push('/');
     }
   };
+
+  // Hide history when sidebar is collapsed
+  if (state === 'collapsed') {
+    return null;
+  }
 
   if (!user) {
     return (
