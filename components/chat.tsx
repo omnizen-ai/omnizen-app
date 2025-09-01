@@ -231,11 +231,13 @@ export function Chat({
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center">
             <div className="w-full max-w-2xl px-4">
-              <div className="text-left mb-8">
-                <StreamingGreeting 
-                  session={session} 
-                  setInput={setInput}
-                />
+              <div className="flex justify-center w-full mb-8">
+                <div className="w-[90%]">
+                  <StreamingGreeting 
+                    session={session} 
+                    setInput={setInput}
+                  />
+                </div>
               </div>
               {!isReadonly && (
                 <MultimodalInput
