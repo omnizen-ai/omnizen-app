@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { auth } from '@/app/(auth)/auth';
 import { cookies } from 'next/headers';
 import type { Session } from 'next-auth';
+import type { Database } from '@/lib/supabase/types';
 
 // Types
 interface SupabaseAuthContext {
@@ -24,7 +25,7 @@ interface BridgedSession extends Session {
  */
 export class AuthBridge {
   private static instance: AuthBridge;
-  private supabaseAdmin: ReturnType<typeof createClient<any>>;
+  private supabaseAdmin: ReturnType<typeof createClient<Database>>;
 
   private constructor() {
     // Initialize Supabase Admin client for service role operations
@@ -60,7 +61,7 @@ export class AuthBridge {
       .from('organization_members')
       .select('organization_id, role, permissions, allowed_workspaces')
       .eq('user_id', session.user.id)
-      .single() as { data: any };
+      .single();
 
     if (!memberData) {
       throw new Error('User not associated with any organization');
@@ -136,7 +137,7 @@ export class AuthBridge {
    * Set RLS context for the current database session
    */
   async setRLSContext(
-    supabase: ReturnType<typeof createClient<any>>,
+    supabase: ReturnType<typeof createClient<Database>>,
     context: SupabaseAuthContext
   ) {
     // Set the organization context for RLS
@@ -145,7 +146,7 @@ export class AuthBridge {
       p_org_id: context.organizationId,
       p_workspace_id: context.workspaceId,
       p_role: context.role,
-    } as any);
+    });
 
     if (orgError) {
       throw new Error(`Failed to set RLS context: ${orgError.message}`);
@@ -193,7 +194,7 @@ export class AuthBridge {
         .from('User')
         .select('id')
         .eq('id', user.id)
-        .single() as { data: any };
+        .single();
 
       if (!existingUser) {
         const { error } = await this.supabaseAdmin
@@ -201,8 +202,8 @@ export class AuthBridge {
           .insert({
             id: user.id,
             email: user.email,
-            name: user.name,
-          } as any);
+            name: user.name || null,
+          });
 
         if (error) {
           console.error('Failed to create user in public.User table:', error);
@@ -221,7 +222,7 @@ export class AuthBridge {
 
     await this.supabaseAdmin
       .from('User')
-      .update({ last_active_at: new Date().toISOString() } as any)
+      .update({ last_active_at: new Date().toISOString() })
       .eq('id', userId);
   }
 
@@ -245,17 +246,11 @@ export class AuthBridge {
         organization_id,
         role,
         permissions,
-        allowed_workspaces,
-        organizations!inner(
-          id,
-          name,
-          plan_tier,
-          feature_flags
-        )
+        allowed_workspaces
       `)
       .eq('user_id', currentSession.user.id)
       .eq('is_active', true)
-      .single() as { data: any };
+      .single();
 
     if (!data) {
       return null;
