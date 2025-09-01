@@ -2,6 +2,7 @@
 
 import { ChevronRight, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import {
@@ -30,12 +31,14 @@ export function NavMain({
     icon?: LucideIcon;
     isActive?: boolean;
     description?: string;
+    isNewChat?: boolean;
     items?: {
       title: string;
       url: string;
     }[];
   }[];
 }) {
+  const router = useRouter();
   const { state, setOpen } = useSidebar();
   const [expandedItems, setExpandedItems] = useState<string[]>(() => 
     items.filter(item => item.isActive).map(item => item.title)
@@ -102,12 +105,23 @@ export function NavMain({
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 tooltip={item.description || item.title}
-                asChild
+                asChild={!item.isNewChat}
+                onClick={item.isNewChat ? () => {
+                  router.push('/');
+                  router.refresh();
+                } : undefined}
               >
-                <Link href={item.url}>
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
-                </Link>
+                {item.isNewChat ? (
+                  <>
+                    {item.icon && <item.icon />}
+                    <span>{item.title}</span>
+                  </>
+                ) : (
+                  <Link href={item.url}>
+                    {item.icon && <item.icon />}
+                    <span>{item.title}</span>
+                  </Link>
+                )}
               </SidebarMenuButton>
             </SidebarMenuItem>
           )

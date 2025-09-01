@@ -1,7 +1,6 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { SidebarToggle } from '@/components/sidebar-toggle';
 import { Button } from '@/components/ui/button';
 import { memo } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
@@ -26,24 +25,6 @@ function PureChatHeader({
 
   return (
     <header className="flex sticky top-0 bg-background py-1.5 items-center px-2 md:px-2 gap-2">
-      <SidebarToggle />
-      
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="outline"
-            className="md:px-2 px-2 md:h-fit"
-            onClick={() => {
-              router.push('/');
-              router.refresh();
-            }}
-          >
-            <PlusIcon />
-            <span className="md:sr-only">New Chat</span>
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>New Chat</TooltipContent>
-      </Tooltip>
 
       {/* Model selector commented out - using DeepSeek by default
       {!isReadonly && (

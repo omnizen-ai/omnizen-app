@@ -56,7 +56,7 @@ export function TeamSwitcher() {
                 letterSpacing: '-0.02em',
                 marginTop: '0.30rem',
                 borderBottom: '2px solid #F97316',
-                paddingBottom: '0.1rem'
+                paddingBottom: '0'
               }}>
                 <span className="text-foreground">OMNI</span>
                 <span style={{ color: '#F97316' }}>ZEN</span>
