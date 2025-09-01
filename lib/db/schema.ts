@@ -11,13 +11,9 @@ import {
   boolean,
 } from 'drizzle-orm/pg-core';
 
-export const user = pgTable('User', {
-  id: uuid('id').primaryKey().notNull().defaultRandom(),
-  email: varchar('email', { length: 64 }).notNull(),
-  password: varchar('password', { length: 64 }),
-});
-
-export type User = InferSelectModel<typeof user>;
+// Import the enhanced users table and re-export as 'user' for compatibility
+import { users as user, type User } from './schema/core/users';
+export { user, type User };
 
 export const chat = pgTable('Chat', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
@@ -169,5 +165,3 @@ export const stream = pgTable(
 
 export type Stream = InferSelectModel<typeof stream>;
 
-// Export all business schema tables
-export * from './schema/business';

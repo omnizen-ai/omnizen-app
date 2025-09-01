@@ -18,10 +18,31 @@ const runMigrate = async () => {
   console.log('⏳ Running migrations...');
 
   const start = Date.now();
-  await migrate(db, { migrationsFolder: './lib/db/migrations' });
+  
+  try {
+    // Create schemas first
+    await connection`CREATE SCHEMA IF NOT EXISTS core`;
+    await connection`CREATE SCHEMA IF NOT EXISTS finance`;
+    await connection`CREATE SCHEMA IF NOT EXISTS ai`;
+    await connection`CREATE SCHEMA IF NOT EXISTS semantic`;
+    console.log('✅ Schemas created/verified');
+    
+    // Set search path
+    await connection`SET search_path TO public, core, finance, ai, semantic`;
+    
+    // Run Drizzle migrations
+    await migrate(db, { migrationsFolder: './lib/db/migrations' });
+    
+  } catch (error) {
+    console.error('Migration error:', error);
+    throw error;
+  }
+  
   const end = Date.now();
 
   console.log('✅ Migrations completed in', end - start, 'ms');
+  
+  await connection.end();
   process.exit(0);
 };
 

@@ -6,11 +6,19 @@ config({
 });
 
 export default defineConfig({
-  schema: './lib/db/schema.ts',
+  schema: [
+    './lib/db/schema.ts', // Legacy schema for backward compatibility
+    './lib/db/schema/core/*.ts',
+    './lib/db/schema/finance/*.ts',
+    './lib/db/schema/ai/*.ts',
+  ],
   out: './lib/db/migrations',
   dialect: 'postgresql',
   dbCredentials: {
     // biome-ignore lint: Forbidden non-null assertion.
     url: process.env.POSTGRES_URL!,
   },
+  tablesFilter: ['*'],
+  verbose: true,
+  strict: true,
 });

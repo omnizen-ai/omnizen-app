@@ -4,6 +4,7 @@ import Credentials from 'next-auth/providers/credentials';
 import { createGuestUser, getUser } from '@/lib/db/queries';
 import { authConfig } from './auth.config';
 import { DUMMY_PASSWORD } from '@/lib/constants';
+import { authBridge } from '@/lib/auth/auth-bridge';
 import type { DefaultJWT } from 'next-auth/jwt';
 
 export type UserType = 'guest' | 'regular';
@@ -13,6 +14,9 @@ declare module 'next-auth' {
     user: {
       id: string;
       type: UserType;
+      organizationId?: string;
+      workspaceId?: string;
+      role?: string;
     } & DefaultSession['user'];
   }
 
@@ -20,6 +24,9 @@ declare module 'next-auth' {
     id?: string;
     email?: string | null;
     type: UserType;
+    organizationId?: string;
+    workspaceId?: string;
+    role?: string;
   }
 }
 
@@ -27,6 +34,9 @@ declare module 'next-auth/jwt' {
   interface JWT extends DefaultJWT {
     id?: string;
     type: UserType;
+    organizationId?: string;
+    workspaceId?: string;
+    role?: string;
   }
 }
 
@@ -76,6 +86,14 @@ export const {
       if (user) {
         token.id = user.id as string;
         token.type = user.type;
+        
+        // Get organization context
+        const context = await authBridge.getCurrentContext({ user: { id: user.id } } as any);
+        if (context) {
+          token.organizationId = context.organizationId;
+          token.workspaceId = context.workspaceId;
+          token.role = context.role;
+        }
       }
 
       return token;
@@ -84,6 +102,14 @@ export const {
       if (session.user) {
         session.user.id = token.id || '';
         session.user.type = token.type;
+        session.user.organizationId = token.organizationId;
+        session.user.workspaceId = token.workspaceId;
+        session.user.role = token.role;
+      }
+
+      // Sync session to Supabase
+      if (session.user.type === 'regular') {
+        await authBridge.syncSessionOnSignIn(session);
       }
 
       return session;
