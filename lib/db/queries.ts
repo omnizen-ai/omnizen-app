@@ -57,7 +57,19 @@ export async function createUser(email: string, password: string) {
   const hashedPassword = generateHashedPassword(password);
 
   try {
-    return await db.insert(user).values({ email, password: hashedPassword });
+    const result = await db.insert(user).values({ email, password: hashedPassword }).returning({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+    });
+
+    // Create user in Supabase auth.users for RLS (one-time operation during signup)
+    if (result[0]) {
+      const { authBridge } = await import('@/lib/auth/auth-bridge');
+      await authBridge.createSupabaseAuthUser(result[0]);
+    }
+
+    return result;
   } catch (error) {
     throw new ChatSDKError('bad_request:database', 'Failed to create user');
   }

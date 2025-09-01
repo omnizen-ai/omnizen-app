@@ -107,9 +107,9 @@ export const {
         session.user.role = token.role;
       }
 
-      // Sync session to Supabase
-      if (session.user.type === 'regular') {
-        await authBridge.syncSessionOnSignIn(session);
+      // Update last active timestamp for authenticated users on login
+      if (session.user.type === 'regular' && session.user.id) {
+        await authBridge.updateLastActive(session.user.id);
       }
 
       return session;

@@ -24,7 +24,7 @@ interface BridgedSession extends Session {
  */
 export class AuthBridge {
   private static instance: AuthBridge;
-  private supabaseAdmin: ReturnType<typeof createClient>;
+  private supabaseAdmin: ReturnType<typeof createClient<any>>;
 
   private constructor() {
     // Initialize Supabase Admin client for service role operations
@@ -60,7 +60,7 @@ export class AuthBridge {
       .from('organization_members')
       .select('organization_id, role, permissions, allowed_workspaces')
       .eq('user_id', session.user.id)
-      .single();
+      .single() as { data: any };
 
     if (!memberData) {
       throw new Error('User not associated with any organization');
@@ -136,7 +136,7 @@ export class AuthBridge {
    * Set RLS context for the current database session
    */
   async setRLSContext(
-    supabase: ReturnType<typeof createClient>,
+    supabase: ReturnType<typeof createClient<any>>,
     context: SupabaseAuthContext
   ) {
     // Set the organization context for RLS
@@ -145,7 +145,7 @@ export class AuthBridge {
       p_org_id: context.organizationId,
       p_workspace_id: context.workspaceId,
       p_role: context.role,
-    });
+    } as any);
 
     if (orgError) {
       throw new Error(`Failed to set RLS context: ${orgError.message}`);
@@ -155,43 +155,74 @@ export class AuthBridge {
   }
 
   /**
-   * Sync NextAuth session to Supabase on sign-in
+   * Create user in Supabase auth.users during signup
+   * This is a one-time operation when a new user registers
    */
-  async syncSessionOnSignIn(session: Session) {
-    const { user } = session;
-    
+  async createSupabaseAuthUser(user: { id: string; email: string; name?: string | null }) {
+    // Only create if we have valid user data
     if (!user?.id || !user?.email) {
+      console.warn('Cannot create Supabase auth user: Invalid user data');
       return;
     }
 
-    // Check if user exists in Supabase
-    const { data: existingUser } = await this.supabaseAdmin
-      .from('User')
-      .select('id')
-      .eq('id', user.id)
-      .single();
-
-    if (!existingUser) {
-      // Create user in Supabase if doesn't exist
-      const { error } = await this.supabaseAdmin
-        .from('User')
-        .insert({
-          id: user.id,
+    try {
+      // Check if user already exists in Supabase auth.users
+      const { data: existingAuthUser } = await this.supabaseAdmin.auth.admin.getUserById(user.id);
+      
+      if (!existingAuthUser?.user) {
+        // Create user in Supabase auth system
+        const { data: authUser, error: authError } = await this.supabaseAdmin.auth.admin.createUser({
           email: user.email,
-          name: user.name,
-          image: user.image,
+          email_confirm: true, // Auto-confirm since they're coming from NextAuth
+          user_metadata: {
+            name: user.name,
+            provider: 'nextauth',
+          },
         });
 
-      if (error) {
-        console.error('Failed to sync user to Supabase:', error);
-      }
-    }
+        if (authError) {
+          console.error('Failed to create Supabase auth user:', authError);
+          return;
+        }
 
-    // Update last active timestamp
+        console.log('Created Supabase auth user:', authUser.user?.id);
+      }
+
+      // Also ensure user exists in public.User table for application data
+      const { data: existingUser } = await this.supabaseAdmin
+        .from('User')
+        .select('id')
+        .eq('id', user.id)
+        .single() as { data: any };
+
+      if (!existingUser) {
+        const { error } = await this.supabaseAdmin
+          .from('User')
+          .insert({
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          } as any);
+
+        if (error) {
+          console.error('Failed to create user in public.User table:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Error in createSupabaseAuthUser:', error);
+    }
+  }
+
+  /**
+   * Update user's last active timestamp on login
+   */
+  async updateLastActive(userId: string) {
+    if (!userId) return;
+
     await this.supabaseAdmin
       .from('User')
-      .update({ last_active_at: new Date().toISOString() })
-      .eq('id', user.id);
+      .update({ last_active_at: new Date().toISOString() } as any)
+      .eq('id', userId);
   }
 
   /**
@@ -224,7 +255,7 @@ export class AuthBridge {
       `)
       .eq('user_id', currentSession.user.id)
       .eq('is_active', true)
-      .single();
+      .single() as { data: any };
 
     if (!data) {
       return null;
