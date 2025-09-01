@@ -2,7 +2,7 @@
 
 import { DefaultChatTransport } from 'ai';
 import { useChat } from '@ai-sdk/react';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 import { ChatHeader } from '@/components/chat-header';
 import type { Vote } from '@/lib/db/schema';
@@ -24,33 +24,44 @@ import type { Attachment, ChatMessage, CustomUIDataTypes } from '@/lib/types';
 import type { DataUIPart } from 'ai';
 import { useDataStream } from './data-stream-provider';
 
+const quickActionSuggestions = [
+  "What were my top selling products last month?",
+  "Which customers generated the most revenue this quarter?",
+  "How is my revenue trending compared to last year?",
+  "What is my current cash position and runway?",
+  "Which invoices are overdue for payment?",
+  "What is my gross profit margin this month?",
+  "What are my operational bottlenecks right now?",
+  "Which suppliers have the best lead times?",
+  "How can I reduce my operational costs?",
+  "What is my customer retention rate?",
+  "Which marketing channels drive the most conversions?",
+  "What is my average customer lifetime value?",
+  "Show me hourly sales patterns for optimization",
+  "How can I improve my inventory turnover?",
+  "What are the risks in my supply chain?",
+  "Create a marketing campaign strategy",
+  "How much funding do I need for expansion?",
+  "Develop a customer acquisition strategy",
+];
+
 // Streaming greeting component
-function StreamingGreeting({ session }: { session: Session | null }) {
+function StreamingGreeting({ 
+  session,
+  setInput
+}: { 
+  session: Session | null;
+  setInput?: (value: string) => void;
+}) {
   const [displayedText, setDisplayedText] = useState('');
   
-  const fullText = useMemo(() => {
-    // Get greeting based on user session and day (consistent per day)
-    const firstName = session?.user?.name?.split(' ')[0];
-    const day = new Date().getDate();
-    
-    // Use day as seed for consistent daily greeting
-    const greetings = firstName 
-      ? [`Hey ${firstName}`, `Hi ${firstName}`, `Morning ${firstName}`, `Afternoon ${firstName}`, firstName]
-      : ['Hey boss', 'Hey partner', 'Boss', 'Chief', 'Captain', 'Hey there', 'Morning boss'];
-    const greetingIndex = day % greetings.length;
-    const greeting = greetings[greetingIndex];
-    
-    // Get question based on day of month
-    let question = '';
-    if (day <= 5) question = "how's the cash flow looking?";
-    else if (day <= 10) question = "time to review last month's numbers?";
-    else if (day <= 15) question = "need to check on pending invoices?";
-    else if (day <= 20) question = "how's the team performance this month?";
-    else if (day <= 25) question = "ready to prep for month-end close?";
-    else question = "time to close the books?";
-    
-    return `${greeting}! ${question}`;
-  }, [session]);
+  // Generate random suggestion once when component mounts
+  const [suggestion] = useState(() => {
+    const randomIndex = Math.floor(Math.random() * quickActionSuggestions.length);
+    return quickActionSuggestions[randomIndex];
+  });
+  
+  const fullText = `Hey partner!\nTry asking: "${suggestion}"`;
 
   useEffect(() => {
     let currentIndex = 0;
@@ -66,25 +77,40 @@ function StreamingGreeting({ session }: { session: Session | null }) {
     return () => clearInterval(interval);
   }, [fullText]);
 
-  // Split the text to apply styling to greeting part
-  const greetingEnd = displayedText.indexOf('!') + 1;
-  const hasGreeting = greetingEnd > 0;
+  // Split the text into lines
+  const lines = displayedText.split('\n');
+  const firstLine = lines[0] || '';
+  const secondLine = lines[1] || '';
+  
+  const handleSuggestionClick = () => {
+    if (setInput && suggestion) {
+      setInput(suggestion);
+      // Focus the input textarea after a short delay
+      setTimeout(() => {
+        const textarea = document.querySelector('textarea[placeholder*="Message"]') as HTMLTextAreaElement;
+        if (textarea) {
+          textarea.focus();
+          const length = textarea.value.length;
+          textarea.setSelectionRange(length, length);
+        }
+      }, 100);
+    }
+  };
   
   return (
-    <p className="text-2xl text-zinc-600">
-      {hasGreeting ? (
-        <>
-          <span className="font-medium text-yellow-700/60 dark:text-amber-200/80">
-            {displayedText.slice(0, greetingEnd)}
-          </span>
-          <span>{displayedText.slice(greetingEnd)}</span>
-        </>
-      ) : (
-        <span className="font-medium text-yellow-700/60 dark:text-amber-200/80">
-          {displayedText}
-        </span>
+    <div className="text-2xl text-zinc-600">
+      <p className="font-medium text-yellow-700/60 dark:text-amber-200/80">
+        {firstLine}
+      </p>
+      {secondLine && (
+        <p 
+          className="mt-2 cursor-pointer hover:text-zinc-800 dark:hover:text-zinc-400 transition-colors"
+          onClick={handleSuggestionClick}
+        >
+          {secondLine}
+        </p>
       )}
-    </p>
+    </div>
   );
 }
 
@@ -206,7 +232,10 @@ export function Chat({
           <div className="flex-1 flex flex-col items-center justify-center">
             <div className="w-full max-w-2xl px-4">
               <div className="text-left mb-8">
-                <StreamingGreeting session={session} />
+                <StreamingGreeting 
+                  session={session} 
+                  setInput={setInput}
+                />
               </div>
               {!isReadonly && (
                 <MultimodalInput
