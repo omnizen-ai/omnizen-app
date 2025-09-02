@@ -254,7 +254,8 @@ COMMENT ON VIEW semantic.v_personal_categories_summary IS 'Personal finance cate
 -- ============================
 -- Indexes for Performance
 -- ============================
--- These indexes support the views above
+-- These indexes complement Drizzle-created indexes for RLS optimization
+-- Composite indexes are crucial for Row Level Security performance
 CREATE INDEX IF NOT EXISTS idx_bank_transactions_org_account_date ON bank_transactions(organization_id, bank_account_id, transaction_date);
 CREATE INDEX IF NOT EXISTS idx_bank_transactions_category ON bank_transactions(category) WHERE category IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_bank_accounts_org_workspace ON bank_accounts(organization_id, workspace_id);
