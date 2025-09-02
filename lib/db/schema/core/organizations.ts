@@ -78,7 +78,8 @@ export const organizations = pgTable('organizations', {
   // Settings
   countryCode: text('country_code').default('US'),
   timezone: text('timezone').notNull().default('UTC'),
-  currency: text('currency').notNull().default('USD'),
+  currency: text('currency').notNull().default('USD'), // Default currency for transactions
+  baseCurrency: text('base_currency').notNull().default('USD'), // Base currency for reporting (usually same as currency)
   fiscalYearStart: integer('fiscal_year_start').notNull().default(1), // Month number
   
   // Metadata

@@ -166,15 +166,18 @@ export const journalLines = pgTable('journal_lines', {
   
   lineNumber: integer('line_number').notNull(),
   
-  // Account and amounts
+  // Account and amounts (base currency)
   accountId: uuid('account_id').notNull().references(() => chartAccounts.id),
   debit: decimal('debit', { precision: 20, scale: 2 }).notNull().default('0.00'),
   credit: decimal('credit', { precision: 20, scale: 2 }).notNull().default('0.00'),
   // Note: will add CHECK constraint in migration to ensure only debit OR credit is non-zero
   
-  // Currency support
+  // Multi-currency support (optional - only used for foreign currency transactions)
   currencyCode: text('currency_code').notNull().default('USD'),
   exchangeRate: decimal('exchange_rate', { precision: 20, scale: 8 }),
+  // Foreign currency amounts (original transaction currency) - nullable for base currency entries
+  foreignDebit: decimal('foreign_debit', { precision: 20, scale: 2 }),
+  foreignCredit: decimal('foreign_credit', { precision: 20, scale: 2 }),
   
   // References
   contactId: uuid('contact_id'), // Reference to contacts table
