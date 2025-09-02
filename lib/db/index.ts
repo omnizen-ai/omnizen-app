@@ -6,9 +6,12 @@ import * as usersSchema from './schema/core/users';
 import * as accountsSchema from './schema/finance/accounts';
 import * as transactionsSchema from './schema/finance/transactions';
 import * as aiSchema from './schema/ai/agents';
+import * as erpPermissionsSchema from './schema/ai/erp-permissions';
 import * as bankingSchema from './schema/erp/banking';
 import * as warehousesSchema from './schema/erp/warehouses';
 import * as ordersSchema from './schema/erp/orders';
+import * as personalFinanceSchema from './schema/personal/finance';
+import * as semanticSchema from './schema/semantic/catalog';
 
 // Combine all schemas
 const fullSchema = {
@@ -25,11 +28,18 @@ const fullSchema = {
   
   // AI schemas
   ...aiSchema,
+  ...erpPermissionsSchema,
   
   // ERP schemas
   ...bankingSchema,
   ...warehousesSchema,
   ...ordersSchema,
+  
+  // Personal Finance schemas
+  ...personalFinanceSchema,
+  
+  // Semantic schemas
+  ...semanticSchema,
 };
 
 // Create the connection
@@ -54,9 +64,12 @@ export * from './schema/core/users';
 export * from './schema/finance/accounts';
 export * from './schema/finance/transactions';
 export * from './schema/ai/agents';
+export * from './schema/ai/erp-permissions';
 export * from './schema/erp/banking';
 export * from './schema/erp/warehouses';
 export * from './schema/erp/orders';
+export * from './schema/personal/finance';
+export * from './schema/semantic/catalog';
 
 // Helper function to set auth context for RLS
 export async function setAuthContext(
