@@ -19,8 +19,20 @@ export const planTierEnum = pgEnum('plan_tier', [
   'starter',
   'professional',
   'enterprise',
-  'custom'
+  'custom',
+  // Personal finance tiers
+  'personal-free',
+  'personal-plus',
+  'personal-pro',
+  'family'
 ]);
+
+// Account type enum
+export const organizationTypeEnum = pgEnum('organization_type', [
+  'business',
+  'personal',
+  'hybrid'
+]);;
 
 // Organizations - Multi-tenant foundation
 export const organizations = pgTable('organizations', {
@@ -28,6 +40,10 @@ export const organizations = pgTable('organizations', {
   name: text('name').notNull(),
   slug: text('slug').notNull(),
   planTier: planTierEnum('plan_tier').notNull().default('starter'),
+  
+  // Personal finance support
+  accountType: organizationTypeEnum('organization_type').default('business'),
+  isPersonalFinance: boolean('is_personal_finance').default(false),
   
   // Feature flags for progressive enhancement
   featureFlags: jsonb('feature_flags').notNull().default({
@@ -75,7 +91,7 @@ export const workspaces = pgTable('workspaces', {
   
   name: text('name').notNull(),
   slug: text('slug').notNull(),
-  workspaceType: text('workspace_type').notNull().default('default'), // default, department, project, subsidiary
+  workspaceType: text('workspace_type').notNull().default('default'), // default, department, project, subsidiary, personal, family
   
   // Workspace-specific settings
   settings: jsonb('settings').notNull().default({}),

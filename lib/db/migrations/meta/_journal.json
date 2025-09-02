@@ -15,6 +15,13 @@
       "when": 1756806786237,
       "tag": "0001_loving_harpoon",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1756821195899,
+      "tag": "0002_rare_mephisto",
+      "breakpoints": true
     }
   ]
 }

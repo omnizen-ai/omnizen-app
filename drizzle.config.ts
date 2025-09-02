@@ -13,6 +13,7 @@ export default defineConfig({
     './lib/db/schema/ai/*.ts',
     './lib/db/schema/erp/*.ts',
     './lib/db/schema/semantic/*.ts',
+    './lib/db/schema/personal/*.ts',
   ],
   out: './lib/db/migrations',
   dialect: 'postgresql',
