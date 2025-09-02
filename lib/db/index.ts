@@ -6,6 +6,9 @@ import * as usersSchema from './schema/core/users';
 import * as accountsSchema from './schema/finance/accounts';
 import * as transactionsSchema from './schema/finance/transactions';
 import * as aiSchema from './schema/ai/agents';
+import * as bankingSchema from './schema/erp/banking';
+import * as warehousesSchema from './schema/erp/warehouses';
+import * as ordersSchema from './schema/erp/orders';
 
 // Combine all schemas
 const fullSchema = {
@@ -22,6 +25,11 @@ const fullSchema = {
   
   // AI schemas
   ...aiSchema,
+  
+  // ERP schemas
+  ...bankingSchema,
+  ...warehousesSchema,
+  ...ordersSchema,
 };
 
 // Create the connection
@@ -36,7 +44,19 @@ const migrationClient = postgres(connectionString, { max: 1 });
 export const migrationDb = drizzle(migrationClient, { schema: fullSchema });
 
 // Export all schemas for use in other files
+// Export legacy schemas first (for backward compatibility)
 export * from './schema';
+
+// Export new schemas (some may override legacy exports)
+// Note: This creates a unified export surface where new schemas take precedence
+export * from './schema/core/organizations';
+export * from './schema/core/users';
+export * from './schema/finance/accounts';
+export * from './schema/finance/transactions';
+export * from './schema/ai/agents';
+export * from './schema/erp/banking';
+export * from './schema/erp/warehouses';
+export * from './schema/erp/orders';
 
 // Helper function to set auth context for RLS
 export async function setAuthContext(

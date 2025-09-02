@@ -9,6 +9,11 @@ export * from './finance/transactions';
 // AI schemas
 export * from './ai/agents';
 
+// ERP schemas
+export * from './erp/banking';
+export * from './erp/warehouses';
+export * from './erp/orders';
+
 // Legacy schemas (for backward compatibility)
 // Re-export specific items to avoid conflicts
 export { 
