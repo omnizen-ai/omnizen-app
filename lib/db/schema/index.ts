@@ -14,6 +14,9 @@ export * from './erp/banking';
 export * from './erp/warehouses';
 export * from './erp/orders';
 
+// Personal Finance schemas
+export * from './personal/finance';
+
 // Legacy schemas (for backward compatibility)
 // Re-export specific items to avoid conflicts
 export { 
