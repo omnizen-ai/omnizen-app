@@ -1,3 +1,21 @@
 evaluate the busiess schema for omnizen, its a saas, for individual and business -> individual will use    │
 │   the agent for their daily personal finance needs and advice, like expense tracking, utility bills,         │
 │   financial planning like investments, savings, goals  
+
+
+
+we can use dynamid query templaate, think about it, each user is authenticated so, users db specific information is known at start, like org, workspace, role, acces etc. -> he will ask , and agent will answer according to the intent, simple intent,
+  clear asks, we can just matched pattern. but for things that we need to make queries, agent will create sql, if the sql successfully gets the result, we can cache it in redis, when we make new quereis, we can just add the succesful queries history
+  inthe context only the sql, it will guide the agetn write the queries better as its know exampels that workd. right?
+
+
+  we can add metadata to successful queries as well. like, purpose/intent in plain english, sql queries, domains, and which user.  so that, it points to specific queries. as once users quereies accumulate, agent will start to mistake less. ? and q
+
+
+its like natural selection. failed queries die out, successfull survives.
+
+
+job of the omni is to -> route to right agent, rifht context, right itent so that it performs well. omni is teh context stitcher 
+
+with successfull quereies, both user level and organization level and platfrom level, we can optimize, keep the successfull and desired query, discard failed one, highlight common mistakes. its caching but inteligent caching. for agents. with context. 
+so that it has the right context, right query examples readily available, and over time it reduces mistakes a lot. and can do complex stuffs without static context. we can add soring to the queries. top scored queries are added top 10, for doman, rasks , metadata
