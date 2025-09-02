@@ -141,15 +141,35 @@ export class AuthBridge {
     context: SupabaseAuthContext
   ) {
     // Set the organization context for RLS
-    const { error: orgError } = await supabase.rpc('set_auth_context', {
+    const { data: result, error } = await supabase.rpc('set_auth_context', {
       p_user_id: context.userId,
       p_org_id: context.organizationId,
       p_workspace_id: context.workspaceId,
       p_role: context.role,
     });
 
-    if (orgError) {
-      throw new Error(`Failed to set RLS context: ${orgError.message}`);
+    // Handle RPC call error
+    if (error) {
+      throw new Error(`Failed to call set_auth_context: ${error.message}`);
+    }
+
+    // Handle function-level errors from the JSONB response
+    if (!result?.success) {
+      const errorMessage = result?.errors 
+        ? `RLS context validation failed: ${result.errors.join(', ')}`
+        : `Failed to set RLS context: ${result?.error || 'Unknown error'}`;
+      throw new Error(errorMessage);
+    }
+
+    // Log successful context setting in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('RLS context set successfully:', {
+        user_id: result.user_id,
+        org_id: result.org_id,
+        workspace_id: result.workspace_id,
+        role: result.role,
+        context_set_at: result.context_set_at,
+      });
     }
 
     return true;
@@ -227,6 +247,44 @@ export class AuthBridge {
   }
 
   /**
+   * Verify that RLS context is properly set
+   */
+  async verifyRLSContext(supabase: ReturnType<typeof createClient<Database>>) {
+    const { data: verification, error } = await supabase.rpc('verify_auth_context');
+
+    if (error) {
+      throw new Error(`Failed to verify RLS context: ${error.message}`);
+    }
+
+    if (!verification?.valid) {
+      const warnings = verification?.warnings?.join(', ') || 'Invalid context';
+      throw new Error(`RLS context verification failed: ${warnings}`);
+    }
+
+    return verification;
+  }
+
+  /**
+   * Clear RLS context on logout
+   */
+  async clearRLSContext(supabase: ReturnType<typeof createClient<Database>>) {
+    const { data: result, error } = await supabase.rpc('clear_auth_context');
+
+    if (error) {
+      console.error('Failed to clear RLS context:', error.message);
+      // Don't throw on cleanup errors, just log them
+      return false;
+    }
+
+    if (!result?.success) {
+      console.error('Failed to clear RLS context:', result?.error);
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
    * Get current user's organization context
    */
   async getCurrentContext(session?: Session | null): Promise<SupabaseAuthContext | null> {
@@ -283,6 +341,11 @@ export class AuthBridge {
       
       if (context) {
         await this.setRLSContext(supabase, context);
+        
+        // Verify context was set correctly in development
+        if (process.env.NODE_ENV === 'development') {
+          await this.verifyRLSContext(supabase);
+        }
       }
       
       return { session, supabase, context };

@@ -1,0 +1,565 @@
+-- LLM‑Optimized PostgreSQL ERP Schema (Core + Semantic Layer)
+-- Target: ERP workloads similar to Xero/Zoho/Odoo with an LLM query layer that is safe, semantically clear, and tenant‑aware.
+-- Author: ChatGPT (GPT‑5 Thinking)
+-- Version: v0.1 (2025‑09‑01)
+
+-- ============================
+-- 0) EXTENSIONS & SCHEMAS
+-- ============================
+CREATE SCHEMA IF NOT EXISTS erp;
+CREATE SCHEMA IF NOT EXISTS util;
+CREATE SCHEMA IF NOT EXISTS sem;   -- semantic, LLM‑friendly views
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;   -- gen_random_uuid()
+CREATE EXTENSION IF NOT EXISTS citext;     -- case‑insensitive text (emails, codes)
+CREATE EXTENSION IF NOT EXISTS unaccent;   -- text search helpers
+CREATE EXTENSION IF NOT EXISTS pg_trgm;    -- similarity search helpers
+
+COMMENT ON SCHEMA erp IS 'Normalized OLTP entities for ERP.';
+COMMENT ON SCHEMA sem IS 'LLM‑safe, denormalized views (read‑only).';
+COMMENT ON SCHEMA util IS 'Utility functions, guardrails, and helpers.';
+
+-- ============================
+-- 1) TENANCY, USERS, DICTS
+-- ============================
+CREATE TABLE IF NOT EXISTS erp.organizations (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    name            text NOT NULL,
+    country_code    text,
+    timezone        text DEFAULT 'UTC',
+    created_at      timestamptz NOT NULL DEFAULT now()
+);
+COMMENT ON TABLE erp.organizations IS 'Logical tenants/companies.';
+
+CREATE TABLE IF NOT EXISTS erp.users (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          uuid NOT NULL REFERENCES erp.organizations(id) ON DELETE CASCADE,
+    email           citext UNIQUE NOT NULL,
+    display_name    text,
+    is_admin        boolean NOT NULL DEFAULT false,
+    created_at      timestamptz NOT NULL DEFAULT now()
+);
+
+-- Reference dictionaries
+CREATE TABLE IF NOT EXISTS erp.currencies (
+    code            text PRIMARY KEY,         -- e.g., USD, EUR, BDT
+    symbol          text,
+    name            text,
+    decimals        int  NOT NULL DEFAULT 2
+);
+
+CREATE TABLE IF NOT EXISTS erp.fx_rates (
+    org_id          uuid NOT NULL REFERENCES erp.organizations(id) ON DELETE CASCADE,
+    rate_date       date NOT NULL,
+    from_ccy        text NOT NULL REFERENCES erp.currencies(code),
+    to_ccy          text NOT NULL REFERENCES erp.currencies(code),
+    rate            numeric(20,8) NOT NULL,
+    PRIMARY KEY (org_id, rate_date, from_ccy, to_ccy)
+);
+
+CREATE TABLE IF NOT EXISTS erp.tax_codes (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          uuid NOT NULL REFERENCES erp.organizations(id) ON DELETE CASCADE,
+    code            text NOT NULL,
+    description     text,
+    rate_percent    numeric(9,4) NOT NULL DEFAULT 0,
+    is_sales        boolean NOT NULL DEFAULT true,
+    is_purchase     boolean NOT NULL DEFAULT true,
+    UNIQUE(org_id, code)
+);
+
+-- ============================
+-- 2) CORE ENTITIES
+-- ============================
+CREATE TABLE IF NOT EXISTS erp.contacts (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          uuid NOT NULL REFERENCES erp.organizations(id) ON DELETE CASCADE,
+    kind            text NOT NULL CHECK (kind IN ('customer','vendor','customer_vendor','employee','other')),
+    external_code   text,                      -- optional code from external system
+    name            text NOT NULL,
+    email           citext,
+    phone           text,
+    address_json    jsonb,
+    created_at      timestamptz NOT NULL DEFAULT now(),
+    UNIQUE(org_id, external_code)
+);
+COMMENT ON COLUMN erp.contacts.kind IS 'Classification used by semantic views; keep small set of values.';
+
+CREATE TABLE IF NOT EXISTS erp.products (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          uuid NOT NULL REFERENCES erp.organizations(id) ON DELETE CASCADE,
+    sku             text NOT NULL,
+    name            text NOT NULL,
+    uom             text NOT NULL DEFAULT 'unit',
+    is_service      boolean NOT NULL DEFAULT false,
+    income_account_id uuid,
+    expense_account_id uuid,
+    inventory_account_id uuid,
+    is_tracked_inventory boolean NOT NULL DEFAULT false,
+    sale_price      numeric(20,6),
+    purchase_price  numeric(20,6),
+    currency_code   text REFERENCES erp.currencies(code),
+    tax_code_id     uuid REFERENCES erp.tax_codes(id),
+    active          boolean NOT NULL DEFAULT true,
+    created_at      timestamptz NOT NULL DEFAULT now(),
+    UNIQUE(org_id, sku)
+);
+
+-- Accounts & GL (Chart of Accounts)
+CREATE TABLE IF NOT EXISTS erp.accounts (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          uuid NOT NULL REFERENCES erp.organizations(id) ON DELETE CASCADE,
+    code            text NOT NULL,
+    name            text NOT NULL,
+    type            text NOT NULL CHECK (type IN (
+        'asset','liability','equity','income','expense','contra_asset','contra_liability','other'
+    )),
+    parent_id       uuid REFERENCES erp.accounts(id),
+    is_postable     boolean NOT NULL DEFAULT true,
+    currency_code   text REFERENCES erp.currencies(code),
+    UNIQUE(org_id, code)
+);
+
+CREATE TABLE IF NOT EXISTS erp.journals (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          uuid NOT NULL REFERENCES erp.organizations(id) ON DELETE CASCADE,
+    code            text NOT NULL,
+    name            text NOT NULL,
+    kind            text NOT NULL CHECK (kind IN ('general','sales','purchases','bank','inventory','payroll','other')),
+    UNIQUE(org_id, code)
+);
+
+CREATE TABLE IF NOT EXISTS erp.journal_entries (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          uuid NOT NULL REFERENCES erp.organizations(id) ON DELETE CASCADE,
+    journal_id      uuid NOT NULL REFERENCES erp.journals(id),
+    entry_date      date NOT NULL,
+    document_type   text,                       -- invoice, bill, payment, etc.
+    document_id     uuid,                       -- references a document table
+    memo            text,
+    status          text NOT NULL DEFAULT 'posted' CHECK (status IN ('draft','posted','void')),
+    created_at      timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS erp.journal_lines (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          uuid NOT NULL REFERENCES erp.organizations(id) ON DELETE CASCADE,
+    journal_entry_id uuid NOT NULL REFERENCES erp.journal_entries(id) ON DELETE CASCADE,
+    line_no         int NOT NULL,
+    account_id      uuid NOT NULL REFERENCES erp.accounts(id),
+    contact_id      uuid REFERENCES erp.contacts(id),
+    product_id      uuid REFERENCES erp.products(id),
+    tax_code_id     uuid REFERENCES erp.tax_codes(id),
+    debit           numeric(20,6) NOT NULL DEFAULT 0,
+    credit          numeric(20,6) NOT NULL DEFAULT 0,
+    currency_code   text REFERENCES erp.currencies(code),
+    exchange_rate   numeric(20,8),             -- optional if lines in foreign currency
+    description     text,
+    UNIQUE(journal_entry_id, line_no)
+);
+
+-- Trigger to enforce balanced entries (sum(debit)=sum(credit))
+CREATE OR REPLACE FUNCTION erp.fn_assert_balanced() RETURNS trigger AS $$
+DECLARE
+    s numeric(20,6);
+BEGIN
+    -- Recalculate for affected journal entry
+    SELECT COALESCE(SUM(debit - credit),0) INTO s
+    FROM erp.journal_lines
+    WHERE journal_entry_id = COALESCE(NEW.journal_entry_id, OLD.journal_entry_id);
+
+    IF s <> 0 THEN
+        RAISE EXCEPTION 'Journal entry % is not balanced (sum debit - credit = %)', COALESCE(NEW.journal_entry_id, OLD.journal_entry_id), s;
+    END IF;
+    RETURN NULL; -- statement-level usage
+END; $$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_assert_balanced_insupd ON erp.journal_lines;
+DROP TRIGGER IF EXISTS trg_assert_balanced_del    ON erp.journal_lines;
+
+CREATE CONSTRAINT TRIGGER trg_assert_balanced_insupd
+AFTER INSERT OR UPDATE ON erp.journal_lines
+DEFERRABLE INITIALLY DEFERRED
+FOR EACH ROW EXECUTE FUNCTION erp.fn_assert_balanced();
+
+CREATE CONSTRAINT TRIGGER trg_assert_balanced_del
+AFTER DELETE ON erp.journal_lines
+DEFERRABLE INITIALLY DEFERRED
+FOR EACH ROW EXECUTE FUNCTION erp.fn_assert_balanced();
+
+-- Sales (AR)
+CREATE TABLE IF NOT EXISTS erp.invoices (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          uuid NOT NULL REFERENCES erp.organizations(id) ON DELETE CASCADE,
+    contact_id      uuid NOT NULL REFERENCES erp.contacts(id),
+    invoice_no      text NOT NULL,
+    issue_date      date NOT NULL,
+    due_date        date,
+    currency_code   text NOT NULL REFERENCES erp.currencies(code),
+    status          text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','approved','partially_paid','paid','void')),
+    total_subtotal  numeric(20,6) NOT NULL DEFAULT 0,
+    total_tax       numeric(20,6) NOT NULL DEFAULT 0,
+    total_grand     numeric(20,6) NOT NULL DEFAULT 0,
+    created_at      timestamptz NOT NULL DEFAULT now(),
+    UNIQUE(org_id, invoice_no)
+);
+
+CREATE TABLE IF NOT EXISTS erp.invoice_lines (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          uuid NOT NULL REFERENCES erp.organizations(id) ON DELETE CASCADE,
+    invoice_id      uuid NOT NULL REFERENCES erp.invoices(id) ON DELETE CASCADE,
+    line_no         int NOT NULL,
+    product_id      uuid REFERENCES erp.products(id),
+    description     text,
+    qty             numeric(20,6) NOT NULL DEFAULT 1,
+    unit_price      numeric(20,6) NOT NULL DEFAULT 0,
+    discount        numeric(20,6) NOT NULL DEFAULT 0,
+    tax_code_id     uuid REFERENCES erp.tax_codes(id),
+    line_subtotal   numeric(20,6) NOT NULL DEFAULT 0,
+    line_tax        numeric(20,6) NOT NULL DEFAULT 0,
+    line_total      numeric(20,6) NOT NULL DEFAULT 0,
+    UNIQUE(invoice_id, line_no)
+);
+
+-- Purchases (AP)
+CREATE TABLE IF NOT EXISTS erp.bills (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          uuid NOT NULL REFERENCES erp.organizations(id) ON DELETE CASCADE,
+    vendor_id       uuid NOT NULL REFERENCES erp.contacts(id),
+    bill_no         text NOT NULL,
+    bill_date       date NOT NULL,
+    due_date        date,
+    currency_code   text NOT NULL REFERENCES erp.currencies(code),
+    status          text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','approved','partially_paid','paid','void')),
+    total_subtotal  numeric(20,6) NOT NULL DEFAULT 0,
+    total_tax       numeric(20,6) NOT NULL DEFAULT 0,
+    total_grand     numeric(20,6) NOT NULL DEFAULT 0,
+    created_at      timestamptz NOT NULL DEFAULT now(),
+    UNIQUE(org_id, bill_no)
+);
+
+CREATE TABLE IF NOT EXISTS erp.bill_lines (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          uuid NOT NULL REFERENCES erp.organizations(id) ON DELETE CASCADE,
+    bill_id         uuid NOT NULL REFERENCES erp.bills(id) ON DELETE CASCADE,
+    line_no         int NOT NULL,
+    product_id      uuid REFERENCES erp.products(id),
+    description     text,
+    qty             numeric(20,6) NOT NULL DEFAULT 1,
+    unit_price      numeric(20,6) NOT NULL DEFAULT 0,
+    discount        numeric(20,6) NOT NULL DEFAULT 0,
+    tax_code_id     uuid REFERENCES erp.tax_codes(id),
+    line_subtotal   numeric(20,6) NOT NULL DEFAULT 0,
+    line_tax        numeric(20,6) NOT NULL DEFAULT 0,
+    line_total      numeric(20,6) NOT NULL DEFAULT 0,
+    UNIQUE(bill_id, line_no)
+);
+
+-- Cash/Bank
+CREATE TABLE IF NOT EXISTS erp.bank_accounts (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          uuid NOT NULL REFERENCES erp.organizations(id) ON DELETE CASCADE,
+    name            text NOT NULL,
+    account_no      text,
+    currency_code   text NOT NULL REFERENCES erp.currencies(code),
+    gl_account_id   uuid REFERENCES erp.accounts(id),
+    UNIQUE(org_id, name)
+);
+
+CREATE TABLE IF NOT EXISTS erp.bank_transactions (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          uuid NOT NULL REFERENCES erp.organizations(id) ON DELETE CASCADE,
+    bank_account_id uuid NOT NULL REFERENCES erp.bank_accounts(id) ON DELETE CASCADE,
+    txn_date        date NOT NULL,
+    amount          numeric(20,6) NOT NULL,
+    currency_code   text NOT NULL REFERENCES erp.currencies(code),
+    description     text,
+    external_ref    text
+);
+
+-- Payments & Allocations (works for both AR/AP)
+CREATE TABLE IF NOT EXISTS erp.payments (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          uuid NOT NULL REFERENCES erp.organizations(id) ON DELETE CASCADE,
+    contact_id      uuid NOT NULL REFERENCES erp.contacts(id),
+    direction       text NOT NULL CHECK (direction IN ('incoming','outgoing')),
+    payment_date    date NOT NULL,
+    currency_code   text NOT NULL REFERENCES erp.currencies(code),
+    amount_total    numeric(20,6) NOT NULL,
+    method          text,                        -- bank transfer, cash, card, etc.
+    status          text NOT NULL DEFAULT 'posted' CHECK (status IN ('draft','posted','void')),
+    created_at      timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS erp.payment_allocations (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          uuid NOT NULL REFERENCES erp.organizations(id) ON DELETE CASCADE,
+    payment_id      uuid NOT NULL REFERENCES erp.payments(id) ON DELETE CASCADE,
+    kind            text NOT NULL CHECK (kind IN ('invoice','bill')),
+    document_id     uuid NOT NULL,               -- references invoices.id or bills.id depending on kind
+    amount_applied  numeric(20,6) NOT NULL
+);
+
+-- Inventory (minimal; extend as needed)
+CREATE TABLE IF NOT EXISTS erp.warehouses (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          uuid NOT NULL REFERENCES erp.organizations(id) ON DELETE CASCADE,
+    code            text NOT NULL,
+    name            text NOT NULL,
+    UNIQUE(org_id, code)
+);
+
+CREATE TABLE IF NOT EXISTS erp.stock_moves (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          uuid NOT NULL REFERENCES erp.organizations(id) ON DELETE CASCADE,
+    product_id      uuid NOT NULL REFERENCES erp.products(id),
+    warehouse_id    uuid NOT NULL REFERENCES erp.warehouses(id),
+    move_date       timestamptz NOT NULL DEFAULT now(),
+    qty_delta       numeric(20,6) NOT NULL,      -- +in / -out
+    unit_cost       numeric(20,6),               -- optional for COGS; maintain via costing method
+    ref_type        text,                        -- invoice, bill, adjustment, so/po, etc.
+    ref_id          uuid
+);
+
+-- ============================
+-- 3) UTILITIES & GUARDRAILS
+-- ============================
+-- Per‑session org scoping for RLS
+CREATE OR REPLACE FUNCTION util.set_org(p_org uuid) RETURNS void AS $$
+BEGIN
+  PERFORM set_config('app.current_org', p_org::text, true);
+END; $$ LANGUAGE plpgsql;
+
+-- Simple date range helper for natural buckets (supports: today, yesterday, this_week, last_week, this_month, last_month, this_quarter, last_quarter, ytd)
+CREATE OR REPLACE FUNCTION util.date_range(preset text, tz text DEFAULT 'UTC')
+RETURNS TABLE(start_date date, end_date date) AS $$
+DECLARE
+  nowts timestamptz := now() AT TIME ZONE tz;
+  first date; last date;
+BEGIN
+  CASE lower(preset)
+    WHEN 'today' THEN first := (nowts)::date; last := (nowts)::date;
+    WHEN 'yesterday' THEN first := (nowts - interval '1 day')::date; last := (nowts - interval '1 day')::date;
+    WHEN 'this_week' THEN first := date_trunc('week', nowts)::date; last := (date_trunc('week', nowts) + interval '6 days')::date;
+    WHEN 'last_week' THEN first := (date_trunc('week', nowts) - interval '7 days')::date; last := (date_trunc('week', nowts) - interval '1 day')::date;
+    WHEN 'this_month' THEN first := date_trunc('month', nowts)::date; last := (date_trunc('month', nowts) + interval '1 month - 1 day')::date;
+    WHEN 'last_month' THEN first := (date_trunc('month', nowts) - interval '1 month')::date; last := (date_trunc('month', nowts) - interval '1 day')::date;
+    WHEN 'this_quarter' THEN first := date_trunc('quarter', nowts)::date; last := (date_trunc('quarter', nowts) + interval '3 months - 1 day')::date;
+    WHEN 'last_quarter' THEN first := (date_trunc('quarter', nowts) - interval '3 months')::date; last := (date_trunc('quarter', nowts) - interval '1 day')::date;
+    WHEN 'ytd' THEN first := make_date(EXTRACT(YEAR FROM nowts)::int,1,1); last := (nowts)::date;
+    ELSE RAISE EXCEPTION 'Unknown preset %', preset;
+  END CASE;
+  RETURN QUERY SELECT first, last;
+END; $$ LANGUAGE plpgsql STABLE;
+
+-- FX conversion (spot rate on/as‑of date; falls back to nearest previous)
+CREATE OR REPLACE FUNCTION util.fx_convert(amount numeric, from_ccy text, to_ccy text, as_of date, org uuid)
+RETURNS numeric AS $$
+DECLARE r numeric;
+BEGIN
+  IF from_ccy = to_ccy THEN RETURN amount; END IF;
+  SELECT rate INTO r
+  FROM erp.fx_rates
+  WHERE org_id = org AND from_ccy = from_ccy AND to_ccy = to_ccy AND rate_date <= as_of
+  ORDER BY rate_date DESC LIMIT 1;
+  IF r IS NULL THEN RAISE EXCEPTION 'No FX rate % -> % for %', from_ccy, to_ccy, as_of; END IF;
+  RETURN amount * r;
+END; $$ LANGUAGE plpgsql STABLE;
+
+-- Semantic catalog for LLMs (synonyms, descriptions, examples)
+CREATE TABLE IF NOT EXISTS util.semantic_catalog (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    object_type     text NOT NULL CHECK (object_type IN ('table','column','view','function')),
+    object_schema   text NOT NULL,
+    object_name     text NOT NULL,
+    column_name     text,
+    description     text,
+    aliases         jsonb,       -- e.g., ["customer","client","buyer"]
+    examples        jsonb,       -- e.g., [{"ask":"top customers last month","sql":"SELECT ..."}]
+    pii             boolean DEFAULT false
+);
+
+INSERT INTO util.semantic_catalog(object_type, object_schema, object_name, description, aliases)
+VALUES
+('table','sem','v_ar_open_invoices','Open AR invoices by customer, denormalized and ready for analytics','["receivables","customer dues","outstanding invoices"]'::jsonb),
+('table','sem','v_ap_open_bills','Open AP bills by vendor','["payables","vendor dues","outstanding bills"]'::jsonb),
+('view','sem','v_gl_fact','Fact table for GL lines with accounts, contacts, products, dates, amounts','["ledger","journal lines","transactions"]'::jsonb);
+
+-- ============================
+-- 4) ROW‑LEVEL SECURITY (RLS)
+-- ============================
+ALTER TABLE erp.contacts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE erp.products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE erp.accounts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE erp.journals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE erp.journal_entries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE erp.journal_lines ENABLE ROW LEVEL SECURITY;
+ALTER TABLE erp.invoices ENABLE ROW LEVEL SECURITY;
+ALTER TABLE erp.invoice_lines ENABLE ROW LEVEL SECURITY;
+ALTER TABLE erp.bills ENABLE ROW LEVEL SECURITY;
+ALTER TABLE erp.bill_lines ENABLE ROW LEVEL SECURITY;
+ALTER TABLE erp.payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE erp.payment_allocations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE erp.bank_accounts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE erp.bank_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE erp.warehouses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE erp.stock_moves ENABLE ROW LEVEL SECURITY;
+ALTER TABLE erp.tax_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE erp.fx_rates ENABLE ROW LEVEL SECURITY;
+
+-- Common policy: org_id must equal current setting app.current_org
+CREATE OR REPLACE FUNCTION util.org_matches(org uuid) RETURNS boolean AS $$
+BEGIN
+  RETURN org::text = current_setting('app.current_org', true);
+END; $$ LANGUAGE plpgsql STABLE;
+
+DO $$
+DECLARE t record;
+BEGIN
+  FOR t IN SELECT n.nspname, c.relname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+           WHERE n.nspname='erp' AND c.relkind='r'
+  LOOP
+    EXECUTE format('CREATE POLICY p_rls_%I_%I ON erp.%I USING (util.org_matches(org_id));', t.nspname, t.relname, t.relname);
+    EXECUTE format('ALTER TABLE erp.%I FORCE ROW LEVEL SECURITY;', t.relname);
+  END LOOP;
+END $$;
+
+-- Read‑only role for LLM (only on views)
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'llm_reader') THEN
+        CREATE ROLE llm_reader NOINHERIT;
+    END IF;
+END $$;
+
+-- ============================
+-- 5) SEMANTIC VIEWS (LLM‑SAFE)
+-- ============================
+-- GL fact table (flattened)
+CREATE OR REPLACE VIEW sem.v_gl_fact AS
+SELECT
+  jl.id                AS gl_line_id,
+  je.id                AS gl_entry_id,
+  je.entry_date,
+  je.journal_id,
+  j.kind               AS journal_kind,
+  a.id                 AS account_id,
+  a.code               AS account_code,
+  a.name               AS account_name,
+  a.type               AS account_type,
+  jl.contact_id,
+  c.name               AS contact_name,
+  jl.product_id,
+  p.sku                AS product_sku,
+  p.name               AS product_name,
+  COALESCE(jl.debit,0) AS debit,
+  COALESCE(jl.credit,0) AS credit,
+  (COALESCE(jl.debit,0) - COALESCE(jl.credit,0)) AS amount,
+  jl.currency_code,
+  je.org_id
+FROM erp.journal_lines jl
+JOIN erp.journal_entries je ON je.id = jl.journal_entry_id
+JOIN erp.journals j        ON j.id  = je.journal_id
+JOIN erp.accounts a        ON a.id  = jl.account_id
+LEFT JOIN erp.contacts c   ON c.id  = jl.contact_id
+LEFT JOIN erp.products p   ON p.id  = jl.product_id
+WITH LOCAL CHECK OPTION;  -- ensures RLS still applies
+
+-- Open AR invoices
+CREATE OR REPLACE VIEW sem.v_ar_open_invoices AS
+SELECT i.id AS invoice_id, i.invoice_no, i.issue_date, i.due_date, i.contact_id, c.name AS customer_name,
+       i.currency_code,
+       i.total_grand,
+       (i.total_grand - COALESCE((
+           SELECT SUM(pa.amount_applied)
+           FROM erp.payment_allocations pa
+           JOIN erp.payments py ON py.id = pa.payment_id AND py.org_id = i.org_id AND pa.org_id = i.org_id
+           WHERE pa.kind='invoice' AND pa.document_id = i.id
+       ),0)) AS amount_due,
+       i.status,
+       i.org_id
+FROM erp.invoices i
+JOIN erp.contacts c ON c.id = i.contact_id
+WHERE i.status IN ('approved','partially_paid')
+WITH LOCAL CHECK OPTION;
+
+-- Open AP bills
+CREATE OR REPLACE VIEW sem.v_ap_open_bills AS
+SELECT b.id AS bill_id, b.bill_no, b.bill_date, b.due_date, b.vendor_id, v.name AS vendor_name,
+       b.currency_code,
+       b.total_grand,
+       (b.total_grand - COALESCE((
+           SELECT SUM(pa.amount_applied)
+           FROM erp.payment_allocations pa
+           JOIN erp.payments py ON py.id = pa.payment_id AND py.org_id = b.org_id AND pa.org_id = b.org_id
+           WHERE pa.kind='bill' AND pa.document_id = b.id
+       ),0)) AS amount_due,
+       b.status,
+       b.org_id
+FROM erp.bills b
+JOIN erp.contacts v ON v.id = b.vendor_id
+WHERE b.status IN ('approved','partially_paid')
+WITH LOCAL CHECK OPTION;
+
+-- Stock on hand (per product, warehouse)
+CREATE OR REPLACE VIEW sem.v_stock_on_hand AS
+SELECT sm.org_id, sm.product_id, p.sku, p.name AS product_name, sm.warehouse_id, w.code AS warehouse_code,
+       SUM(sm.qty_delta) AS qty_on_hand
+FROM erp.stock_moves sm
+JOIN erp.products p ON p.id = sm.product_id
+JOIN erp.warehouses w ON w.id = sm.warehouse_id
+GROUP BY sm.org_id, sm.product_id, p.sku, p.name, sm.warehouse_id, w.code
+WITH LOCAL CHECK OPTION;
+
+-- Revenue by customer by month (simple KPI)
+CREATE OR REPLACE VIEW sem.v_kpi_revenue_by_month AS
+SELECT
+  je.org_id,
+  date_trunc('month', je.entry_date)::date AS month,
+  c.id AS customer_id,
+  c.name AS customer_name,
+  SUM(jl.credit - jl.debit) AS revenue
+FROM erp.journal_entries je
+JOIN erp.journal_lines jl ON jl.journal_entry_id = je.id
+JOIN erp.accounts a ON a.id = jl.account_id AND a.type = 'income'
+LEFT JOIN erp.contacts c ON c.id = jl.contact_id
+GROUP BY je.org_id, date_trunc('month', je.entry_date), c.id, c.name
+WITH LOCAL CHECK OPTION;
+
+-- Grant read to LLM role on semantic views only
+GRANT USAGE ON SCHEMA sem TO llm_reader;
+GRANT SELECT ON ALL TABLES IN SCHEMA sem TO llm_reader;
+ALTER DEFAULT PRIVILEGES IN SCHEMA sem GRANT SELECT ON TABLES TO llm_reader;
+
+-- ============================
+-- 6) COMMENTS (DATA DICTIONARY)
+-- ============================
+COMMENT ON TABLE erp.invoices IS 'Customer invoices (AR). Monetary totals stored at header for simplicity; lines hold detail.';
+COMMENT ON COLUMN erp.invoices.total_grand IS 'Subtotal + tax - discount at document level. For analytics use sem.v_ar_open_invoices.';
+COMMENT ON TABLE erp.journal_lines IS 'Atomic double‑entry rows; enforce balance via DEFERRABLE constraint triggers.';
+COMMENT ON VIEW sem.v_gl_fact IS 'LLM‑friendly flattened GL fact for easy aggregations by account/contact/product/date.';
+COMMENT ON VIEW sem.v_ar_open_invoices IS 'LLM‑safe view of open receivables with computed amount_due.';
+COMMENT ON VIEW sem.v_ap_open_bills IS 'LLM‑safe view of open payables with computed amount_due.';
+COMMENT ON VIEW sem.v_stock_on_hand IS 'Inventory on hand per product and warehouse (sum of stock_moves).';
+COMMENT ON VIEW sem.v_kpi_revenue_by_month IS 'Monthly revenue by customer based on income accounts.';
+
+-- ============================
+-- 7) PROMPT‑TIME CONTRACT (for your agent)
+-- ============================
+--  • The LLM user/role must connect as role `llm_reader` (read‑only) and query ONLY the sem.* views.
+--  • Before querying, call: SELECT util.set_org('<org_uuid>'); to scope RLS to the correct tenant.
+--  • Prefer natural buckets via SELECT * FROM util.date_range('last_month','Asia/Singapore');
+--  • For FX conversions, use util.fx_convert(amount, from_ccy, to_ccy, as_of, org_id).
+--  • If a field or metric seems ambiguous, check util.semantic_catalog for synonyms and descriptions.
+--  • Do NOT attempt INSERT/UPDATE/DELETE; writers should go through vetted stored procedures (not included in v0.1).
+
+-- ============================
+-- 8) TODO (NEXT ITERATIONS)
+-- ============================
+--  • Add sales_orders/purchase_orders and fulfillment/receiving flows.
+--  • Add period locking & audit trails (posting_periods, audit_log).
+--  • Add bank reconciliation tables and statements.
+--  • Add tax reporting views (VAT/GST by period per tax_code).
+--  • Add costing method (FIFO/AVCO) materialized views for COGS.
+--  • Add doc numbering sequences per org and journal.
+--  • Add safely‑parameterized writer procedures for invoices/bills/payments.
+--  • Add more entries to util.semantic_catalog and column‑level comments.

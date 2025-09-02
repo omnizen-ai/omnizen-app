@@ -15,6 +15,13 @@
       "when": 1756748000000,
       "tag": "0001_rls_functions",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1756790719406,
+      "tag": "0002_early_groot",
+      "breakpoints": true
     }
   ]
 }

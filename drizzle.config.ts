@@ -11,6 +11,8 @@ export default defineConfig({
     './lib/db/schema/core/*.ts',
     './lib/db/schema/finance/*.ts',
     './lib/db/schema/ai/*.ts',
+    './lib/db/schema/erp/*.ts',
+    './lib/db/schema/semantic/*.ts',
   ],
   out: './lib/db/migrations',
   dialect: 'postgresql',
