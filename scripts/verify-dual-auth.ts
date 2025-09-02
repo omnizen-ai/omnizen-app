@@ -243,7 +243,12 @@ async function checkSemanticViews() {
       'v_ap_aging_report', 'v_ar_aging_report', 'v_balance_sheet',
       'v_cash_flow_statement', 'v_customer_revenue', 'v_financial_ratios',
       'v_inventory_status', 'v_kpi_dashboard', 'v_order_pipeline',
-      'v_profit_loss_statement'
+      'v_profit_loss_statement',
+      // Personal finance views
+      'v_personal_budget_performance', 'v_financial_goals_progress',
+      'v_investment_portfolio', 'v_monthly_cash_flow',
+      'v_subscription_tracking', 'v_personal_account_balances',
+      'v_personal_categories_summary'
     ];
     
     for (const viewName of expectedViews) {

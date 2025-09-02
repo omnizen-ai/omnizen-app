@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1756799668123,
-      "tag": "0000_pink_iron_man",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1756806786237,
-      "tag": "0001_loving_harpoon",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1756821195899,
-      "tag": "0002_rare_mephisto",
+      "when": 1756829503393,
+      "tag": "0000_fantastic_talkback",
       "breakpoints": true
     }
   ]

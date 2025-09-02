@@ -17,12 +17,31 @@ import type { InferSelectModel } from 'drizzle-orm';
 import { organizations, workspaces } from '../core/organizations';
 import { chartAccounts } from '../finance/accounts';
 
-// Enums
-export const goalTypeEnum = pgEnum('goal_type_enum', ['savings', 'debt_payoff', 'investment', 'purchase', 'emergency_fund', 'retirement']);
-export const goalStatusEnum = pgEnum('goal_status_enum', ['active', 'paused', 'completed', 'cancelled']);
-export const budgetPeriodEnum = pgEnum('budget_period_enum', ['weekly', 'monthly', 'quarterly', 'yearly']);
-export const assetTypeEnum = pgEnum('asset_type_enum', ['stock', 'etf', 'mutual_fund', 'bond', 'crypto', 'commodity']);
-export const subscriptionFrequencyEnum = pgEnum('subscription_frequency_enum', ['weekly', 'monthly', 'quarterly', 'annual']);
+/**
+ * Personal Finance Schema
+ * 
+ * Design Pattern: Nullable Foreign Keys to Chart of Accounts
+ * -----------------------------------------------------------
+ * Some tables have optional references to chartAccounts to support two modes:
+ * 
+ * 1. Simple Mode (FK is null): For personal users who want basic budgeting
+ *    without full double-entry bookkeeping. Categories and investments are
+ *    tracked for reporting only.
+ * 
+ * 2. Advanced Mode (FK is set): For users who want full GL integration.
+ *    Transactions can be automatically posted to the general ledger for
+ *    complete financial accounting.
+ * 
+ * This flexibility allows the same schema to serve both casual personal
+ * finance users and those who need professional-grade accounting.
+ */
+
+// Enums (consistent naming: TypeScript uses 'Enum' suffix, PostgreSQL doesn't need '_enum')
+export const goalTypeEnum = pgEnum('goal_type', ['savings', 'debt_payoff', 'investment', 'purchase', 'emergency_fund', 'retirement']);
+export const goalStatusEnum = pgEnum('goal_status', ['active', 'paused', 'completed', 'cancelled']);
+export const budgetPeriodEnum = pgEnum('budget_period', ['weekly', 'monthly', 'quarterly', 'yearly']);
+export const assetTypeEnum = pgEnum('asset_type', ['stock', 'etf', 'mutual_fund', 'bond', 'crypto', 'commodity']);
+export const subscriptionFrequencyEnum = pgEnum('subscription_frequency', ['weekly', 'monthly', 'quarterly', 'annual']);
 
 // Personal Categories Table
 export const personalCategories = pgTable('personal_categories', {
@@ -35,6 +54,9 @@ export const personalCategories = pgTable('personal_categories', {
   taxRelevant: boolean('tax_relevant').default(false),
   parentCategoryId: uuid('parent_category_id').references(() => personalCategories.id),
   // Optional chart of accounts mapping for detailed bookkeeping
+  // Nullable to support both simple categorization (no GL mapping) and full accounting (with GL integration)
+  // When null: Category used for budgeting/reporting only
+  // When set: Transactions can be automatically posted to the GL account
   defaultAccountId: uuid('default_account_id').references(() => chartAccounts.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -103,6 +125,9 @@ export const investmentHoldings = pgTable('investment_holdings', {
   unrealizedGainLoss: decimal('unrealized_gain_loss', { precision: 15, scale: 2 }),
   lastUpdated: timestamp('last_updated').defaultNow(),
   // Optional chart of accounts mapping for investment tracking
+  // Nullable to support both simple portfolio tracking and full GL integration
+  // When null: Investment tracked for reporting only (most personal users)
+  // When set: Investment gains/losses can be posted to GL (advanced users/businesses)
   investmentAccountId: uuid('investment_account_id').references(() => chartAccounts.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => ({

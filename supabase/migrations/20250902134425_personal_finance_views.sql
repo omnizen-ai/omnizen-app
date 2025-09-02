@@ -204,7 +204,7 @@ SELECT
   ba.workspace_id,
   ba.id AS account_id,
   ba.account_name,
-  ba.account_type,
+  ba.bank_account_type,
   ba.bank_name,
   ba.current_balance,
   ba.available_balance,

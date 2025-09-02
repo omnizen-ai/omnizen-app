@@ -40,7 +40,7 @@ export const bankAccounts = pgTable('bank_accounts', {
   // Account details
   accountName: text('account_name').notNull(),
   accountNumber: text('account_number'),
-  accountType: bankAccountTypeEnum('account_type').notNull(),
+  accountType: bankAccountTypeEnum('bank_account_type').notNull(), // Renamed column to avoid confusion with chart_accounts.account_type
   
   // Bank information
   bankName: text('bank_name'),
