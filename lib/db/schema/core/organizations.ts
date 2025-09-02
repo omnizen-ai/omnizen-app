@@ -26,7 +26,7 @@ export const planTierEnum = pgEnum('plan_tier', [
 export const organizations = pgTable('organizations', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
-  slug: text('slug').notNull().unique(),
+  slug: text('slug').notNull(),
   planTier: planTierEnum('plan_tier').notNull().default('starter'),
   
   // Feature flags for progressive enhancement
