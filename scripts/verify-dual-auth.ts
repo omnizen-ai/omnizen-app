@@ -248,7 +248,9 @@ async function checkSemanticViews() {
       'v_personal_budget_performance', 'v_financial_goals_progress',
       'v_investment_portfolio', 'v_monthly_cash_flow',
       'v_subscription_tracking', 'v_personal_account_balances',
-      'v_personal_categories_summary'
+      'v_personal_categories_summary',
+      // Balance tracking view
+      'v_unbalanced_journal_entries'
     ];
     
     for (const viewName of expectedViews) {

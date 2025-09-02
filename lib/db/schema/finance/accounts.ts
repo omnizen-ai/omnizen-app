@@ -141,6 +141,11 @@ export const journalEntries: any = pgTable('journal_entries', {
   postedAt: timestamp('posted_at'),
   reversedFromId: uuid('reversed_from_id').references((): AnyPgColumn => journalEntries.id),
   
+  // Balance tracking (will be computed via trigger or application)
+  totalDebits: decimal('total_debits', { precision: 20, scale: 2 }).notNull().default('0.00'),
+  totalCredits: decimal('total_credits', { precision: 20, scale: 2 }).notNull().default('0.00'),
+  // Note: is_balanced will be added as a generated column in migration
+  
   // Metadata
   createdBy: uuid('created_by'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -165,6 +170,7 @@ export const journalLines = pgTable('journal_lines', {
   accountId: uuid('account_id').notNull().references(() => chartAccounts.id),
   debit: decimal('debit', { precision: 20, scale: 2 }).notNull().default('0.00'),
   credit: decimal('credit', { precision: 20, scale: 2 }).notNull().default('0.00'),
+  // Note: will add CHECK constraint in migration to ensure only debit OR credit is non-zero
   
   // Currency support
   currencyCode: text('currency_code').notNull().default('USD'),

@@ -32,7 +32,14 @@ export const organizationTypeEnum = pgEnum('organization_type', [
   'business',
   'personal',
   'hybrid'
-]);;
+]);
+
+// Accounting mode enum - Progressive enforcement for different business sizes
+export const accountingModeEnum = pgEnum('accounting_mode', [
+  'simple',    // No balance enforcement, warnings only (startups/small business)
+  'standard',  // Balance required for posting, drafts can be unbalanced (growing business)
+  'strict'     // Always enforced, even on drafts (enterprise/regulated)
+]);
 
 // Organizations - Multi-tenant foundation
 export const organizations = pgTable('organizations', {
@@ -44,6 +51,11 @@ export const organizations = pgTable('organizations', {
   // Personal finance support
   accountType: organizationTypeEnum('organization_type').default('business'),
   isPersonalFinance: boolean('is_personal_finance').default(false),
+  
+  // Accounting configuration
+  accountingMode: accountingModeEnum('accounting_mode').notNull().default('simple'),
+  enforceBalanceOnPost: boolean('enforce_balance_on_post').notNull().default(false),
+  requireApprovalWorkflow: boolean('require_approval_workflow').notNull().default(false),
   
   // Feature flags for progressive enhancement
   featureFlags: jsonb('feature_flags').notNull().default({
