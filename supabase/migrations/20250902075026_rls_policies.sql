@@ -221,7 +221,7 @@ CREATE POLICY "semantic_catalog_access" ON semantic_catalog
 
 CREATE POLICY "semantic_catalog_modification" ON semantic_catalog
   FOR INSERT
-  USING (
+  WITH CHECK (
     organization_id = auth_org_id()
     OR (organization_id IS NULL AND auth_role() IN ('admin', 'owner'))
   );
@@ -253,7 +253,7 @@ CREATE POLICY "query_templates_access" ON query_templates
 
 CREATE POLICY "query_templates_modification" ON query_templates
   FOR INSERT
-  USING (
+  WITH CHECK (
     organization_id = auth_org_id()
     OR (organization_id IS NULL AND auth_role() IN ('admin', 'owner'))
   );
@@ -285,7 +285,7 @@ CREATE POLICY "business_metrics_access" ON business_metrics
 
 CREATE POLICY "business_metrics_modification" ON business_metrics
   FOR INSERT
-  USING (
+  WITH CHECK (
     organization_id = auth_org_id()
     OR (organization_id IS NULL AND auth_role() IN ('admin', 'owner'))
   );
@@ -317,7 +317,7 @@ CREATE POLICY "nl_mappings_access" ON nl_mappings
 
 CREATE POLICY "nl_mappings_modification" ON nl_mappings
   FOR INSERT
-  USING (
+  WITH CHECK (
     organization_id = auth_org_id()
     OR (organization_id IS NULL AND auth_role() IN ('admin', 'owner'))
   );
@@ -361,7 +361,7 @@ CREATE POLICY "agent_erp_permissions_read" ON agent_erp_permissions
 -- Only admins can modify agent permissions
 CREATE POLICY "agent_erp_permissions_admin_insert" ON agent_erp_permissions
   FOR INSERT
-  USING (
+  WITH CHECK (
     organization_id = auth_org_id()
     AND auth_role() IN ('admin', 'owner')
   );
@@ -417,7 +417,7 @@ CREATE POLICY "query_validation_rules_access" ON query_validation_rules
 
 CREATE POLICY "query_validation_rules_admin_modify" ON query_validation_rules
   FOR INSERT
-  USING (
+  WITH CHECK (
     (organization_id = auth_org_id() OR organization_id IS NULL)
     AND auth_role() IN ('admin', 'owner')
   );
@@ -448,7 +448,7 @@ CREATE POLICY "financial_guardrails_read" ON financial_guardrails
 -- Only admins and accountants can modify guardrails
 CREATE POLICY "financial_guardrails_insert" ON financial_guardrails
   FOR INSERT
-  USING (
+  WITH CHECK (
     organization_id = auth_org_id()
     AND auth_role() IN ('admin', 'owner', 'accountant')
   );

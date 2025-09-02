@@ -3,7 +3,7 @@
 -- ============================
 -- These views provide denormalized, business-friendly data for LLM queries
 -- All views respect RLS through auth_org_id() function
--- Note: The semantic schema is created in migration 0002_early_groot.sql
+-- Note: The semantic schema is created by migrate.ts
 
 -- ============================
 -- 1. AR Aging Report View
@@ -376,7 +376,7 @@ SELECT
   c.display_name AS party_name,
   so.total_amount::numeric AS total_amount,
   so.currency_code,
-  so.status,
+  so.status::text AS status,
   so.expected_delivery_date AS expected_date,
   (so.total_quantity_ordered::numeric - so.total_quantity_fulfilled::numeric) AS pending_quantity,
   CASE 
@@ -402,7 +402,7 @@ SELECT
   v.display_name AS party_name,
   po.total_amount::numeric AS total_amount,
   po.currency_code,
-  po.status,
+  po.status::text AS status,
   po.expected_receipt_date AS expected_date,
   (po.total_quantity_ordered::numeric - po.total_quantity_received::numeric) AS pending_quantity,
   CASE 

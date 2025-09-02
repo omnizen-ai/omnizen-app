@@ -16,6 +16,12 @@
     "db:pull": "drizzle-kit pull",
     "db:check": "drizzle-kit check",
     "db:up": "drizzle-kit up",
+    "supabase:migrate:local": "supabase db push --local",
+    "supabase:migrate:prod": "supabase db push",
+    "migrate:local": "pnpm db:migrate && pnpm supabase:migrate:local",
+    "migrate:prod": "pnpm db:migrate && pnpm supabase:migrate:prod",
+    "db:reset:local": "supabase db reset --local && pnpm migrate:local",
+    "db:reset:prod": "echo '⚠️  WARNING: This will reset the production database! Press Ctrl+C to cancel.' && sleep 5 && supabase db reset && pnpm migrate:prod",
     "db:types": "npx supabase gen types typescript --local 2>/dev/null | grep -v '^Connecting to db' > lib/supabase/types.ts",
     "test": "export PLAYWRIGHT=True && pnpm exec playwright test"
   },
