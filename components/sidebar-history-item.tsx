@@ -25,6 +25,7 @@ import {
 } from './icons';
 import { memo } from 'react';
 import { useChatVisibility } from '@/hooks/use-chat-visibility';
+import { usePanelState } from '@/lib/hooks/use-panel-state';
 
 const PureChatItem = ({
   chat,
@@ -41,11 +42,15 @@ const PureChatItem = ({
     chatId: chat.id,
     initialVisibilityType: chat.visibility,
   });
+  const { closePanel } = usePanelState();
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>
-        <Link href={`/chat/${chat.id}`} onClick={() => setOpenMobile(false)}>
+        <Link href={`/chat/${chat.id}`} onClick={() => {
+          closePanel(); // Close any open panel when navigating to chat
+          setOpenMobile(false);
+        }}>
           <span>{chat.title}</span>
         </Link>
       </SidebarMenuButton>

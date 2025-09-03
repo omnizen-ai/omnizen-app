@@ -4,6 +4,7 @@ import { ChevronRight, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { usePanelState, type PanelType } from '@/lib/hooks/use-panel-state';
 
 import {
   Collapsible,
@@ -39,9 +40,27 @@ export function NavMain({
 }) {
   const router = useRouter();
   const { state, setOpen } = useSidebar();
+  const { openPanel, closePanel } = usePanelState();
   const [expandedItems, setExpandedItems] = useState<string[]>(() => 
     items.filter(item => item.isActive).map(item => item.title)
   );
+  
+  // Map URLs to panel types - only child items, not parent items
+  const urlToPanelType: Record<string, PanelType> = {
+    '/bookkeeping/general-ledger': 'bookkeeping/general-ledger',
+    '/bookkeeping/bills': 'bookkeeping/bills',
+    '/bookkeeping/invoices': 'bookkeeping/invoices',
+    '/banking/payment-methods': 'banking/payment-methods',
+    '/banking/transactions': 'banking/transactions',
+  };
+  
+  const handleNavClick = (e: React.MouseEvent, url: string) => {
+    const panelType = urlToPanelType[url];
+    if (panelType) {
+      e.preventDefault();
+      openPanel(panelType);
+    }
+  };
 
   const handleCollapsedClick = (e: React.MouseEvent, item: any) => {
     // If sidebar is collapsed and item has sub-items (not Omni), expand sidebar
@@ -78,7 +97,10 @@ export function NavMain({
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton 
                     tooltip={item.title}
-                    onClick={(e) => handleCollapsedClick(e, item)}
+                    onClick={(e) => {
+                      handleCollapsedClick(e, item);
+                      // Parent items with children should only expand/collapse, not open panels
+                    }}
                   >
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
@@ -90,9 +112,12 @@ export function NavMain({
                     {item.items.map((subItem) => (
                       <SidebarMenuSubItem key={subItem.title}>
                         <SidebarMenuSubButton asChild>
-                          <Link href={subItem.url}>
+                          <a 
+                            href={subItem.url}
+                            onClick={(e) => handleNavClick(e, subItem.url)}
+                          >
                             <span>{subItem.title}</span>
-                          </Link>
+                          </a>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     ))}
@@ -104,13 +129,19 @@ export function NavMain({
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 tooltip={item.description || item.title}
-                asChild={!item.isNewChat}
-                onClick={item.isNewChat ? () => {
-                  router.push('/');
-                  router.refresh();
-                } : undefined}
+                asChild={!item.isNewChat && item.title !== 'Omni'}
+                onClick={
+                  item.isNewChat ? () => {
+                    router.push('/');
+                    router.refresh();
+                  } : item.title === 'Omni' ? () => {
+                    // Close any open panel and navigate to chat
+                    closePanel();
+                    router.push('/');
+                  } : undefined
+                }
               >
-                {item.isNewChat ? (
+                {item.isNewChat || item.title === 'Omni' ? (
                   <>
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
