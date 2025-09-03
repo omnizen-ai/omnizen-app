@@ -202,11 +202,15 @@ export const journalLines = pgTable('journal_lines', {
 // Currencies
 export const currencies = pgTable('currencies', {
   code: text('code').primaryKey(), // USD, EUR, GBP, etc.
+  organizationId: uuid('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
   symbol: text('symbol').notNull(),
   name: text('name').notNull(),
   decimals: integer('decimals').notNull().default(2),
   isActive: boolean('is_active').notNull().default(true),
-});
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => ({
+  orgCodeIdx: uniqueIndex('fin_currency_org_code_idx').on(table.organizationId, table.code),
+}));
 
 // Exchange rates
 export const exchangeRates = pgTable('exchange_rates', {

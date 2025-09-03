@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
-import type { BankAccount, BankTransaction } from '@/lib/db/schema/index';
+import type { BankAccount, BankTransaction, Currency } from '@/lib/db/schema/index';
 
 // Bank Accounts hooks
 export function useBankAccounts() {
@@ -131,5 +131,13 @@ export function useDeleteBankTransaction() {
       queryClient.invalidateQueries({ queryKey: ['bankAccounts'] });
       queryClient.invalidateQueries({ queryKey: ['cashFlowSummary'] });
     },
+  });
+}
+
+// Currencies hook
+export function useCurrencies() {
+  return useQuery({
+    queryKey: ['currencies'],
+    queryFn: () => apiClient.get<Currency[]>('/api/banking/currencies'),
   });
 }

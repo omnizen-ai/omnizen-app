@@ -22,6 +22,8 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import type { BankAccount } from '@/lib/db/schema/index';
+import { useCurrencies } from '@/lib/hooks/use-banking';
+import { useChartAccounts } from '@/lib/hooks/use-chart-of-accounts';
 
 const accountTypes = [
   { value: 'checking', label: 'Checking' },
@@ -47,6 +49,8 @@ export function BankAccountForm({
   account,
   isLoading = false,
 }: BankAccountFormProps) {
+  const { data: currencies = [], isLoading: currenciesLoading } = useCurrencies();
+  const { data: chartAccounts = [], isLoading: accountsLoading } = useChartAccounts();
   const [formData, setFormData] = useState<Partial<BankAccount>>({
     accountName: '',
     bankName: '',
@@ -56,6 +60,7 @@ export function BankAccountForm({
     currentBalance: '0.00',
     availableBalance: '0.00',
     currencyCode: 'USD',
+    glAccountId: '',
     isActive: true,
     isReconciling: false,
     notes: '',
@@ -72,6 +77,7 @@ export function BankAccountForm({
         currentBalance: account.currentBalance,
         availableBalance: account.availableBalance,
         currencyCode: account.currencyCode,
+        glAccountId: account.glAccountId,
         isActive: account.isActive,
         isReconciling: account.isReconciling,
         notes: account.notes,
@@ -86,6 +92,7 @@ export function BankAccountForm({
         currentBalance: '0.00',
         availableBalance: '0.00',
         currencyCode: 'USD',
+        glAccountId: '',
         isActive: true,
         isReconciling: false,
         notes: '',
@@ -221,11 +228,33 @@ export function BankAccountForm({
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="USD">USD - US Dollar</SelectItem>
-                  <SelectItem value="EUR">EUR - Euro</SelectItem>
-                  <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                  <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
-                  <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
+                  {currencies.map((currency) => (
+                    <SelectItem key={currency.code} value={currency.code}>
+                      {currency.code} - {currency.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="glAccountId">GL Account *</Label>
+              <Select
+                value={formData.glAccountId || ''}
+                onValueChange={(value) => handleChange('glAccountId', value)}
+                disabled={isLoading || accountsLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select GL account" />
+                </SelectTrigger>
+                <SelectContent>
+                  {chartAccounts
+                    .filter(acc => acc.type === 'asset' && acc.isPostable)
+                    .map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                        {account.code} - {account.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
