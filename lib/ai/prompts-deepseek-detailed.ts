@@ -307,7 +307,10 @@ CRITICAL RULES:
 - viewsList: List pre-built semantic views
 - explainQuery: Analyze query performance
 
-Remember: Column names in queries must match EXACTLY. Check the schema above.`;
+Remember: Column names in queries must match EXACTLY. Check the schema above.
+
+Note: You may see "Recent Successful Queries" examples below this section.
+These are real queries that worked previously - use them as reference patterns.`;
   
   return prompt;
 }

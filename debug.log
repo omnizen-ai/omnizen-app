@@ -1,0 +1,1152 @@
+
+> ai-chatbot@3.1.0 dev /Users/kalam/Codespace/omnizen-app
+> lsof -ti:3333 | xargs kill -9 2>/dev/null; next dev --turbo --port 3333
+
+   ▲ Next.js 15.3.0-canary.31 (Turbopack)
+   - Local:        http://localhost:3333
+   - Network:      http://192.168.0.112:3333
+   - Environments: .env.local
+   - Experiments (use with caution):
+     ✓ ppr
+
+ ✓ Starting...
+ ✓ Compiled in 411ms
+Langfuse tracing initialized
+ ✓ Ready in 1026ms
+Langfuse tracing initialized
+ ○ Compiling / ...
+ ✓ Compiled / in 4.6s
+ GET / 200 in 5602ms
+ ○ Compiling /api/history ...
+ ✓ Compiled /api/history in 767ms
+ GET /api/history?limit=20 200 in 819ms
+ GET /api/auth/session 200 in 1121ms
+ GET /api/auth/session 200 in 31ms
+ ✓ Compiled /api/chat in 482ms
+[Database Tools] User context: {
+  userId: '7c08fc98-a801-407a-98fc-f24b7e352bfb',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  workspaceId: undefined,
+  role: 'user'
+}
+[Database Tools] Loaded 5 tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Database Tools] Tools object: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[QueryMemory] Connected to Redis
+[QueryMemory] Injected 2 examples into prompt
+[Prompt Analysis]
+- Characters: 6493
+- Estimated tokens: 1623
+- Cost (DeepSeek): $0.000227
+- Sections: Full Schema, Invoice Context
+[DeepSeek Detailed] Type: business, Tokens: 1813 (complete schema for accuracy)
+[Model Selection] Using model: deepseek-chat
+[Tools Registration] Available tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Tools Registration] Tool names for activeTools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+ ✓ Compiled /api/vote in 303ms
+ GET /api/vote?chatId=5e30069f-717b-4bd3-bf29-886c211db5d2 200 in 330ms
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '129',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_uQadfUTH8eAPeTCyaYXpwHHr' } ]
+[QueryMemory Debug] toolCall structure: {
+  toolName: 'dbRead',
+  hasArgs: false,
+  argsType: 'undefined',
+  argsKeys: 'undefined',
+  toolCallKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata'
+  ]
+}
+[QueryMemory] Cannot store - missing data: {
+  hasSuccess: false,
+  hasQuery: false,
+  resultKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata',
+    'output'
+  ]
+}
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'schemaInfo', id: 'call_00_vJjaGAaGdlF6J5mtb7q1ZDR6' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '129',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_jneLoSje7eIW5Mwvl0WLa94q' } ]
+[QueryMemory Debug] toolCall structure: {
+  toolName: 'dbRead',
+  hasArgs: false,
+  argsType: 'undefined',
+  argsKeys: 'undefined',
+  toolCallKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata'
+  ]
+}
+[QueryMemory] Cannot store - missing data: {
+  hasSuccess: false,
+  hasQuery: false,
+  resultKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata',
+    'output'
+  ]
+}
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '35',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_wcsHCL3qD8SaE5s15upLzcFn' } ]
+[QueryMemory Debug] toolCall structure: {
+  toolName: 'dbRead',
+  hasArgs: false,
+  argsType: 'undefined',
+  argsKeys: 'undefined',
+  toolCallKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata'
+  ]
+}
+[QueryMemory] Cannot store - missing data: {
+  hasSuccess: false,
+  hasQuery: false,
+  resultKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata',
+    'output'
+  ]
+}
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "LIMIT"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '30',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_C6FrexDm7ueJYI5CwQxyMWP3' } ]
+[QueryMemory Debug] toolCall structure: {
+  toolName: 'dbRead',
+  hasArgs: false,
+  argsType: 'undefined',
+  argsKeys: 'undefined',
+  toolCallKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata'
+  ]
+}
+[QueryMemory] Cannot store - missing data: {
+  hasSuccess: false,
+  hasQuery: false,
+  resultKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata',
+    'output'
+  ]
+}
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'viewsList', id: 'call_00_ukPuS86MTBpU9iCZNQEorxnV' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: relation "v_profit_loss_statement" does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42P01',
+  position: '15',
+  file: 'parse_relation.c',
+  line: '1449',
+  routine: 'parserOpenTable'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_YA6773EjF44D1OKCMIA8mbEU' } ]
+[QueryMemory Debug] toolCall structure: {
+  toolName: 'dbRead',
+  hasArgs: false,
+  argsType: 'undefined',
+  argsKeys: 'undefined',
+  toolCallKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata'
+  ]
+}
+[QueryMemory] Cannot store - missing data: {
+  hasSuccess: false,
+  hasQuery: false,
+  resultKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata',
+    'output'
+  ]
+}
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_XIFp11YehTzgxGj6EyucYw7t' } ]
+[QueryMemory Debug] toolCall structure: {
+  toolName: 'dbRead',
+  hasArgs: false,
+  argsType: 'undefined',
+  argsKeys: 'undefined',
+  toolCallKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata'
+  ]
+}
+[QueryMemory] Cannot store - missing data: {
+  hasSuccess: false,
+  hasQuery: false,
+  resultKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata',
+    'output'
+  ]
+}
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "LIMIT"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '30',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_ppxA6fKnmsB7IGvq6sPHdQUn' } ]
+[QueryMemory Debug] toolCall structure: {
+  toolName: 'dbRead',
+  hasArgs: false,
+  argsType: 'undefined',
+  argsKeys: 'undefined',
+  toolCallKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata'
+  ]
+}
+[QueryMemory] Cannot store - missing data: {
+  hasSuccess: false,
+  hasQuery: false,
+  resultKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata',
+    'output'
+  ]
+}
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_ejgRmkqNQJBWuJ85RcfIYu92' } ]
+[QueryMemory Debug] toolCall structure: {
+  toolName: 'dbRead',
+  hasArgs: false,
+  argsType: 'undefined',
+  argsKeys: 'undefined',
+  toolCallKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata'
+  ]
+}
+[QueryMemory] Cannot store - missing data: {
+  hasSuccess: false,
+  hasQuery: false,
+  resultKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata',
+    'output'
+  ]
+}
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '129',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_7bBAOkGh7gvtH8cDhszKJ6N4' } ]
+[QueryMemory Debug] toolCall structure: {
+  toolName: 'dbRead',
+  hasArgs: false,
+  argsType: 'undefined',
+  argsKeys: 'undefined',
+  toolCallKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata'
+  ]
+}
+[QueryMemory] Cannot store - missing data: {
+  hasSuccess: false,
+  hasQuery: false,
+  resultKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata',
+    'output'
+  ]
+}
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '44',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_lmkXrgQgOssNhoz9FZTmA23A' } ]
+[QueryMemory Debug] toolCall structure: {
+  toolName: 'dbRead',
+  hasArgs: false,
+  argsType: 'undefined',
+  argsKeys: 'undefined',
+  toolCallKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata'
+  ]
+}
+[QueryMemory] Cannot store - missing data: {
+  hasSuccess: false,
+  hasQuery: false,
+  resultKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata',
+    'output'
+  ]
+}
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_dyfoTjjho1GTQHh7Lsi7SIrE' } ]
+[QueryMemory Debug] toolCall structure: {
+  toolName: 'dbRead',
+  hasArgs: false,
+  argsType: 'undefined',
+  argsKeys: 'undefined',
+  toolCallKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata'
+  ]
+}
+[QueryMemory] Cannot store - missing data: {
+  hasSuccess: false,
+  hasQuery: false,
+  resultKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata',
+    'output'
+  ]
+}
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_MwUdHaSmAmbwY4zNAijhUotb' } ]
+[QueryMemory Debug] toolCall structure: {
+  toolName: 'dbRead',
+  hasArgs: false,
+  argsType: 'undefined',
+  argsKeys: 'undefined',
+  toolCallKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata'
+  ]
+}
+[QueryMemory] Cannot store - missing data: {
+  hasSuccess: false,
+  hasQuery: false,
+  resultKeys: [
+    'type',
+    'toolCallId',
+    'toolName',
+    'input',
+    'providerExecuted',
+    'providerMetadata',
+    'output'
+  ]
+}
+[Step] Tool results received: 1
+[DeepSeek] Intermediate step text: "Based on the database query results, I can provide you with the total revenue information:
+
+**Total ..."
+ POST /api/chat 200 in 106424ms
+ GET /api/history?limit=20 200 in 43ms
+
+> ai-chatbot@3.1.0 dev /Users/kalam/Codespace/omnizen-app
+> lsof -ti:3333 | xargs kill -9 2>/dev/null; next dev --turbo --port 3333
+
+   ▲ Next.js 15.3.0-canary.31 (Turbopack)
+   - Local:        http://localhost:3333
+   - Network:      http://192.168.0.112:3333
+   - Environments: .env.local
+   - Experiments (use with caution):
+     ✓ ppr
+
+ ✓ Starting...
+ ✓ Compiled in 371ms
+Langfuse tracing initialized
+ ✓ Ready in 1013ms
+Langfuse tracing initialized
+ ○ Compiling / ...
+ ✓ Compiled / in 4.7s
+ GET / 200 in 5686ms
+ ○ Compiling /api/history ...
+ ✓ Compiled /api/history in 793ms
+ GET /api/history?limit=20 200 in 988ms
+ GET /api/auth/session 200 in 1374ms
+ GET /api/auth/session 200 in 22ms
+ ✓ Compiled /api/chat in 152ms
+ ⨯ ./app/(chat)/api/chat/route.ts:428:13
+Parsing ecmascript source code failed
+[0m [90m 426 |[39m               )[33m;[39m[0m
+[0m [90m 427 |[39m             }[0m
+[0m[31m[1m>[22m[39m[90m 428 |[39m           }[33m,[39m[33m,[39m[0m
+[0m [90m     |[39m             [31m[1m^[22m[39m[0m
+[0m [90m 429 |[39m           onFinish[33m:[39m [36masync[39m (result) [33m=>[39m {[0m
+[0m [90m 430 |[39m             [90m// Final aggregated tracking[39m[0m
+[0m [90m 431 |[39m             [36mconst[39m finalOutput [33m=[39m {[0m
+
+Unexpected token `,`. Expected identifier, string literal, numeric literal or [ for the computed key
+
+
+ ✓ Compiled /_error in 345ms
+ POST /api/chat 500 in 609ms
+ ○ Compiling /chat/[id] ...
+ ✓ Compiled /chat/[id] in 2.9s
+ GET /chat/5e30069f-717b-4bd3-bf29-886c211db5d2 200 in 3650ms
+ GET /api/auth/session 200 in 43ms
+ GET /api/history?limit=20 200 in 46ms
+ GET /api/auth/session 200 in 25ms
+ ✓ Compiled /api/vote in 329ms
+ GET /api/vote?chatId=5e30069f-717b-4bd3-bf29-886c211db5d2 200 in 359ms
+ GET / 200 in 111ms
+ GET /api/auth/session 200 in 106ms
+ GET /api/history?limit=20 200 in 111ms
+ GET /api/auth/session 200 in 23ms
+[Database Tools] User context: {
+  userId: '7c08fc98-a801-407a-98fc-f24b7e352bfb',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  workspaceId: undefined,
+  role: 'user'
+}
+[Database Tools] Loaded 5 tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Database Tools] Tools object: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[QueryMemory] Connected to Redis
+[QueryMemory] Injected 2 examples into prompt
+[Prompt Analysis]
+- Characters: 6493
+- Estimated tokens: 1623
+- Cost (DeepSeek): $0.000227
+- Sections: Full Schema, Invoice Context
+[DeepSeek Detailed] Type: business, Tokens: 1813 (complete schema for accuracy)
+[Model Selection] Using model: deepseek-chat
+[Tools Registration] Available tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Tools Registration] Tool names for activeTools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+ GET /api/vote?chatId=1d63e791-c366-4f87-bbdb-b6ff6113de1b 200 in 22ms
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_FXCP22g2GPnxTMje7TtIn3OA' } ]
+[QueryMemory] Failed to capture query: TypeError: output.includes is not a function
+    at onStepFinish (app/(chat)/api/chat/route.ts:400:56)
+  398 |                     
+  399 |                     // Check if the query was successful (no error in output)
+> 400 |                     const isSuccess = output && !output.includes('[Error') && !output.includes('Error:');
+      |                                                        ^
+  401 |                     
+  402 |                     // Store if query was successful
+  403 |                     if (isSuccess && query) {
+[Step] Tool results received: 1
+[DeepSeek] Intermediate step text: "Here are the first 3 invoices from your system:
+
+| Invoice # | Issue Date | Due Date | Customer | To..."
+ POST /api/chat 200 in 23046ms
+ GET /api/history?limit=20 200 in 22ms
+ GET / 200 in 118ms
+ GET /api/auth/session 200 in 31ms
+ GET /api/history?limit=20 200 in 34ms
+ GET /api/auth/session 200 in 21ms
+[Database Tools] User context: {
+  userId: '7c08fc98-a801-407a-98fc-f24b7e352bfb',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  workspaceId: undefined,
+  role: 'user'
+}
+[Database Tools] Loaded 5 tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Database Tools] Tools object: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[QueryMemory] Connected to Redis
+[Prompt Analysis]
+- Characters: 6480
+- Estimated tokens: 1620
+- Cost (DeepSeek): $0.000227
+- Sections: Full Schema
+[DeepSeek Detailed] Type: business, Tokens: 1620 (complete schema for accuracy)
+[Model Selection] Using model: deepseek-chat
+[Tools Registration] Available tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Tools Registration] Tool names for activeTools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+ GET /api/vote?chatId=3b9ba573-14ac-4a14-91ae-8ec0434cc78f 200 in 30ms
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '330',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_4ka960D9Euo2BDccV3eTsnD1' } ]
+[QueryMemory] Stored: query:finance:lookup (usage: 1)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '330',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_9Gmf918mOKu95WoXUXtrwjQu' } ]
+[QueryMemory] Stored: query:finance:lookup (usage: 2)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'schemaInfo', id: 'call_00_csZRvkVFqcHbN8c0vhzop8SI' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '166',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_pj6I0V1WUSqYcGyKPKwniEtD' } ]
+[QueryMemory] Stored: query:finance:lookup (usage: 3)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "LIMIT"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '37',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_c6dt4ClAf2LaQCiwRwtV2BKF' } ]
+[QueryMemory] Stored: query:finance:lookup (usage: 4)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '30',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_xbcUmrkkfeU1fxWwGHPg2Yog' } ]
+[QueryMemory] Stored: query:finance:lookup (usage: 5)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'viewsList', id: 'call_00_cxcH87OL8Gl9Po9o02V2oeSJ' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'viewsList', id: 'call_00_4viiy43FxK4d9sBTLcNhLZjx' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: relation "v_profit_loss_statement" does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42P01',
+  position: '15',
+  file: 'parse_relation.c',
+  line: '1449',
+  routine: 'parserOpenTable'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_6Mme6xjlW0A0I4UNduodiLHd' } ]
+[QueryMemory] Stored: query:general:lookup (usage: 1)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: relation "v_customer_revenue" does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42P01',
+  position: '15',
+  file: 'parse_relation.c',
+  line: '1449',
+  routine: 'parserOpenTable'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_xgHhRlHsZ8h2xRM7dKXvsofs' } ]
+[QueryMemory] Stored: query:general:lookup (usage: 2)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: relation "v_kpi_dashboard" does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42P01',
+  position: '15',
+  file: 'parse_relation.c',
+  line: '1449',
+  routine: 'parserOpenTable'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_XHigTYkopz9qHBCZ5oEyi5iG' } ]
+[QueryMemory] Stored: query:general:lookup (usage: 3)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_B87n52IkjqKfYxYsSLQi5Dxg' } ]
+[QueryMemory] Stored: query:general:lookup (usage: 4)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_g7EygMpB3dfl8yfuDAzkQeC2' } ]
+[QueryMemory] Stored: query:finance:lookup (usage: 6)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "GROUP"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '190',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_BTBYpEsi3ZpoA0GLqnboyLbw' } ]
+[QueryMemory] Stored: query:finance:lookup (usage: 7)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column "invoices.status" must appear in the GROUP BY clause or be used in an aggregate function] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42803',
+  position: '8',
+  file: 'parse_agg.c',
+  line: '1439',
+  routine: 'check_ungrouped_columns_walker'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_4Y8JoUyq7EWlIY8P4dOSHnm7' } ]
+[QueryMemory] Stored: query:finance:lookup (usage: 8)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_oVNVCcWxjWOWOZ4ji8FtFIb8' } ]
+[QueryMemory] Stored: query:finance:lookup (usage: 9)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[DeepSeek] Intermediate step text: "## Total Revenue Summary
+
+Based on the data, here's your revenue overview:
+
+**Total Revenue:** \$1,0..."
+ POST /api/chat 200 in 121389ms
+ GET /api/history?limit=20 200 in 31ms
+[Database Tools] User context: {
+  userId: '7c08fc98-a801-407a-98fc-f24b7e352bfb',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  workspaceId: undefined,
+  role: 'user'
+}
+[Database Tools] Loaded 5 tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Database Tools] Tools object: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[QueryMemory] Injected 2 examples into prompt
+[Prompt Analysis]
+- Characters: 6493
+- Estimated tokens: 1623
+- Cost (DeepSeek): $0.000227
+- Sections: Full Schema, Invoice Context
+[DeepSeek Detailed] Type: business, Tokens: 1765 (complete schema for accuracy)
+[Model Selection] Using model: deepseek-chat
+[Tools Registration] Available tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Tools Registration] Tool names for activeTools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_d9iaeNvaFsSkPEKK6WPAXUo3' } ]
+[QueryMemory] Stored: query:finance:lookup_invoice (usage: 2)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[DeepSeek] Intermediate step text: "## Your Invoices
+
+Here are all your invoices:
+
+| Invoice # | Issue Date | Due Date | Customer | Tota..."
+ POST /api/chat 200 in 23426ms
+ GET /api/history?limit=20 200 in 52ms
+ GET / 200 in 146ms
+ GET /api/auth/session 200 in 147ms
+ GET /api/history?limit=20 200 in 155ms
+ ○ Compiling /favicon.ico ...
+ GET /api/auth/session 200 in 50ms
+ ✓ Compiled /favicon.ico in 546ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 773ms
+ GET /api/auth/csrf 200 in 33ms
+ POST /api/auth/signout 200 in 20ms
+ ✓ Compiled /api/auth/guest in 277ms
+ GET /api/auth/guest?redirectUrl=http%3A%2F%2Flocalhost%3A3333%2F 307 in 381ms
+ GET / 200 in 127ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 232ms
+ GET /api/auth/session 200 in 41ms
+ GET /api/history?limit=20 200 in 41ms
+ GET /api/auth/session 200 in 27ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 552ms
+ GET /login 200 in 596ms
+[31m[auth][error][0m CredentialsSignin: Read more at https://errors.authjs.dev#credentialssignin
+    at callback (/Users/kalam/Codespace/omnizen-app/.next/server/chunks/ssr/c1962_@auth_core_2f58928a._.js:4011:30)
+    at async AuthInternal (/Users/kalam/Codespace/omnizen-app/.next/server/chunks/ssr/c1962_@auth_core_2f58928a._.js:4860:24)
+    at async Auth (/Users/kalam/Codespace/omnizen-app/.next/server/chunks/ssr/c1962_@auth_core_2f58928a._.js:5099:34)
+    at async signIn (/Users/kalam/Codespace/omnizen-app/.next/server/chunks/ssr/node_modules__pnpm_5df8e29d._.js:5266:17)
+    at async login (/Users/kalam/Codespace/omnizen-app/.next/server/chunks/ssr/[root-of-the-server]__33f3337b._.js:1662:9)
+    at async /Users/kalam/Codespace/omnizen-app/node_modules/.pnpm/next@15.3.0-canary.31_@opentelemetry+api@1.9.0_@playwright+test@1.51.0_react-dom@19.0.0-rc-45_mlqzopqn56t6gad76627omqvii/node_modules/next/dist/compiled/next-server/app-page-experimental.runtime.dev.js:455:2357
+    at async handleAction (/Users/kalam/Codespace/omnizen-app/node_modules/.pnpm/next@15.3.0-canary.31_@opentelemetry+api@1.9.0_@playwright+test@1.51.0_react-dom@19.0.0-rc-45_mlqzopqn56t6gad76627omqvii/node_modules/next/dist/compiled/next-server/app-page-experimental.runtime.dev.js:454:21403)
+    at async renderToHTMLOrFlightImpl (/Users/kalam/Codespace/omnizen-app/node_modules/.pnpm/next@15.3.0-canary.31_@opentelemetry+api@1.9.0_@playwright+test@1.51.0_react-dom@19.0.0-rc-45_mlqzopqn56t6gad76627omqvii/node_modules/next/dist/compiled/next-server/app-page-experimental.runtime.dev.js:460:26888)
+    at async doRender (/Users/kalam/Codespace/omnizen-app/node_modules/.pnpm/next@15.3.0-canary.31_@opentelemetry+api@1.9.0_@playwright+test@1.51.0_react-dom@19.0.0-rc-45_mlqzopqn56t6gad76627omqvii/node_modules/next/dist/server/base-server.js:1651:34)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/kalam/Codespace/omnizen-app/node_modules/.pnpm/next@15.3.0-canary.31_@opentelemetry+api@1.9.0_@playwright+test@1.51.0_react-dom@19.0.0-rc-45_mlqzopqn56t6gad76627omqvii/node_modules/next/dist/server/base-server.js:1916:28)
+    at async DevServer.renderPageComponent (/Users/kalam/Codespace/omnizen-app/node_modules/.pnpm/next@15.3.0-canary.31_@opentelemetry+api@1.9.0_@playwright+test@1.51.0_react-dom@19.0.0-rc-45_mlqzopqn56t6gad76627omqvii/node_modules/next/dist/server/base-server.js:2394:24)
+    at async DevServer.renderToResponseImpl (/Users/kalam/Codespace/omnizen-app/node_modules/.pnpm/next@15.3.0-canary.31_@opentelemetry+api@1.9.0_@playwright+test@1.51.0_react-dom@19.0.0-rc-45_mlqzopqn56t6gad76627omqvii/node_modules/next/dist/server/base-server.js:2431:32)
+    at async DevServer.pipeImpl (/Users/kalam/Codespace/omnizen-app/node_modules/.pnpm/next@15.3.0-canary.31_@opentelemetry+api@1.9.0_@playwright+test@1.51.0_react-dom@19.0.0-rc-45_mlqzopqn56t6gad76627omqvii/node_modules/next/dist/server/base-server.js:1004:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/kalam/Codespace/omnizen-app/node_modules/.pnpm/next@15.3.0-canary.31_@opentelemetry+api@1.9.0_@playwright+test@1.51.0_react-dom@19.0.0-rc-45_mlqzopqn56t6gad76627omqvii/node_modules/next/dist/server/next-server.js:305:17)
+    at async DevServer.handleRequestImpl (/Users/kalam/Codespace/omnizen-app/node_modules/.pnpm/next@15.3.0-canary.31_@opentelemetry+api@1.9.0_@playwright+test@1.51.0_react-dom@19.0.0-rc-45_mlqzopqn56t6gad76627omqvii/node_modules/next/dist/server/base-server.js:896:17)
+    at async /Users/kalam/Codespace/omnizen-app/node_modules/.pnpm/next@15.3.0-canary.31_@opentelemetry+api@1.9.0_@playwright+test@1.51.0_react-dom@19.0.0-rc-45_mlqzopqn56t6gad76627omqvii/node_modules/next/dist/server/dev/next-dev-server.js:371:20
+    at async Span.traceAsyncFn (/Users/kalam/Codespace/omnizen-app/node_modules/.pnpm/next@15.3.0-canary.31_@opentelemetry+api@1.9.0_@playwright+test@1.51.0_react-dom@19.0.0-rc-45_mlqzopqn56t6gad76627omqvii/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/kalam/Codespace/omnizen-app/node_modules/.pnpm/next@15.3.0-canary.31_@opentelemetry+api@1.9.0_@playwright+test@1.51.0_react-dom@19.0.0-rc-45_mlqzopqn56t6gad76627omqvii/node_modules/next/dist/server/dev/next-dev-server.js:368:24)
+    at async invokeRender (/Users/kalam/Codespace/omnizen-app/node_modules/.pnpm/next@15.3.0-canary.31_@opentelemetry+api@1.9.0_@playwright+test@1.51.0_react-dom@19.0.0-rc-45_mlqzopqn56t6gad76627omqvii/node_modules/next/dist/server/lib/router-server.js:235:21)
+    at async handleRequest (/Users/kalam/Codespace/omnizen-app/node_modules/.pnpm/next@15.3.0-canary.31_@opentelemetry+api@1.9.0_@playwright+test@1.51.0_react-dom@19.0.0-rc-45_mlqzopqn56t6gad76627omqvii/node_modules/next/dist/server/lib/router-server.js:426:24)
+    at async requestHandlerImpl (/Users/kalam/Codespace/omnizen-app/node_modules/.pnpm/next@15.3.0-canary.31_@opentelemetry+api@1.9.0_@playwright+test@1.51.0_react-dom@19.0.0-rc-45_mlqzopqn56t6gad76627omqvii/node_modules/next/dist/server/lib/router-server.js:450:13)
+    at async Server.requestListener (/Users/kalam/Codespace/omnizen-app/node_modules/.pnpm/next@15.3.0-canary.31_@opentelemetry+api@1.9.0_@playwright+test@1.51.0_react-dom@19.0.0-rc-45_mlqzopqn56t6gad76627omqvii/node_modules/next/dist/server/lib/start-server.js:158:13)
+ POST /login 200 in 95ms
+ ✓ Compiled /register in 463ms
+ GET /register 200 in 494ms
+Created Supabase auth user: f9f67aef-accd-4305-82be-8ffe0b1b2234
+ POST /register 200 in 259ms
+ GET /api/auth/session 200 in 33ms
+ GET / 200 in 53ms
+ GET / 200 in 70ms
+ GET /api/auth/session 200 in 66ms
+ GET /api/auth/session 200 in 59ms
+[Database Tools] User context: {
+  userId: '894e4c8e-2c62-4bc6-9cc4-4d6c9d290e60',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  workspaceId: undefined,
+  role: 'user'
+}
+[Database Tools] Loaded 5 tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Database Tools] Tools object: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[QueryMemory] Injected 1 examples into prompt
+[Prompt Analysis]
+- Characters: 6256
+- Estimated tokens: 1564
+- Cost (DeepSeek): $0.000219
+- Sections: Full Schema
+[DeepSeek Detailed] Type: business, Tokens: 1628 (complete schema for accuracy)
+[Model Selection] Using model: deepseek-chat
+[Tools Registration] Available tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Tools Registration] Tool names for activeTools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+ GET /api/vote?chatId=cc7f2305-18e6-4fb5-aad1-b10863c9de39 200 in 48ms
+[Step] Tool calls: [ { name: 'schemaInfo', id: 'call_00_gGCKFb921fatccVDZUXAgW7s' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_pSDYOGfYlJdqcYILbjXDL9lm' } ]
+[QueryMemory] Stored: query:general:query (usage: 1)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'schemaInfo', id: 'call_00_qknFdLrNZ62xPKGE0hExu42d' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_mJkw4fJsucIxlo93O0qFwORv' } ]
+[QueryMemory] Stored: query:general:query (usage: 2)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_LLi7dknWLtOZwaardONr2Hh8' } ]
+[QueryMemory] Stored: query:general:query (usage: 3)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_AqqtOMn62fG3RrLMAPVB3glO' } ]
+[QueryMemory] Stored: query:contacts:query (usage: 1)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '54',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_USIP7SEo8dSN3uT891UpE5xw' } ]
+[QueryMemory] Stored: query:inventory:query (usage: 1)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '54',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_5Z1Jv8KzIxvyU4NDLZl9AZob' } ]
+[QueryMemory] Stored: query:inventory:query (usage: 2)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_wtZchSgRUlPUqMKpCVFpyZ2c' } ]
+[QueryMemory] Stored: query:inventory:query (usage: 3)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_pB5IKjZKnk4Z6cObBzp7Cd53' } ]
+[QueryMemory] Stored: query:contacts:query (usage: 2)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[DeepSeek] Intermediate step text: "Based on my analysis of your database, here's what I found and what information you'll need to provi..."
+ POST /api/chat 200 in 95764ms
+ GET /api/history?limit=20 200 in 39ms
+ GET /api/auth/session 200 in 45ms
+ GET /api/auth/session 200 in 31ms
+ GET /api/history?limit=20 200 in 43ms
+[Database Tools] User context: {
+  userId: '894e4c8e-2c62-4bc6-9cc4-4d6c9d290e60',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  workspaceId: undefined,
+  role: 'user'
+}
+[Database Tools] Loaded 5 tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Database Tools] Tools object: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[QueryMemory] Injected 2 examples into prompt
+[Prompt Analysis]
+- Characters: 6256
+- Estimated tokens: 1564
+- Cost (DeepSeek): $0.000219
+- Sections: Full Schema
+[DeepSeek Detailed] Type: write, Tokens: 1689 (complete schema for accuracy)
+[Model Selection] Using model: deepseek-chat
+[Tools Registration] Available tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Tools Registration] Tool names for activeTools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[dbWrite] Error: [Error [PostgresError]: syntax error at or near "name"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '33',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Audit] {
+  userId: '894e4c8e-2c62-4bc6-9cc4-4d6c9d290e60',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  operation: 'UPDATE',
+  query: "UPDATE organizations SET name = 'Anchorblock Technology Limited', country_code = 'BD', currency = 'USD', base_currency = 'USD' WHERE id = '11111111-1111-1111-1111-111111111111'",
+  success: false,
+  error: 'syntax error at or near "name"'
+}
+[Step] Tool calls: [ { name: 'dbWrite', id: 'call_00_rjeHlhZJ1x1Mz8axHrIvgaB9' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_Nb9uPO6Y7u7LoWcpJyU3VSLp' } ]
+[QueryMemory] Stored: query:general:query (usage: 4)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbWrite] Error: [Error [PostgresError]: syntax error at or near "name"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '33',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Audit] {
+  userId: '894e4c8e-2c62-4bc6-9cc4-4d6c9d290e60',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  operation: 'UPDATE',
+  query: "UPDATE organizations SET name = 'Anchorblock Technology Limited', country_code = 'BD', currency = 'USD', base_currency = 'USD' WHERE id = '11111111-1111-1111-1111-111111111111'",
+  success: false,
+  error: 'syntax error at or near "name"'
+}
+[Step] Tool calls: [ { name: 'dbWrite', id: 'call_00_I8RP5RNKdCKJG3VjNrVP4fjT' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_kPBJ3PLmylxgcvpL1FHtnqJJ' } ]
+[QueryMemory] Stored: query:general:query (usage: 5)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbWrite] Error: [Error [PostgresError]: syntax error at or near "name"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '33',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Audit] {
+  userId: '894e4c8e-2c62-4bc6-9cc4-4d6c9d290e60',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  operation: 'UPDATE',
+  query: "UPDATE organizations SET name = 'Anchorblock Technology Limited', country_code = 'BD' WHERE id = '11111111-1111-1111-1111-111111111111'",
+  success: false,
+  error: 'syntax error at or near "name"'
+}
+[Step] Tool calls: [ { name: 'dbWrite', id: 'call_00_QIpMljcT8Ro7fkM6EBADiutz' } ]
+[Step] Tool results received: 1
+[dbWrite] Error: [Error [PostgresError]: syntax error at or near "country_code"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '33',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Audit] {
+  userId: '894e4c8e-2c62-4bc6-9cc4-4d6c9d290e60',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  operation: 'UPDATE',
+  query: "UPDATE organizations SET country_code = 'BD' WHERE id = '11111111-1111-1111-1111-111111111111'",
+  success: false,
+  error: 'syntax error at or near "country_code"'
+}
+[Step] Tool calls: [ { name: 'dbWrite', id: 'call_00_n0RYOMtpkYt94ctQgynwnk3z' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_yVgFY7AdyazRWNRWmSF1Ifyr' } ]
+[QueryMemory] Stored: query:contacts:query (usage: 3)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbWrite] Error: [Error [PostgresError]: invalid input value for enum account_type: "revenue"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '22P02',
+  position: '973',
+  file: 'enum.c',
+  line: '129',
+  routine: 'enum_in'
+}
+[Audit] {
+  userId: '894e4c8e-2c62-4bc6-9cc4-4d6c9d290e60',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  operation: 'INSERT',
+  query: 'INSERT INTO chart_accounts (id, organization_id, code, name, type, normal_balance, current_balance, is_active, currency_code) VALUES \n' +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '1010', 'Cash - USD', 'asset', 'debit', 0, true, 'USD'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '1020', 'Cash - BDT', 'asset', 'debit', 0, true, 'BDT'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '1030', 'Bank Account - USD', 'asset', 'debit', 0, true, 'USD'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '1040', 'Bank Account - BDT', 'asset', 'debit', 0, true, 'BDT'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '1200', 'Accounts Receivable', 'asset', 'debit', 0, true, 'USD'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '2000', 'Accounts Payable', 'liability', 'credit', 0, true, 'USD'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '4000', 'Software Development Revenue', 'revenue', 'credit', 0, true, 'USD'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '4010', 'Consulting Revenue', 'revenue', 'credit', 0, true, 'USD'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '5000', 'Salaries & Wages', 'expense', 'debit', 0, true, 'USD'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '5010', 'Software Tools & Subscriptions', 'expense', 'debit', 0, true, 'USD'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '5020', 'Office Rent', 'expense', 'debit', 0, true, 'USD'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '5030', 'Internet & Utilities', 'expense', 'debit', 0, true, 'USD'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '3000', 'Owner''s Equity', 'equity', 'credit', 0, true, 'USD')",
+  success: false,
+  error: 'invalid input value for enum account_type: "revenue"'
+}
+[Step] Tool calls: [ { name: 'dbWrite', id: 'call_00_utR4Kb9RDQWRlDHCjByMD7QF' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_HGDNc8uWrv9ubk49cjGBnKrs' } ]
+[QueryMemory] Stored: query:general:query (usage: 6)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Audit] {
+  userId: '894e4c8e-2c62-4bc6-9cc4-4d6c9d290e60',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  operation: 'INSERT',
+  query: 'INSERT INTO chart_accounts (id, organization_id, code, name, type, normal_balance, current_balance, is_active, currency_code) VALUES \n' +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '1010', 'Cash - USD', 'asset', 'debit', 0, true, 'USD'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '1020', 'Cash - BDT', 'asset', 'debit', 0, true, 'BDT'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '1030', 'Bank Account - USD', 'asset', 'debit', 0, true, 'USD'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '1040', 'Bank Account - BDT', 'asset', 'debit', 0, true, 'BDT'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '1200', 'Accounts Receivable', 'asset', 'debit', 0, true, 'USD'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '2000', 'Accounts Payable', 'liability', 'credit', 0, true, 'USD'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '4000', 'Software Development Revenue', 'income', 'credit', 0, true, 'USD'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '4010', 'Consulting Revenue', 'income', 'credit', 0, true, 'USD'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '5000', 'Salaries & Wages', 'expense', 'debit', 0, true, 'USD'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '5010', 'Software Tools & Subscriptions', 'expense', 'debit', 0, true, 'USD'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '5020', 'Office Rent', 'expense', 'debit', 0, true, 'USD'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '5030', 'Internet & Utilities', 'expense', 'debit', 0, true, 'USD'),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '3000', 'Owner''s Equity', 'equity', 'credit', 0, true, 'USD')",
+  success: true,
+  executionTime: 10
+}
+[Step] Tool calls: [ { name: 'dbWrite', id: 'call_00_aggEB1IX3KoCTMwN9TOLncvg' } ]
+[Step] Tool results received: 1
+[Audit] {
+  userId: '894e4c8e-2c62-4bc6-9cc4-4d6c9d290e60',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  operation: 'INSERT',
+  query: 'INSERT INTO contacts (id, organization_id, type, company_name, display_name, email, phone, address_line1, city, state, postal_code, country, currency_code, payment_terms, is_active) VALUES \n' +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', 'vendor', 'Anchorblock Technology Limited', 'Anchorblock Technology', 'info@anchorblock.tech', '+880-XXXX-XXXXXX', 'House 432, Road 6, Avenue 5, Mirpur Dohs', 'Dhaka', null, '1216', 'Bangladesh', 'USD', 30, true),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', 'customer', 'bKash Limited', 'bKash', 'corporate@bkash.com', '+880-XXXX-XXXXXX', 'bKash Tower, Plot SE(C)-3, Gulshan Avenue', 'Dhaka', null, '1212', 'Bangladesh', 'USD', 30, true)",
+  success: true,
+  executionTime: 6
+}
+[Step] Tool calls: [ { name: 'dbWrite', id: 'call_00_GlVLb9NRlDNVbAajzigoUDGq' } ]
+[Step] Tool results received: 1
+[Audit] {
+  userId: '894e4c8e-2c62-4bc6-9cc4-4d6c9d290e60',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  operation: 'INSERT',
+  query: 'INSERT INTO products (id, organization_id, sku, name, description, is_service, sale_price, purchase_price, currency_code, is_taxable, is_active) VALUES \n' +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', 'DEV-HR', 'Hourly Development Rate', 'Custom software development services per hour', true, 75.00, 0, 'USD', false, true),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', 'DEV-PJ', 'Project-Based Development', 'Complete software project delivery', true, 5000.00, 0, 'USD', false, true),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', 'CON-HR', 'Consulting Hourly Rate', 'Technical consulting and advisory services', true, 100.00, 0, 'USD', false, true),\n" +
+    "(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', 'MAINT-M', 'Monthly Maintenance', 'Ongoing support and maintenance services', true, 500.00, 0, 'USD', false, true)",
+  success: true,
+  executionTime: 6
+}
+[Step] Tool calls: [ { name: 'dbWrite', id: 'call_00_iAQdgUJu2RUmddrXowUYBOG2' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_znsU92nyzGy9x8gpwiQ5bGye' } ]
+[QueryMemory] Stored: query:general:query (usage: 7)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_YPIGMo7huoeA0qskB7rAs7KE' } ]
+[QueryMemory] Stored: query:contacts:query (usage: 4)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '78',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_ZvLV6B2wmIAJhOZzrMDSlCjH' } ]
+[QueryMemory] Stored: query:inventory:query (usage: 4)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_9w8mNhE186xUgqZ0A9lrplVu' } ]
+[QueryMemory] Stored: query:inventory:query (usage: 5)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[DeepSeek] Intermediate step text: "Perfect! I've successfully set up your company's basic bookkeeping structure. Here's what has been c..."
+ POST /api/chat 200 in 229199ms
+ GET /api/history?limit=20 200 in 54ms
+ GET /api/auth/session 200 in 92ms
+ GET /api/auth/session 200 in 38ms
+[Database Tools] User context: {
+  userId: '894e4c8e-2c62-4bc6-9cc4-4d6c9d290e60',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  workspaceId: undefined,
+  role: 'user'
+}
+[Database Tools] Loaded 5 tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Database Tools] Tools object: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[QueryMemory] Injected 2 examples into prompt
+[Prompt Analysis]
+- Characters: 6256
+- Estimated tokens: 1564
+- Cost (DeepSeek): $0.000219
+- Sections: Full Schema
+[DeepSeek Detailed] Type: business, Tokens: 1781 (complete schema for accuracy)
+[Model Selection] Using model: deepseek-chat
+[Tools Registration] Available tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Tools Registration] Tool names for activeTools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_ejzrYTaKTG7RNIZL7XNmugp3' } ]
+[QueryMemory] Stored: query:general:lookup (usage: 5)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[DeepSeek] Intermediate step text: "# 📊 Anchorblock Technology Limited - Chart of Accounts
+
+## 💰 **Assets** (Account Codes 1000-1999)
+..."
+ POST /api/chat 200 in 42566ms
+ GET /api/history?limit=20 200 in 46ms
+ GET /api/auth/session 200 in 44ms
+ GET /api/auth/session 200 in 33ms

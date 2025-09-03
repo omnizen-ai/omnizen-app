@@ -46,6 +46,7 @@ import {
 } from '@langfuse/tracing';
 import { trace } from '@opentelemetry/api';
 import { createDatabaseTools } from '@/lib/tools/database-tools';
+import { storeSuccessfulQuery, getRelevantExamples, formatExamplesForPrompt } from '@/lib/ai/query-memory';
 
 export const maxDuration = 60;
 
@@ -218,6 +219,14 @@ async function handleChatMessage(request: Request) {
       // Use detailed prompt with complete, accurate schema
       optimizedSystemPrompt = getDeepSeekDetailedPrompt(queryType, messageText);
       
+      // Inject relevant query examples from memory
+      const examples = await getRelevantExamples(messageText, 2);
+      if (examples.length > 0) {
+        const examplesPrompt = formatExamplesForPrompt(examples);
+        optimizedSystemPrompt += examplesPrompt;
+        console.log(`[QueryMemory] Injected ${examples.length} examples into prompt`);
+      }
+      
       // Test prompt size for analysis
       testPromptSize(messageText);
       
@@ -361,6 +370,57 @@ async function handleChatMessage(request: Request) {
                   id: tc.toolCallId,
                 })),
               );
+              
+              // Capture successful database queries for learning
+              for (let i = 0; i < stepResult.toolCalls.length; i++) {
+                const toolCall = stepResult.toolCalls[i];
+                const toolResult = stepResult.toolResults?.[i];
+                
+                if (toolCall.toolName === 'dbRead' && toolResult) {
+                  try {
+                    // Access input and output properties correctly
+                    const input = (toolCall as any).input;
+                    const output = (toolResult as any).output;
+                    
+                    // Parse the input to get the query
+                    let query: string | undefined;
+                    if (typeof input === 'string') {
+                      try {
+                        const parsed = JSON.parse(input);
+                        query = parsed.query;
+                      } catch {
+                        // Input might be the query directly
+                        query = input;
+                      }
+                    } else if (input && typeof input === 'object') {
+                      query = input.query;
+                    }
+                    
+                    // Convert output to string for checking
+                    const outputStr = typeof output === 'string' ? output : JSON.stringify(output);
+                    
+                    // Check if the query was successful (no error in output)
+                    const isSuccess = outputStr && !outputStr.includes('[Error') && !outputStr.includes('Error:');
+                    
+                    // Store if query was successful
+                    if (isSuccess && query) {
+                      await storeSuccessfulQuery(
+                        messageText,  // Natural language query
+                        query,        // SQL query
+                        true
+                      );
+                      console.log('[QueryMemory] Stored successful query');
+                    } else if (!isSuccess && query) {
+                      console.log('[QueryMemory] Query failed, not storing');
+                    } else {
+                      console.log('[QueryMemory] Cannot store - missing query');
+                    }
+                  } catch (err) {
+                    // Silent failure - non-critical
+                    console.log('[QueryMemory] Failed to capture query:', err);
+                  }
+                }
+              }
             }
             if (stepResult.toolResults?.length) {
               console.log(
