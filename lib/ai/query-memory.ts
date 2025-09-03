@@ -148,6 +148,21 @@ export async function storeSuccessfulQuery(
   success: boolean = true
 ): Promise<void> {
   try {
+    // Skip storing if input is too large (likely CSV/structured data)
+    const MAX_QUERY_LENGTH = 500; // Characters
+    if (naturalQuery.length > MAX_QUERY_LENGTH || sqlQuery.length > 5000) {
+      console.log('[QueryMemory] Skipping storage - input too large (likely structured data)');
+      return;
+    }
+    
+    // Skip if it looks like CSV data (multiple commas per line)
+    const lines = naturalQuery.split('\n').slice(0, 3); // Check first 3 lines
+    const looksLikeCSV = lines.some(line => (line.match(/,/g) || []).length > 5);
+    if (looksLikeCSV) {
+      console.log('[QueryMemory] Skipping storage - detected CSV/structured data');
+      return;
+    }
+    
     const client = await getRedisClient();
     if (!client) return;
     

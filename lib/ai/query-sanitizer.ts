@@ -57,8 +57,14 @@ export function sanitizeSQLQuery(sql: string): string {
 export function sanitizeNaturalQuery(query: string): string {
   if (!query) return '';
   
+  // Limit processing for very large inputs to prevent performance issues
+  const MAX_PROCESS_LENGTH = 1000;
+  const processQuery = query.length > MAX_PROCESS_LENGTH 
+    ? query.substring(0, MAX_PROCESS_LENGTH) 
+    : query;
+  
   // First, extract the core action/intent
-  let sanitized = query.toLowerCase();
+  let sanitized = processQuery.toLowerCase();
   
   // Remove UUIDs first (before phone number detection)
   sanitized = sanitized.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '{{id}}');
