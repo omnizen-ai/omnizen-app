@@ -48,81 +48,85 @@ export function AppSidebar({ user }: { user: User | undefined }) {
           title: 'Accounts Receivable',
           url: '/accounting/accounts-receivable',
         },
-        {
-          title: 'Financial Reports',
-          url: '/accounting/reports',
-        },
+        // {
+        //   title: 'Financial Reports',
+        //   url: '/accounting/reports',
+        // },
       ],
     },
-    {
-      title: 'Operations',
-      url: '/operations',
-      icon: Building2,
-      items: [
-        {
-          title: 'Inventory Management',
-          url: '/operations/inventory',
-        },
-        {
-          title: 'Supply Chain',
-          url: '/operations/supply-chain',
-        },
-        {
-          title: 'Production Planning',
-          url: '/operations/production',
-        },
-        {
-          title: 'Quality Control',
-          url: '/operations/quality',
-        },
-      ],
-    },
+    // {
+    //   title: 'Operations',
+    //   url: '/operations',
+    //   icon: Building2,
+    //   items: [
+    //     {
+    //       title: 'Inventory Management',
+    //       url: '/operations/inventory',
+    //     },
+    //     // {
+    //     //   title: 'Supply Chain',
+    //     //   url: '/operations/supply-chain',
+    //     // },
+    //     // {
+    //     //   title: 'Production Planning',
+    //     //   url: '/operations/production',
+    //     // },
+    //     // {
+    //     //   title: 'Quality Control',
+    //     //   url: '/operations/quality',
+    //     // },
+    //   ],
+    // },
     {
       title: 'Finance',
       url: '/finance',
       icon: DollarSign,
       items: [
         {
+          title: 'Bank Accounts',
+          url: '/finance/bank-accounts',
+        },
+        {
           title: 'Cash Flow',
           url: '/finance/cash-flow',
         },
-        {
-          title: 'Budgeting',
-          url: '/finance/budgeting',
-        },
-        {
-          title: 'Investments',
-          url: '/finance/investments',
-        },
-        {
-          title: 'Financial Analysis',
-          url: '/finance/analysis',
-        },
+        // {
+        //   title: 'Budgeting',
+        //   url: '/finance/budgeting',
+        // },
+        // {
+        //   title: 'Investments',
+        //   url: '/finance/investments',
+        // },
+        // {
+        //   title: 'Financial Analysis',
+        //   url: '/finance/analysis',
+        // },
       ],
     },
-    {
-      title: 'Sales',
-      url: '/sales',
-      icon: TrendingUp,
-      items: [
-        {
-          title: 'CRM',
-          url: '/sales/crm',
-        },
-        {
-          title: 'Pipeline Management',
-          url: '/sales/pipeline',
-        },
-        {
-          title: 'Quotations',
-          url: '/sales/quotations',
-        },
-        {
-          title: 'Sales Reports',
-          url: '/sales/reports',
-        },
-      ],
-    },
+    // {
+    //   title: 'Sales',
+    //   url: '/sales',
+    //   icon: TrendingUp,
+    //   items: [
+    //     {
+    //       title: 'CRM',
+    //       url: '/sales/crm',
+    //     },
+    //     {
+    //       title: 'Pipeline Management',
+    //       url: '/sales/pipeline',
+    //     },
+    //     {
+    //       title: 'Quotations',
+    //       url: '/sales/quotations',
+    //     },
+    //     {
+    //       title: 'Sales Reports',
+    //       url: '/sales/reports',
+    //     },
+    //   ],
+    // },
   ];
 
   return (
