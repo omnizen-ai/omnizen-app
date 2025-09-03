@@ -136,6 +136,106 @@ async function submitFeedback(request: NextRequest): Promise<ApiResponse<any>> {
   }
 }
 
-export const GET = withAuth(withErrorHandler(getQueryIntelligence));
-export const POST = withAuth(withErrorHandler(searchSimilarQueries));
-export const PUT = withAuth(withErrorHandler(submitFeedback));
+export const GET = withErrorHandler(async (request: NextRequest) => {
+  return withAuth(async (session) => {
+    const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
+
+    try {
+      const { searchParams } = new URL(request.url);
+      const queryId = searchParams.get('queryId');
+      const limit = parseInt(searchParams.get('limit') || '20');
+      const includeMetrics = searchParams.get('metrics') === 'true';
+      
+      const queryEvolution = new QueryEvolutionService();
+      
+      if (queryId) {
+        const intelligence = await queryEvolution.getQueryIntelligence(queryId, organizationId);
+        return NextResponse.json({
+          success: true,
+          data: intelligence
+        });
+      } else {
+        const recentQueries = await queryEvolution.getRecentQueries(organizationId, {
+          limit,
+          includeMetrics
+        });
+        
+        return NextResponse.json({
+          success: true,
+          data: {
+            queries: recentQueries,
+            pagination: {
+              limit,
+              hasMore: recentQueries.length === limit
+            }
+          }
+        });
+      }
+
+    } catch (error) {
+      console.error('Get query intelligence error:', error);
+      return ApiResponse.error(error instanceof Error ? error.message : 'Failed to get query intelligence');
+    }
+  });
+});
+
+export const POST = withErrorHandler(async (request: NextRequest) => {
+  return withAuth(async (session) => {
+    const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
+
+    try {
+      const body = await request.json();
+      const { query, options } = searchSimilarSchema.parse(body);
+      
+      const queryEvolution = new QueryEvolutionService();
+      const similarQueries = await queryEvolution.findSimilarQueries(organizationId, query, options);
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          originalQuery: query,
+          similarQueries,
+          searchOptions: options
+        }
+      });
+
+    } catch (error) {
+      console.error('Search similar queries error:', error);
+      
+      if (error instanceof z.ZodError) {
+        return ApiResponse.badRequest('Invalid search parameters', error.errors);
+      }
+
+      return ApiResponse.error(error instanceof Error ? error.message : 'Failed to search similar queries');
+    }
+  });
+});
+
+export const PUT = withErrorHandler(async (request: NextRequest) => {
+  return withAuth(async (session) => {
+    try {
+      const body = await request.json();
+      const feedback = queryFeedbackSchema.parse(body);
+      
+      const queryEvolution = new QueryEvolutionService();
+      const result = await queryEvolution.submitQueryFeedback(feedback);
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          message: 'Feedback submitted successfully',
+          feedbackId: result.feedbackId
+        }
+      });
+
+    } catch (error) {
+      console.error('Submit feedback error:', error);
+      
+      if (error instanceof z.ZodError) {
+        return ApiResponse.badRequest('Invalid feedback format', error.errors);
+      }
+
+      return ApiResponse.error(error instanceof Error ? error.message : 'Failed to submit feedback');
+    }
+  });
+});

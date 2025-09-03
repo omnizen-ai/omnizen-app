@@ -7,36 +7,36 @@ const analyticsQuerySchema = z.object({
   days: z.number().min(1).max(365).optional().default(30),
 });
 
-async function getStatementAnalytics(request: NextRequest): Promise<ApiResponse<any>> {
-  const { organizationId } = request as any;
+export const GET = withErrorHandler(async (request: NextRequest) => {
+  return withAuth(async (session) => {
+    const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
 
-  try {
-    const { searchParams } = new URL(request.url);
-    const queryParams = {
-      days: parseInt(searchParams.get('days') || '30'),
-    };
+    try {
+      const { searchParams } = new URL(request.url);
+      const queryParams = {
+        days: parseInt(searchParams.get('days') || '30'),
+      };
 
-    const validatedParams = analyticsQuerySchema.parse(queryParams);
-    const stats = await bankingStatementProcessor.getProcessingStats(organizationId, validatedParams.days);
+      const validatedParams = analyticsQuerySchema.parse(queryParams);
+      const stats = await bankingStatementProcessor.getProcessingStats(organizationId, validatedParams.days);
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        ...stats,
-        period: `${validatedParams.days} days`,
-        generatedAt: new Date().toISOString(),
+      return NextResponse.json({
+        success: true,
+        data: {
+          ...stats,
+          period: `${validatedParams.days} days`,
+          generatedAt: new Date().toISOString(),
+        }
+      });
+
+    } catch (error) {
+      console.error('Statement analytics error:', error);
+      
+      if (error instanceof z.ZodError) {
+        return ApiResponse.badRequest('Invalid query parameters', error.errors);
       }
-    });
 
-  } catch (error) {
-    console.error('Statement analytics error:', error);
-    
-    if (error instanceof z.ZodError) {
-      return ApiResponse.badRequest('Invalid query parameters', error.errors);
+      return ApiResponse.error(error instanceof Error ? error.message : 'Failed to fetch analytics');
     }
-
-    return ApiResponse.error(error instanceof Error ? error.message : 'Failed to fetch analytics');
-  }
-}
-
-export const GET = withAuth(withErrorHandler(getStatementAnalytics));
+  });
+});

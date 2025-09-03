@@ -96,5 +96,69 @@ async function createPattern(request: NextRequest): Promise<ApiResponse<any>> {
   }
 }
 
-export const GET = withAuth(withErrorHandler(getPatterns));
-export const POST = withAuth(withErrorHandler(createPattern));
+export const GET = withErrorHandler(async (request: NextRequest) => {
+  return withAuth(async (session) => {
+    const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
+    
+    try {
+      const { searchParams } = new URL(request.url);
+      const limit = parseInt(searchParams.get('limit') || '50');
+      const offset = parseInt(searchParams.get('offset') || '0');
+      const category = searchParams.get('category');
+      
+      const queryEvolution = new QueryEvolutionService();
+      const patterns = await queryEvolution.getQueryPatterns(organizationId, {
+        limit,
+        offset,
+        category: category || undefined
+      });
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          patterns,
+          pagination: {
+            limit,
+            offset,
+            hasMore: patterns.length === limit
+          }
+        }
+      });
+
+    } catch (error) {
+      console.error('Get patterns error:', error);
+      return ApiResponse.error(error instanceof Error ? error.message : 'Failed to fetch patterns');
+    }
+  });
+});
+
+export const POST = withErrorHandler(async (request: NextRequest) => {
+  return withAuth(async (session) => {
+    const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
+
+    try {
+      const body = await request.json();
+      const config = createPatternSchema.parse(body);
+      
+      const queryEvolution = new QueryEvolutionService();
+      const patternId = await queryEvolution.createQueryPattern(organizationId, config);
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          patternId,
+          message: 'Query pattern created successfully'
+        }
+      });
+
+    } catch (error) {
+      console.error('Create pattern error:', error);
+      
+      if (error instanceof z.ZodError) {
+        return ApiResponse.badRequest('Invalid pattern configuration', error.errors);
+      }
+
+      return ApiResponse.error(error instanceof Error ? error.message : 'Failed to create pattern');
+    }
+  });
+});
