@@ -22,7 +22,7 @@ export function useBills(filters?: {
       if (filters?.startDate) params.append('startDate', filters.startDate.toISOString());
       if (filters?.endDate) params.append('endDate', filters.endDate.toISOString());
       
-      const response = await apiClient.get(`/accounting/api/bills?${params}`);
+      const response = await apiClient.get(`/bookkeeping/api/bills?${params}`);
       return response || [];
     },
   });
@@ -32,7 +32,7 @@ export function useBillStats() {
   return useQuery({
     queryKey: ['bill-stats'],
     queryFn: async () => {
-      const response = await apiClient.get('/accounting/api/bills?stats=true');
+      const response = await apiClient.get('/bookkeeping/api/bills?stats=true');
       return response || { totalOutstanding: 0, totalOverdue: 0, totalDraft: 0, count: 0 };
     },
   });
@@ -43,7 +43,7 @@ export function useBillById(id: string | null) {
     queryKey: ['bill', id],
     queryFn: async () => {
       if (!id) return null;
-      const response = await apiClient.get(`/accounting/api/bills/${id}`);
+      const response = await apiClient.get(`/bookkeeping/api/bills/${id}`);
       return response;
     },
     enabled: !!id,
@@ -55,7 +55,7 @@ export function useCreateBill() {
   
   return useMutation({
     mutationFn: async (data: Partial<Bill>) => {
-      const response = await apiClient.post('/accounting/api/bills', data);
+      const response = await apiClient.post('/bookkeeping/api/bills', data);
       return response;
     },
     onSuccess: () => {
@@ -74,7 +74,7 @@ export function useUpdateBill() {
   
   return useMutation({
     mutationFn: async ({ id, ...data }: Partial<Bill> & { id: string }) => {
-      const response = await apiClient.put(`/accounting/api/bills/${id}`, data);
+      const response = await apiClient.put(`/bookkeeping/api/bills/${id}`, data);
       return response;
     },
     onSuccess: (_, variables) => {
@@ -94,7 +94,7 @@ export function useDeleteBill() {
   
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiClient.delete(`/accounting/api/bills/${id}`);
+      const response = await apiClient.delete(`/bookkeeping/api/bills/${id}`);
       return response;
     },
     onSuccess: () => {
@@ -125,7 +125,7 @@ export function useRecordBillPayment() {
       paymentMethod?: string;
       reference?: string;
     }) => {
-      const response = await apiClient.post(`/accounting/api/bills/${billId}`, {
+      const response = await apiClient.post(`/bookkeeping/api/bills/${billId}`, {
         action: 'record-payment',
         amount,
         paymentDate,

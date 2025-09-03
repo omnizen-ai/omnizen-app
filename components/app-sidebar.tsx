@@ -32,25 +32,25 @@ export function AppSidebar({ user }: { user: User | undefined }) {
       description: 'AI Partner & Assistant',
     },
     {
-      title: 'Accounting',
-      url: '/accounting',
+      title: 'Bookkeeping',
+      url: '/bookkeeping',
       icon: Calculator,
       items: [
         {
           title: 'General Ledger',
-          url: '/accounting/general-ledger',
+          url: '/bookkeeping/general-ledger',
         },
         {
-          title: 'Accounts Payable',
-          url: '/accounting/accounts-payable',
+          title: 'Bills',
+          url: '/bookkeeping/bills',
         },
         {
-          title: 'Accounts Receivable',
-          url: '/accounting/accounts-receivable',
+          title: 'Invoices',
+          url: '/bookkeeping/invoices',
         },
         // {
         //   title: 'Financial Reports',
-        //   url: '/accounting/reports',
+        //   url: '/bookkeeping/reports',
         // },
       ],
     },
@@ -78,29 +78,29 @@ export function AppSidebar({ user }: { user: User | undefined }) {
     //   ],
     // },
     {
-      title: 'Finance',
-      url: '/finance',
+      title: 'Banking',
+      url: '/banking',
       icon: DollarSign,
       items: [
         {
-          title: 'Bank Accounts',
-          url: '/finance/bank-accounts',
+          title: 'Payment Methods',
+          url: '/banking/payment-methods',
         },
         {
-          title: 'Cash Flow',
-          url: '/finance/cash-flow',
+          title: 'Transactions',
+          url: '/banking/transactions',
         },
         // {
         //   title: 'Budgeting',
-        //   url: '/finance/budgeting',
+        //   url: '/banking/budgeting',
         // },
         // {
         //   title: 'Investments',
-        //   url: '/finance/investments',
+        //   url: '/banking/investments',
         // },
         // {
         //   title: 'Financial Analysis',
-        //   url: '/finance/analysis',
+        //   url: '/banking/analysis',
         // },
       ],
     },

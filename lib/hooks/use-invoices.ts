@@ -22,7 +22,7 @@ export function useInvoices(filters?: {
       if (filters?.startDate) params.append('startDate', filters.startDate.toISOString());
       if (filters?.endDate) params.append('endDate', filters.endDate.toISOString());
       
-      const response = await apiClient.get(`/accounting/api/invoices?${params}`);
+      const response = await apiClient.get(`/bookkeeping/api/invoices?${params}`);
       return response || [];
     },
   });
@@ -32,7 +32,7 @@ export function useInvoiceStats() {
   return useQuery({
     queryKey: ['invoice-stats'],
     queryFn: async () => {
-      const response = await apiClient.get('/accounting/api/invoices?stats=true');
+      const response = await apiClient.get('/bookkeeping/api/invoices?stats=true');
       return response || { totalOutstanding: 0, totalOverdue: 0, totalDraft: 0, count: 0 };
     },
   });
@@ -43,7 +43,7 @@ export function useInvoiceById(id: string | null) {
     queryKey: ['invoice', id],
     queryFn: async () => {
       if (!id) return null;
-      const response = await apiClient.get(`/accounting/api/invoices/${id}`);
+      const response = await apiClient.get(`/bookkeeping/api/invoices/${id}`);
       return response;
     },
     enabled: !!id,
@@ -55,7 +55,7 @@ export function useCreateInvoice() {
   
   return useMutation({
     mutationFn: async (data: Partial<Invoice>) => {
-      const response = await apiClient.post('/accounting/api/invoices', data);
+      const response = await apiClient.post('/bookkeeping/api/invoices', data);
       return response;
     },
     onSuccess: () => {
@@ -74,7 +74,7 @@ export function useUpdateInvoice() {
   
   return useMutation({
     mutationFn: async ({ id, ...data }: Partial<Invoice> & { id: string }) => {
-      const response = await apiClient.put(`/accounting/api/invoices/${id}`, data);
+      const response = await apiClient.put(`/bookkeeping/api/invoices/${id}`, data);
       return response;
     },
     onSuccess: (_, variables) => {
@@ -94,7 +94,7 @@ export function useDeleteInvoice() {
   
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiClient.delete(`/accounting/api/invoices/${id}`);
+      const response = await apiClient.delete(`/bookkeeping/api/invoices/${id}`);
       return response;
     },
     onSuccess: () => {
@@ -125,7 +125,7 @@ export function useRecordInvoicePayment() {
       paymentMethod?: string;
       reference?: string;
     }) => {
-      const response = await apiClient.post(`/accounting/api/invoices/${invoiceId}`, {
+      const response = await apiClient.post(`/bookkeeping/api/invoices/${invoiceId}`, {
         action: 'record-payment',
         amount,
         paymentDate,
@@ -151,7 +151,7 @@ export function useSendInvoice() {
   
   return useMutation({
     mutationFn: async (invoiceId: string) => {
-      const response = await apiClient.post(`/accounting/api/invoices/${invoiceId}`, {
+      const response = await apiClient.post(`/bookkeeping/api/invoices/${invoiceId}`, {
         action: 'send',
       });
       return response;

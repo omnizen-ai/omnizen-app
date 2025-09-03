@@ -13,7 +13,7 @@ export function useChartAccounts() {
   return useQuery({
     queryKey: [QUERY_KEY],
     queryFn: async () => {
-      const data = await ApiClient.get<ChartAccount[]>('/accounting/api/accounts');
+      const data = await ApiClient.get<ChartAccount[]>('/bookkeeping/api/accounts');
       return data || [];
     },
   });
@@ -23,7 +23,7 @@ export function useChartAccounts() {
 export function useChartAccount(id?: string) {
   return useQuery({
     queryKey: [QUERY_KEY, id],
-    queryFn: () => ApiClient.get<ChartAccount>(`/accounting/api/accounts/${id}`),
+    queryFn: () => ApiClient.get<ChartAccount>(`/bookkeeping/api/accounts/${id}`),
     enabled: !!id,
   });
 }
@@ -34,7 +34,7 @@ export function useCreateChartAccount() {
   
   return useMutation({
     mutationFn: (data: Partial<ChartAccount>) => 
-      ApiClient.post<ChartAccount>('/accounting/api/accounts', data),
+      ApiClient.post<ChartAccount>('/bookkeeping/api/accounts', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       handleMutationSuccess('Account created successfully');
@@ -51,7 +51,7 @@ export function useUpdateChartAccount() {
   
   return useMutation({
     mutationFn: ({ id, ...data }: Partial<ChartAccount> & { id: string }) => 
-      ApiClient.put<ChartAccount>(`/accounting/api/accounts/${id}`, data),
+      ApiClient.put<ChartAccount>(`/bookkeeping/api/accounts/${id}`, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY, variables.id] });
@@ -69,7 +69,7 @@ export function useDeleteChartAccount() {
   
   return useMutation({
     mutationFn: (id: string) => 
-      ApiClient.delete(`/accounting/api/accounts/${id}`),
+      ApiClient.delete(`/bookkeeping/api/accounts/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
       handleMutationSuccess('Account deleted successfully');

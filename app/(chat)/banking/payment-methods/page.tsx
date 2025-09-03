@@ -202,9 +202,9 @@ export default function BankAccountsPage() {
       <div className="flex-1 overflow-y-auto">
         <div className="container max-w-6xl mx-auto py-8 px-4">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold">Bank Accounts</h2>
+            <h2 className="text-2xl font-bold">Payment Methods</h2>
             <p className="text-muted-foreground mt-2">
-              Manage your company's bank accounts and financial institutions.
+              Manage your company's bank accounts and payment methods.
             </p>
           </div>
 

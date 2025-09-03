@@ -296,7 +296,7 @@ export default function AccountsPayablePage() {
       <div className="flex-1 overflow-y-auto">
         <div className="container max-w-6xl mx-auto py-8 px-4">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold">Vendor Bills Management</h2>
+            <h2 className="text-2xl font-bold">Bills</h2>
             <p className="text-muted-foreground mt-2">
               Manage vendor bills, track payments, and monitor outstanding payables.
             </p>
