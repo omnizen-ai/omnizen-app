@@ -363,7 +363,7 @@ export default function InventoryPage() {
           <DataTableCrud
             columns={columns}
             data={inventory}
-            searchKey="productName"
+            searchKey="productSku"
             searchPlaceholder="Search products..."
             onAdd={() => alert('Add inventory functionality coming soon')}
             onRefresh={() => {}}

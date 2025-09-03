@@ -52,6 +52,15 @@ export function NavMain({
     '/bookkeeping/invoices': 'bookkeeping/invoices',
     '/banking/payment-methods': 'banking/payment-methods',
     '/banking/transactions': 'banking/transactions',
+    '/sales/crm': 'sales/crm',
+    '/sales/orders': 'sales/orders',
+    '/sales/quotations': 'sales/quotations',
+    '/operations/inventory': 'operations/inventory',
+    '/operations/products': 'operations/products',
+    '/operations/warehouses': 'operations/warehouses',
+    '/purchasing/orders': 'purchasing/orders',
+    '/purchasing/vendors': 'purchasing/vendors',
+    '/purchasing/receipts': 'purchasing/receipts',
   };
   
   const handleNavClick = (e: React.MouseEvent, url: string) => {

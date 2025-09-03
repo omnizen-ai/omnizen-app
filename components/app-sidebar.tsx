@@ -8,6 +8,7 @@ import {
   Building2,
   TrendingUp,
   DollarSign,
+  ShoppingCart,
 } from 'lucide-react';
 
 import { NavMain } from '@/components/nav-main';
@@ -54,29 +55,25 @@ export function AppSidebar({ user }: { user: User | undefined }) {
         // },
       ],
     },
-    // {
-    //   title: 'Operations',
-    //   url: '/operations',
-    //   icon: Building2,
-    //   items: [
-    //     {
-    //       title: 'Inventory Management',
-    //       url: '/operations/inventory',
-    //     },
-    //     // {
-    //     //   title: 'Supply Chain',
-    //     //   url: '/operations/supply-chain',
-    //     // },
-    //     // {
-    //     //   title: 'Production Planning',
-    //     //   url: '/operations/production',
-    //     // },
-    //     // {
-    //     //   title: 'Quality Control',
-    //     //   url: '/operations/quality',
-    //     // },
-    //   ],
-    // },
+    {
+      title: 'Operations',
+      url: '/operations',
+      icon: Building2,
+      items: [
+        {
+          title: 'Inventory',
+          url: '/operations/inventory',
+        },
+        {
+          title: 'Products',
+          url: '/operations/products',
+        },
+        {
+          title: 'Warehouses',
+          url: '/operations/warehouses',
+        },
+      ],
+    },
     {
       title: 'Banking',
       url: '/banking',
@@ -104,29 +101,44 @@ export function AppSidebar({ user }: { user: User | undefined }) {
         // },
       ],
     },
-    // {
-    //   title: 'Sales',
-    //   url: '/sales',
-    //   icon: TrendingUp,
-    //   items: [
-    //     {
-    //       title: 'CRM',
-    //       url: '/sales/crm',
-    //     },
-    //     {
-    //       title: 'Pipeline Management',
-    //       url: '/sales/pipeline',
-    //     },
-    //     {
-    //       title: 'Quotations',
-    //       url: '/sales/quotations',
-    //     },
-    //     {
-    //       title: 'Sales Reports',
-    //       url: '/sales/reports',
-    //     },
-    //   ],
-    // },
+    {
+      title: 'Sales',
+      url: '/sales',
+      icon: TrendingUp,
+      items: [
+        {
+          title: 'CRM',
+          url: '/sales/crm',
+        },
+        {
+          title: 'Sales Orders',
+          url: '/sales/orders',
+        },
+        {
+          title: 'Quotations',
+          url: '/sales/quotations',
+        },
+      ],
+    },
+    {
+      title: 'Purchasing',
+      url: '/purchasing',
+      icon: ShoppingCart,
+      items: [
+        {
+          title: 'Purchase Orders',
+          url: '/purchasing/orders',
+        },
+        {
+          title: 'Vendors',
+          url: '/purchasing/vendors',
+        },
+        {
+          title: 'Receipts',
+          url: '/purchasing/receipts',
+        },
+      ],
+    },
   ];
 
   return (

@@ -7,7 +7,16 @@ export type PanelType =
   | 'bookkeeping/bills' 
   | 'bookkeeping/invoices'
   | 'banking/payment-methods'
-  | 'banking/transactions';
+  | 'banking/transactions'
+  | 'sales/crm'
+  | 'sales/orders'
+  | 'sales/quotations'
+  | 'operations/inventory'
+  | 'operations/products'
+  | 'operations/warehouses'
+  | 'purchasing/orders'
+  | 'purchasing/vendors'
+  | 'purchasing/receipts';
 
 interface PanelState {
   isOpen: boolean;

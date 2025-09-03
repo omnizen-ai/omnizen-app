@@ -15,107 +15,47 @@ import {
   Users,
   DollarSign,
   TrendingUp,
-  UserCheck
+  UserCheck,
+  MoreHorizontal
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format } from 'date-fns';
-
-// Mock CRM data
-const mockCustomers = [
-  {
-    id: '1',
-    name: 'John Smith',
-    email: 'john.smith@techcorp.com',
-    phone: '+1 (555) 123-4567',
-    company: 'TechCorp Solutions',
-    type: 'enterprise',
-    status: 'active',
-    value: 125000,
-    deals: 3,
-    lastContact: new Date('2024-01-20'),
-    owner: 'Sarah Johnson',
-    avatar: null,
-    initials: 'JS',
-    leadScore: 85,
-  },
-  {
-    id: '2',
-    name: 'Emily Davis',
-    email: 'emily@startupinc.com',
-    phone: '+1 (555) 234-5678',
-    company: 'StartupInc',
-    type: 'startup',
-    status: 'prospect',
-    value: 45000,
-    deals: 1,
-    lastContact: new Date('2024-01-18'),
-    owner: 'Mike Chen',
-    avatar: null,
-    initials: 'ED',
-    leadScore: 72,
-  },
-  {
-    id: '3',
-    name: 'Robert Johnson',
-    email: 'rjohnson@globalenterprises.com',
-    phone: '+1 (555) 345-6789',
-    company: 'Global Enterprises',
-    type: 'enterprise',
-    status: 'active',
-    value: 250000,
-    deals: 5,
-    lastContact: new Date('2024-01-15'),
-    owner: 'Sarah Johnson',
-    avatar: null,
-    initials: 'RJ',
-    leadScore: 95,
-  },
-  {
-    id: '4',
-    name: 'Lisa Chen',
-    email: 'lisa@designstudio.com',
-    phone: '+1 (555) 456-7890',
-    company: 'Design Studio Pro',
-    type: 'smb',
-    status: 'lead',
-    value: 15000,
-    deals: 0,
-    lastContact: new Date('2024-01-22'),
-    owner: 'Tom Wilson',
-    avatar: null,
-    initials: 'LC',
-    leadScore: 60,
-  },
-  {
-    id: '5',
-    name: 'Michael Brown',
-    email: 'mbrown@retailchain.com',
-    phone: '+1 (555) 567-8901',
-    company: 'Retail Chain LLC',
-    type: 'enterprise',
-    status: 'inactive',
-    value: 180000,
-    deals: 4,
-    lastContact: new Date('2023-12-10'),
-    owner: 'Sarah Johnson',
-    avatar: null,
-    initials: 'MB',
-    leadScore: 40,
-  },
-];
+import { 
+  useContacts,
+  useCreateContact,
+  useUpdateContact,
+  useDeleteContact,
+  useSalesSummary
+} from '@/lib/hooks/use-sales';
+import { type Contact } from '@/lib/db/schema/index';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ContactForm } from '@/components/sales/contact-form';
 
 export default function CRMPage() {
-  const [customers] = useState(mockCustomers);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [viewMode, setViewMode] = useState<'contacts' | 'pipeline'>('contacts');
+  const [formOpen, setFormOpen] = useState(false);
 
-  // Calculate summary statistics
-  const totalCustomers = customers.length;
-  const activeCustomers = customers.filter(c => c.status === 'active').length;
-  const totalValue = customers.reduce((sum, c) => sum + c.value, 0);
-  const totalDeals = customers.reduce((sum, c) => sum + c.deals, 0);
-  const avgLeadScore = customers.reduce((sum, c) => sum + c.leadScore, 0) / customers.length;
+  // React Query hooks
+  const { data: contacts = [], isLoading: contactsLoading, refetch } = useContacts();
+  const { data: summary } = useSalesSummary();
+  const createMutation = useCreateContact();
+  const updateMutation = useUpdateContact();
+  const deleteMutation = useDeleteContact();
 
-  // Columns definition
-  const columns: ColumnDef<typeof mockCustomers[0]>[] = [
+  // Filter contacts to customers only
+  const customers = contacts.filter(contact => contact.type === 'customer');
+
+  // Columns definition for contacts table
+  const contactColumns: ColumnDef<Contact>[] = [
     {
       accessorKey: 'name',
       header: ({ column }) => {
@@ -130,17 +70,19 @@ export default function CRMPage() {
         );
       },
       cell: ({ row }) => {
+        const contact = row.original;
+        const initials = contact.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'C';
         return (
           <div className="flex items-center gap-3">
             <Avatar className="size-8">
-              <AvatarImage src={row.original.avatar || undefined} />
-              <AvatarFallback className="text-xs">{row.original.initials}</AvatarFallback>
+              <AvatarImage src={undefined} />
+              <AvatarFallback className="text-xs">{initials}</AvatarFallback>
             </Avatar>
             <div>
-              <div className="font-medium">{row.original.name}</div>
+              <div className="font-medium">{contact.name}</div>
               <div className="text-xs text-muted-foreground flex items-center gap-1">
                 <Building2 className="size-3" />
-                {row.original.company}
+                {contact.companyName || 'No Company'}
               </div>
             </div>
           </div>
@@ -151,138 +93,124 @@ export default function CRMPage() {
       accessorKey: 'email',
       header: 'Contact',
       cell: ({ row }) => {
+        const contact = row.original;
         return (
           <div className="text-sm">
             <div className="flex items-center gap-1">
               <Mail className="size-3 text-muted-foreground" />
-              {row.original.email}
+              {contact.email || 'No email'}
             </div>
             <div className="flex items-center gap-1 text-muted-foreground">
               <Phone className="size-3" />
-              {row.original.phone}
+              {contact.phone || 'No phone'}
             </div>
           </div>
         );
       },
     },
     {
-      accessorKey: 'type',
-      header: 'Type',
-      cell: ({ row }) => {
-        const type = row.original.type;
-        const typeConfig = {
-          enterprise: { label: 'Enterprise', color: 'bg-purple-500/10 text-purple-500' },
-          smb: { label: 'SMB', color: 'bg-blue-500/10 text-blue-500' },
-          startup: { label: 'Startup', color: 'bg-green-500/10 text-green-500' },
-        };
-        const config = typeConfig[type as keyof typeof typeConfig];
-        return (
-          <Badge variant="outline" className={cn('capitalize', config.color)}>
-            {config.label}
-          </Badge>
-        );
-      },
-    },
-    {
-      accessorKey: 'status',
+      accessorKey: 'isActive',
       header: 'Status',
       cell: ({ row }) => {
-        const status = row.original.status;
-        const statusConfig = {
-          active: { label: 'Active', color: 'bg-green-500/10 text-green-500' },
-          prospect: { label: 'Prospect', color: 'bg-blue-500/10 text-blue-500' },
-          lead: { label: 'Lead', color: 'bg-orange-500/10 text-orange-500' },
-          inactive: { label: 'Inactive', color: 'bg-gray-500/10 text-gray-500' },
-        };
-        const config = statusConfig[status as keyof typeof statusConfig];
+        const active = row.original.isActive;
         return (
-          <Badge variant="outline" className={cn('capitalize', config.color)}>
-            {config.label}
+          <Badge variant={active ? 'default' : 'secondary'}>
+            {active ? 'Active' : 'Inactive'}
           </Badge>
         );
       },
     },
     {
-      accessorKey: 'value',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Total Value
-            <ArrowUpDown className="ml-2 size-4" />
-          </Button>
-        );
-      },
+      accessorKey: 'createdAt',
+      header: 'Added',
       cell: ({ row }) => {
-        const value = row.original.value;
-        const deals = row.original.deals;
-        const formatted = new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'USD',
-        }).format(value);
-        return (
-          <div>
-            <div className="font-medium">{formatted}</div>
-            <div className="text-xs text-muted-foreground">{deals} deals</div>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: 'leadScore',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Lead Score
-            <ArrowUpDown className="ml-2 size-4" />
-          </Button>
-        );
-      },
-      cell: ({ row }) => {
-        const score = row.original.leadScore;
-        let color = 'text-green-600';
-        if (score < 70) color = 'text-orange-600';
-        if (score < 50) color = 'text-red-600';
-        
-        return (
-          <div className={cn('font-bold text-lg', color)}>
-            {score}
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: 'lastContact',
-      header: 'Last Contact',
-      cell: ({ row }) => {
-        const date = row.original.lastContact;
-        const daysAgo = Math.floor((new Date().getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+        const date = new Date(row.original.createdAt);
         return (
           <div>
             <div className="text-sm">{format(date, 'MMM d, yyyy')}</div>
-            <div className="text-xs text-muted-foreground">{daysAgo} days ago</div>
+            <div className="text-xs text-muted-foreground">
+              {format(date, 'h:mm a')}
+            </div>
           </div>
         );
       },
     },
     {
-      accessorKey: 'owner',
-      header: 'Owner',
+      id: 'actions',
       cell: ({ row }) => {
+        const contact = row.original;
+
         return (
-          <div className="flex items-center gap-1">
-            <UserCheck className="size-3 text-muted-foreground" />
-            <span className="text-sm">{row.original.owner}</span>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="size-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => handleEdit(contact)}>
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => handleDelete(contact)}
+                className="text-red-600"
+              >
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         );
       },
     },
   ];
+
+  // Handlers
+  const handleAdd = () => {
+    setSelectedContact(null);
+    setFormOpen(true);
+  };
+
+  const handleEdit = (contact: Contact) => {
+    setSelectedContact(contact);
+    setFormOpen(true);
+  };
+
+  const handleFormSubmit = async (data: Partial<Contact>) => {
+    if (selectedContact) {
+      await updateMutation.mutateAsync({
+        id: selectedContact.id,
+        ...data,
+      });
+    } else {
+      await createMutation.mutateAsync(data);
+    }
+    setFormOpen(false);
+    setSelectedContact(null);
+  };
+
+  const handleDelete = async (contact: Contact) => {
+    if (confirm(`Are you sure you want to delete ${contact.name}?`)) {
+      await deleteMutation.mutateAsync(contact.id);
+    }
+  };
+
+  // Pipeline component (placeholder)
+  const PipelineView = () => (
+    <div className="flex items-center justify-center h-96">
+      <div className="text-center">
+        <h3 className="text-lg font-medium mb-2">Sales Pipeline</h3>
+        <p className="text-muted-foreground mb-4">
+          Drag and drop deals between stages to track your sales process.
+        </p>
+        <div className="text-sm text-muted-foreground">
+          Pipeline view coming soon...
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex flex-col min-w-0 h-dvh bg-background">
@@ -296,88 +224,113 @@ export default function CRMPage() {
           </div>
 
           {/* Summary Cards */}
-          <div className="grid gap-4 md:grid-cols-5 mb-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-                <Users className="size-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{totalCustomers}</div>
-                <p className="text-xs text-muted-foreground">
-                  All contacts
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active</CardTitle>
-                <UserCheck className="size-4 text-green-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">{activeCustomers}</div>
-                <p className="text-xs text-muted-foreground">
-                  Paying customers
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-                <DollarSign className="size-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  ${(totalValue / 1000).toFixed(0)}K
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Lifetime value
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Deals</CardTitle>
-                <TrendingUp className="size-4 text-blue-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{totalDeals}</div>
-                <p className="text-xs text-muted-foreground">
-                  Open opportunities
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Avg Score</CardTitle>
-                <TrendingUp className="size-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{avgLeadScore.toFixed(0)}</div>
-                <p className="text-xs text-muted-foreground">
-                  Lead quality
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+          {summary && (
+            <div className="grid gap-4 md:grid-cols-5 mb-8">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Contacts</CardTitle>
+                  <Users className="size-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{summary.totalContacts}</div>
+                  <p className="text-xs text-muted-foreground">
+                    All contacts
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Customers</CardTitle>
+                  <UserCheck className="size-4 text-blue-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-600">{summary.totalCustomers}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Customer contacts
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Active</CardTitle>
+                  <UserCheck className="size-4 text-green-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">{summary.activeCustomers}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Active customers
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+                  <TrendingUp className="size-4 text-blue-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{summary.totalOrders}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Sales orders
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Order Value</CardTitle>
+                  <DollarSign className="size-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    ${(summary.totalOrderValue || 0).toLocaleString()}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Total sales
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
-          <DataTableCrud
-            columns={columns}
-            data={customers}
-            searchKey="name"
-            searchPlaceholder="Search customers..."
-            onAdd={() => alert('Add customer functionality coming soon')}
-            onRefresh={() => {}}
-            isLoading={false}
-            addButtonLabel="Add Customer"
-            showActions={false}
-          />
+          {/* View Toggle Tabs */}
+          <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as any)} className="mb-6">
+            <TabsList>
+              <TabsTrigger value="contacts">Contacts</TabsTrigger>
+              <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="contacts">
+              <DataTableCrud
+                columns={contactColumns}
+                data={customers}
+                searchKey="name"
+                searchPlaceholder="Search customers..."
+                onAdd={handleAdd}
+                onRefresh={refetch}
+                isLoading={contactsLoading}
+                addButtonLabel="Add Customer"
+                showActions={false}
+              />
+            </TabsContent>
+            
+            <TabsContent value="pipeline">
+              <PipelineView />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
+
+      {/* Contact Form Dialog */}
+      <ContactForm
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        onSubmit={handleFormSubmit}
+        contact={selectedContact}
+        isLoading={createMutation.isPending || updateMutation.isPending}
+      />
     </div>
   );
 }
