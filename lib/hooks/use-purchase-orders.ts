@@ -45,7 +45,7 @@ export function useUpdatePurchaseOrder() {
   
   return useMutation({
     mutationFn: ({ id, ...data }: Partial<PurchaseOrder> & { id: string; lines?: any[] }) =>
-      apiClient.put<PurchaseOrder>(`/api/purchasing/orders`, { id, ...data }),
+      apiClient.put<PurchaseOrder>(`/api/purchasing/orders/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
       queryClient.invalidateQueries({ queryKey: ['purchase-orders-summary'] });
@@ -59,7 +59,7 @@ export function useDeletePurchaseOrder() {
   
   return useMutation({
     mutationFn: (id: string) =>
-      apiClient.delete(`/api/purchasing/orders?id=${id}`),
+      apiClient.delete(`/api/purchasing/orders/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
       queryClient.invalidateQueries({ queryKey: ['purchase-orders-summary'] });

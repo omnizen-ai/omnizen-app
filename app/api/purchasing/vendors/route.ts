@@ -1,6 +1,61 @@
 import { NextRequest } from 'next/server';
 import { withAuth, withErrorHandler, ApiResponse } from '@/lib/api/base';
-import { getContacts, createContact, updateContact, deleteContact } from '@/lib/db/queries/sales';
+import { getContacts, createContact } from '@/lib/db/queries/sales';
+import { z } from 'zod';
+
+// Schema for vendor creation (vendors are contacts with type='vendor')
+const createVendorSchema = z.object({
+  displayName: z.string().min(1),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  companyName: z.string().optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  mobile: z.string().optional(),
+  website: z.string().optional(),
+  fax: z.string().optional(),
+  type: z.enum(['vendor', 'both']).default('vendor'),
+  customerType: z.enum(['individual', 'business']).default('business'),
+  isActive: z.boolean().default(true),
+  taxId: z.string().optional(),
+  taxExempt: z.boolean().default(false),
+  creditLimit: z.string().default('0'),
+  paymentTerms: z.string().optional(),
+  priceLevel: z.string().optional(),
+  defaultDiscountPercent: z.string().default('0'),
+  notes: z.string().optional(),
+  tags: z.array(z.string()).default([]),
+  billingAddress: z.object({
+    street1: z.string().default(''),
+    street2: z.string().default(''),
+    city: z.string().default(''),
+    state: z.string().default(''),
+    postalCode: z.string().default(''),
+    country: z.string().default(''),
+  }).default({
+    street1: '',
+    street2: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: '',
+  }),
+  shippingAddress: z.object({
+    street1: z.string().default(''),
+    street2: z.string().default(''),
+    city: z.string().default(''),
+    state: z.string().default(''),
+    postalCode: z.string().default(''),
+    country: z.string().default(''),
+  }).default({
+    street1: '',
+    street2: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: '',
+  }),
+});
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   return withAuth(async (session) => {
@@ -47,57 +102,18 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 export const POST = withErrorHandler(async (request: NextRequest) => {
   return withAuth(async (session) => {
     const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
-    const body = await request.json();
+    const workspaceId = session.user?.workspaceId || null;
     
-    const vendorData = {
-      ...body,
-      type: 'vendor' as const,
-      organizationId,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    const newVendor = await createContact(vendorData);
-    return ApiResponse.success(newVendor, 201);
-  });
-});
-
-export const PUT = withErrorHandler(async (request: NextRequest) => {
-  return withAuth(async (session) => {
-    const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
     const body = await request.json();
-    const { id, ...updateData } = body;
-
-    if (!id) {
-      return ApiResponse.badRequest('Vendor ID required');
-    }
-
-    const updatedVendor = await updateContact(id, organizationId, updateData);
-
-    if (!updatedVendor) {
-      return ApiResponse.notFound('Vendor not found');
-    }
-
-    return ApiResponse.success(updatedVendor);
+    const validatedData = createVendorSchema.parse(body);
+    
+    const vendor = await createContact({
+      ...validatedData,
+      organizationId,
+      workspaceId,
+    } as any);
+    
+    return ApiResponse.success(vendor, 201);
   });
 });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
-  return withAuth(async (session) => {
-    const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
-    const searchParams = request.nextUrl.searchParams;
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return ApiResponse.badRequest('Vendor ID required');
-    }
-
-    const deletedVendor = await deleteContact(id, organizationId);
-
-    if (!deletedVendor) {
-      return ApiResponse.notFound('Vendor not found');
-    }
-
-    return ApiResponse.success({ success: true });
-  });
-});

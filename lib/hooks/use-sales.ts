@@ -41,7 +41,7 @@ export function useUpdateContact() {
   
   return useMutation({
     mutationFn: ({ id, ...data }: Partial<Contact> & { id: string }) =>
-      apiClient.put<Contact>(`/api/sales/contacts`, { id, ...data }),
+      apiClient.put<Contact>(`/api/sales/contacts/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       queryClient.invalidateQueries({ queryKey: ['sales-summary'] });
@@ -55,7 +55,7 @@ export function useDeleteContact() {
   
   return useMutation({
     mutationFn: (id: string) =>
-      apiClient.delete(`/api/sales/contacts?id=${id}`),
+      apiClient.delete(`/api/sales/contacts/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       queryClient.invalidateQueries({ queryKey: ['sales-summary'] });
@@ -98,7 +98,7 @@ export function useUpdateSalesOrder() {
   
   return useMutation({
     mutationFn: ({ id, ...data }: Partial<SalesOrder> & { id: string; lines?: any[] }) =>
-      apiClient.put<SalesOrder>(`/api/sales/orders`, { id, ...data }),
+      apiClient.put<SalesOrder>(`/api/sales/orders/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales-orders'] });
       queryClient.invalidateQueries({ queryKey: ['sales-summary'] });
@@ -112,7 +112,7 @@ export function useDeleteSalesOrder() {
   
   return useMutation({
     mutationFn: (id: string) =>
-      apiClient.delete(`/api/sales/orders?id=${id}`),
+      apiClient.delete(`/api/sales/orders/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sales-orders'] });
       queryClient.invalidateQueries({ queryKey: ['sales-summary'] });

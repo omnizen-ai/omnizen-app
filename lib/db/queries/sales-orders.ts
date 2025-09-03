@@ -119,12 +119,9 @@ export async function deleteSalesOrder(orderId: string, organizationId: string) 
     .delete(salesOrderLines)
     .where(eq(salesOrderLines.salesOrderId, orderId));
 
-  const result = await db
+  await db
     .delete(salesOrders)
-    .where(and(eq(salesOrders.id, orderId), eq(salesOrders.organizationId, organizationId)))
-    .returning();
-  
-  return result[0];
+    .where(and(eq(salesOrders.id, orderId), eq(salesOrders.organizationId, organizationId)));
 }
 
 export async function getSalesOrderSummary(organizationId: string) {

@@ -120,12 +120,9 @@ export async function updatePurchaseOrder(purchaseOrderId: string, organizationI
 }
 
 export async function deletePurchaseOrder(purchaseOrderId: string, organizationId: string) {
-  const result = await db
+  await db
     .delete(purchaseOrders)
-    .where(and(eq(purchaseOrders.id, purchaseOrderId), eq(purchaseOrders.organizationId, organizationId)))
-    .returning();
-  
-  return result[0];
+    .where(and(eq(purchaseOrders.id, purchaseOrderId), eq(purchaseOrders.organizationId, organizationId)));
 }
 
 export async function getPurchaseOrderSummary(organizationId: string) {

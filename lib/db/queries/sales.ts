@@ -58,12 +58,9 @@ export async function updateContact(contactId: string, organizationId: string, d
 }
 
 export async function deleteContact(contactId: string, organizationId: string) {
-  const result = await db
+  await db
     .delete(contacts)
-    .where(and(eq(contacts.id, contactId), eq(contacts.organizationId, organizationId)))
-    .returning();
-  
-  return result[0];
+    .where(and(eq(contacts.id, contactId), eq(contacts.organizationId, organizationId)));
 }
 
 export async function getSalesSummary(organizationId: string) {
@@ -155,12 +152,9 @@ export async function updateProduct(productId: string, organizationId: string, d
 }
 
 export async function deleteProduct(productId: string, organizationId: string) {
-  const result = await db
+  await db
     .delete(products)
-    .where(and(eq(products.id, productId), eq(products.organizationId, organizationId)))
-    .returning();
-  
-  return result[0];
+    .where(and(eq(products.id, productId), eq(products.organizationId, organizationId)));
 }
 
 export async function getProductSummary(organizationId: string) {

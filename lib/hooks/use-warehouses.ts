@@ -41,7 +41,7 @@ export function useUpdateWarehouse() {
   
   return useMutation({
     mutationFn: ({ id, ...data }: Partial<Warehouse> & { id: string }) =>
-      apiClient.put<Warehouse>(`/api/operations/warehouses`, { id, ...data }),
+      apiClient.put<Warehouse>(`/api/operations/warehouses/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['warehouses'] });
       queryClient.invalidateQueries({ queryKey: ['warehouses-summary'] });
@@ -55,7 +55,7 @@ export function useDeleteWarehouse() {
   
   return useMutation({
     mutationFn: (id: string) =>
-      apiClient.delete(`/api/operations/warehouses?id=${id}`),
+      apiClient.delete(`/api/operations/warehouses/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['warehouses'] });
       queryClient.invalidateQueries({ queryKey: ['warehouses-summary'] });

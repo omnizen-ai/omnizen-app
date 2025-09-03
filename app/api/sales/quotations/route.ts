@@ -1,37 +1,29 @@
 import { NextRequest } from 'next/server';
 import { withAuth, withErrorHandler, ApiResponse } from '@/lib/api/base';
 import { 
-  getPurchaseOrders, 
-  createPurchaseOrder,
-  getPurchaseOrderSummary
-} from '@/lib/db/queries/purchase-orders';
+  getQuotations, 
+  createQuotation,
+  getQuotationsSummary
+} from '@/lib/db/queries/quotations';
 import { z } from 'zod';
 
-// Schema for purchase order creation
-const createPurchaseOrderSchema = z.object({
-  vendorId: z.string().uuid(),
-  orderNumber: z.string().optional(),
-  orderDate: z.string().datetime(),
-  dueDate: z.string().datetime().optional(),
-  expectedDeliveryDate: z.string().datetime().optional(),
-  status: z.enum(['draft', 'pending', 'confirmed', 'shipped', 'received', 'cancelled', 'completed']).default('draft'),
-  priority: z.enum(['low', 'normal', 'high', 'urgent']).default('normal'),
-  paymentTerms: z.string().optional(),
-  paymentDueDate: z.string().datetime().optional(),
-  shippingMethod: z.string().optional(),
-  shippingCost: z.string().default('0'),
+// Schema for quotation creation
+const createQuotationSchema = z.object({
+  customerId: z.string().uuid(),
+  quotationNumber: z.string().optional(),
+  quotationDate: z.string().date(),
+  validUntil: z.string().date(),
+  status: z.enum(['draft', 'pending', 'sent', 'viewed', 'accepted', 'rejected', 'expired', 'converted', 'cancelled']).default('draft'),
+  subtotal: z.string().default('0'),
   taxAmount: z.string().default('0'),
   discountAmount: z.string().default('0'),
   discountPercent: z.string().default('0'),
-  subtotal: z.string().default('0'),
   total: z.string().default('0'),
+  paymentTerms: z.string().optional(),
+  deliveryTerms: z.string().optional(),
+  terms: z.string().optional(),
   notes: z.string().optional(),
   internalNotes: z.string().optional(),
-  terms: z.string().optional(),
-  referenceNumber: z.string().optional(),
-  vendorOrderNumber: z.string().optional(),
-  tags: z.array(z.string()).default([]),
-  customFields: z.record(z.any()).default({}),
   billingAddress: z.object({
     street1: z.string().default(''),
     street2: z.string().default(''),
@@ -62,6 +54,10 @@ const createPurchaseOrderSchema = z.object({
     postalCode: '',
     country: '',
   }),
+  referenceNumber: z.string().optional(),
+  customerPo: z.string().optional(),
+  tags: z.array(z.string()).default([]),
+  customFields: z.record(z.any()).default({}),
 });
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
@@ -69,25 +65,33 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
     
     const searchParams = request.nextUrl.searchParams;
+    const customerId = searchParams.get('customerId') || undefined;
     const status = searchParams.get('status') || undefined;
-    const vendorId = searchParams.get('vendorId') || undefined;
     const dateFrom = searchParams.get('dateFrom') || undefined;
     const dateTo = searchParams.get('dateTo') || undefined;
+    const validityDateFrom = searchParams.get('validityDateFrom') || undefined;
+    const validityDateTo = searchParams.get('validityDateTo') || undefined;
     const search = searchParams.get('search') || undefined;
+    const limit = searchParams.get('limit');
+    const offset = searchParams.get('offset');
     const summary = searchParams.get('summary');
 
-    // If summary is requested, return purchase order summary
+    // If summary is requested, return quotations summary
     if (summary === 'true') {
-      const summaryData = await getPurchaseOrderSummary(organizationId);
+      const summaryData = await getQuotationsSummary(organizationId);
       return ApiResponse.success(summaryData);
     }
 
-    const result = await getPurchaseOrders(organizationId, {
+    const result = await getQuotations(organizationId, {
+      customerId,
       status,
-      vendorId,
       dateFrom,
       dateTo,
+      validityDateFrom,
+      validityDateTo,
       search,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      offset: offset ? parseInt(offset, 10) : undefined,
     });
 
     return ApiResponse.success(result);
@@ -98,20 +102,20 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   return withAuth(async (session) => {
     const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
     const workspaceId = session.user?.workspaceId || null;
+    const userId = session.user?.id || null;
     
     const body = await request.json();
-    const { lines, ...orderData } = body;
-    const validatedData = createPurchaseOrderSchema.parse(orderData);
+    const validatedData = createQuotationSchema.parse(body);
     
-    const order = await createPurchaseOrder({
+    const quotation = await createQuotation({
       ...validatedData,
       organizationId,
       workspaceId,
+      createdBy: userId,
+      quotationDate: validatedData.quotationDate,
+      validUntil: validatedData.validUntil,
     } as any);
-
-    // TODO: Handle order lines creation when purchaseOrderLines query functions are added
     
-    return ApiResponse.success(order, 201);
+    return ApiResponse.success(quotation, 201);
   });
 });
-

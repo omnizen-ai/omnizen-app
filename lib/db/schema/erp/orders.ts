@@ -478,6 +478,151 @@ export const purchaseOrdersRelations = relations(purchaseOrders, ({ one, many })
   receipts: many(purchaseReceipts),
 }));
 
+// Quotation status
+export const quotationStatusEnum = pgEnum('quotation_status', [
+  'draft',
+  'pending',
+  'sent',
+  'viewed',
+  'accepted',
+  'rejected',
+  'expired',
+  'converted',
+  'cancelled'
+]);
+
+// Sales Quotations
+export const salesQuotations = pgTable('sales_quotations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  
+  organizationId: uuid('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  workspaceId: uuid('workspace_id').references(() => workspaces.id),
+  
+  // Quotation details
+  quotationNumber: text('quotation_number').notNull(),
+  customerId: uuid('customer_id').notNull().references(() => contacts.id),
+  
+  // Dates
+  quotationDate: date('quotation_date').notNull(),
+  validUntil: date('valid_until').notNull(),
+  
+  // Status
+  status: quotationStatusEnum('status').notNull().default('draft'),
+  
+  // Financial
+  subtotal: decimal('subtotal', { precision: 20, scale: 2 }).notNull().default('0'),
+  taxAmount: decimal('tax_amount', { precision: 20, scale: 2 }).notNull().default('0'),
+  discountAmount: decimal('discount_amount', { precision: 20, scale: 2 }).notNull().default('0'),
+  discountPercent: decimal('discount_percent', { precision: 5, scale: 2 }).notNull().default('0'),
+  total: decimal('total', { precision: 20, scale: 2 }).notNull().default('0'),
+  
+  // Terms and conditions
+  paymentTerms: text('payment_terms'),
+  deliveryTerms: text('delivery_terms'),
+  terms: text('terms'),
+  notes: text('notes'),
+  internalNotes: text('internal_notes'),
+  
+  // Contact info
+  billingAddress: jsonb('billing_address'),
+  shippingAddress: jsonb('shipping_address'),
+  
+  // Tracking
+  sentAt: timestamp('sent_at'),
+  viewedAt: timestamp('viewed_at'),
+  acceptedAt: timestamp('accepted_at'),
+  rejectedAt: timestamp('rejected_at'),
+  convertedAt: timestamp('converted_at'),
+  convertedToOrderId: uuid('converted_to_order_id').references(() => salesOrders.id),
+  
+  // Additional fields
+  referenceNumber: text('reference_number'),
+  customerPo: text('customer_po'),
+  tags: jsonb('tags'), // Array of strings
+  customFields: jsonb('custom_fields'),
+  
+  // Audit
+  createdBy: uuid('created_by').references(() => users.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => ({
+  orgNumberIdx: uniqueIndex('erp_quotation_org_number_idx').on(table.organizationId, table.quotationNumber),
+  customerIdx: index('erp_quotation_customer_idx').on(table.customerId),
+  statusIdx: index('erp_quotation_status_idx').on(table.status),
+  dateIdx: index('erp_quotation_date_idx').on(table.quotationDate),
+}));
+
+// Quotation Lines
+export const quotationLines = pgTable('quotation_lines', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  
+  quotationId: uuid('quotation_id').notNull().references(() => salesQuotations.id, { onDelete: 'cascade' }),
+  
+  // Line details
+  lineNumber: integer('line_number').notNull(),
+  productId: uuid('product_id').references(() => products.id),
+  
+  // Product details (can be overridden)
+  description: text('description').notNull(),
+  sku: text('sku'),
+  
+  // Quantities and pricing
+  quantity: decimal('quantity', { precision: 20, scale: 6 }).notNull(),
+  unitPrice: decimal('unit_price', { precision: 20, scale: 4 }).notNull(),
+  discountPercent: decimal('discount_percent', { precision: 5, scale: 2 }).notNull().default('0'),
+  discountAmount: decimal('discount_amount', { precision: 20, scale: 2 }).notNull().default('0'),
+  lineTotal: decimal('line_total', { precision: 20, scale: 2 }).notNull(),
+  
+  // Tax
+  taxCodeId: uuid('tax_code_id').references(() => taxCodes.id),
+  taxAmount: decimal('tax_amount', { precision: 20, scale: 2 }).notNull().default('0'),
+  
+  // Notes
+  notes: text('notes'),
+  
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => ({
+  quotationIdx: index('erp_quotation_line_idx').on(table.quotationId),
+  productIdx: index('erp_quotation_line_product_idx').on(table.productId),
+  lineNumberIdx: index('erp_quotation_line_number_idx').on(table.quotationId, table.lineNumber),
+}));
+
+// Relations for quotations
+export const salesQuotationsRelations = relations(salesQuotations, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [salesQuotations.organizationId],
+    references: [organizations.id],
+  }),
+  customer: one(contacts, {
+    fields: [salesQuotations.customerId],
+    references: [contacts.id],
+  }),
+  convertedToOrder: one(salesOrders, {
+    fields: [salesQuotations.convertedToOrderId],
+    references: [salesOrders.id],
+  }),
+  lines: many(quotationLines),
+  createdByUser: one(users, {
+    fields: [salesQuotations.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const quotationLinesRelations = relations(quotationLines, ({ one }) => ({
+  quotation: one(salesQuotations, {
+    fields: [quotationLines.quotationId],
+    references: [salesQuotations.id],
+  }),
+  product: one(products, {
+    fields: [quotationLines.productId],
+    references: [products.id],
+  }),
+  taxCode: one(taxCodes, {
+    fields: [quotationLines.taxCodeId],
+    references: [taxCodes.id],
+  }),
+}));
+
 // Types
 export type SalesOrder = InferSelectModel<typeof salesOrders>;
 export type SalesOrderLine = InferSelectModel<typeof salesOrderLines>;
@@ -487,3 +632,5 @@ export type OrderFulfillment = InferSelectModel<typeof orderFulfillments>;
 export type FulfillmentLine = InferSelectModel<typeof fulfillmentLines>;
 export type PurchaseReceipt = InferSelectModel<typeof purchaseReceipts>;
 export type ReceiptLine = InferSelectModel<typeof receiptLines>;
+export type SalesQuotation = InferSelectModel<typeof salesQuotations>;
+export type QuotationLine = InferSelectModel<typeof quotationLines>;

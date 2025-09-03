@@ -3,10 +3,46 @@ import { withAuth, withErrorHandler, ApiResponse } from '@/lib/api/base';
 import { 
   getProducts, 
   createProduct, 
-  updateProduct, 
-  deleteProduct, 
   getProductSummary 
 } from '@/lib/db/queries/sales';
+import { z } from 'zod';
+
+// Schema for product creation
+const createProductSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+  sku: z.string().optional(),
+  upc: z.string().optional(),
+  category: z.string().optional(),
+  subcategory: z.string().optional(),
+  brand: z.string().optional(),
+  manufacturer: z.string().optional(),
+  isService: z.boolean().default(false),
+  isActive: z.boolean().default(true),
+  purchasePrice: z.string().default('0'),
+  salePrice: z.string().default('0'),
+  retailPrice: z.string().default('0'),
+  wholesalePrice: z.string().default('0'),
+  minimumPrice: z.string().default('0'),
+  costOfGoodsSold: z.string().default('0'),
+  taxable: z.boolean().default(true),
+  taxCategoryId: z.string().uuid().optional(),
+  preferredVendorId: z.string().uuid().optional(),
+  reorderPoint: z.number().default(0),
+  reorderQuantity: z.number().default(0),
+  leadTimeDays: z.number().default(0),
+  weight: z.string().optional(),
+  dimensions: z.object({
+    length: z.string().optional(),
+    width: z.string().optional(),
+    height: z.string().optional(),
+    unit: z.string().optional(),
+  }).optional(),
+  images: z.array(z.string()).default([]),
+  tags: z.array(z.string()).default([]),
+  notes: z.string().optional(),
+  customFields: z.record(z.any()).default({}),
+});
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   return withAuth(async (session) => {
@@ -39,56 +75,18 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 export const POST = withErrorHandler(async (request: NextRequest) => {
   return withAuth(async (session) => {
     const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
-    const body = await request.json();
+    const workspaceId = session.user?.workspaceId || null;
     
-    const productData = {
-      ...body,
-      organizationId,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    const newProduct = await createProduct(productData);
-    return ApiResponse.success(newProduct, 201);
-  });
-});
-
-export const PUT = withErrorHandler(async (request: NextRequest) => {
-  return withAuth(async (session) => {
-    const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
     const body = await request.json();
-    const { id, ...updateData } = body;
-
-    if (!id) {
-      return ApiResponse.badRequest('Product ID required');
-    }
-
-    const updatedProduct = await updateProduct(id, organizationId, updateData);
-
-    if (!updatedProduct) {
-      return ApiResponse.notFound('Product not found');
-    }
-
-    return ApiResponse.success(updatedProduct);
+    const validatedData = createProductSchema.parse(body);
+    
+    const product = await createProduct({
+      ...validatedData,
+      organizationId,
+      workspaceId,
+    } as any);
+    
+    return ApiResponse.success(product, 201);
   });
 });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
-  return withAuth(async (session) => {
-    const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
-    const searchParams = request.nextUrl.searchParams;
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return ApiResponse.badRequest('Product ID required');
-    }
-
-    const deletedProduct = await deleteProduct(id, organizationId);
-
-    if (!deletedProduct) {
-      return ApiResponse.notFound('Product not found');
-    }
-
-    return ApiResponse.success({ success: true });
-  });
-});

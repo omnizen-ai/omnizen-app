@@ -43,7 +43,7 @@ export function useUpdateProduct() {
   
   return useMutation({
     mutationFn: ({ id, ...data }: Partial<Product> & { id: string }) =>
-      apiClient.put<Product>(`/api/sales/products`, { id, ...data }),
+      apiClient.put<Product>(`/api/sales/products/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['product-summary'] });
@@ -57,7 +57,7 @@ export function useDeleteProduct() {
   
   return useMutation({
     mutationFn: (id: string) =>
-      apiClient.delete(`/api/sales/products?id=${id}`),
+      apiClient.delete(`/api/sales/products/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['product-summary'] });

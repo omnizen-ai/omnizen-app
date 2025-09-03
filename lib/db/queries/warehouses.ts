@@ -80,12 +80,9 @@ export async function updateWarehouse(warehouseId: string, organizationId: strin
 }
 
 export async function deleteWarehouse(warehouseId: string, organizationId: string) {
-  const result = await db
+  await db
     .delete(warehouses)
-    .where(and(eq(warehouses.id, warehouseId), eq(warehouses.organizationId, organizationId)))
-    .returning();
-  
-  return result[0];
+    .where(and(eq(warehouses.id, warehouseId), eq(warehouses.organizationId, organizationId)));
 }
 
 export async function getWarehouseSummary(organizationId: string) {

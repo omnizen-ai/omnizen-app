@@ -2,11 +2,79 @@ import { NextRequest } from 'next/server';
 import { withAuth, withErrorHandler, ApiResponse } from '@/lib/api/base';
 import { 
   getWarehouses, 
-  createWarehouse, 
-  updateWarehouse, 
-  deleteWarehouse,
+  createWarehouse,
   getWarehouseSummary
 } from '@/lib/db/queries/warehouses';
+import { z } from 'zod';
+
+// Schema for warehouse creation
+const createWarehouseSchema = z.object({
+  name: z.string().min(1),
+  code: z.string().optional(),
+  description: z.string().optional(),
+  type: z.enum(['physical', 'virtual', 'dropship', 'consignment']).default('physical'),
+  isActive: z.boolean().default(true),
+  isDefault: z.boolean().default(false),
+  managerId: z.string().uuid().optional(),
+  contactEmail: z.string().email().optional(),
+  contactPhone: z.string().optional(),
+  address: z.object({
+    street1: z.string().default(''),
+    street2: z.string().default(''),
+    city: z.string().default(''),
+    state: z.string().default(''),
+    postalCode: z.string().default(''),
+    country: z.string().default(''),
+  }).default({
+    street1: '',
+    street2: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: '',
+  }),
+  operatingHours: z.object({
+    monday: z.string().default('9:00 AM - 5:00 PM'),
+    tuesday: z.string().default('9:00 AM - 5:00 PM'),
+    wednesday: z.string().default('9:00 AM - 5:00 PM'),
+    thursday: z.string().default('9:00 AM - 5:00 PM'),
+    friday: z.string().default('9:00 AM - 5:00 PM'),
+    saturday: z.string().default('Closed'),
+    sunday: z.string().default('Closed'),
+  }).default({
+    monday: '9:00 AM - 5:00 PM',
+    tuesday: '9:00 AM - 5:00 PM',
+    wednesday: '9:00 AM - 5:00 PM',
+    thursday: '9:00 AM - 5:00 PM',
+    friday: '9:00 AM - 5:00 PM',
+    saturday: 'Closed',
+    sunday: 'Closed',
+  }),
+  capacity: z.object({
+    maxWeight: z.string().optional(),
+    maxVolume: z.string().optional(),
+    maxPallets: z.number().optional(),
+  }).optional(),
+  zones: z.array(z.object({
+    name: z.string(),
+    type: z.string(),
+    capacity: z.number().optional(),
+  })).default([]),
+  settings: z.object({
+    allowNegativeStock: z.boolean().default(false),
+    autoReorderEnabled: z.boolean().default(true),
+    requireReceiptConfirmation: z.boolean().default(true),
+    requireShipmentConfirmation: z.boolean().default(true),
+  }).default({
+    allowNegativeStock: false,
+    autoReorderEnabled: true,
+    requireReceiptConfirmation: true,
+    requireShipmentConfirmation: true,
+  }),
+  tags: z.array(z.string()).default([]),
+  notes: z.string().optional(),
+  customFields: z.record(z.any()).default({}),
+});
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   return withAuth(async (session) => {
@@ -37,56 +105,18 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 export const POST = withErrorHandler(async (request: NextRequest) => {
   return withAuth(async (session) => {
     const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
-    const body = await request.json();
+    const workspaceId = session.user?.workspaceId || null;
     
-    const warehouseData = {
-      ...body,
-      organizationId,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    const newWarehouse = await createWarehouse(warehouseData);
-    return ApiResponse.success(newWarehouse, 201);
-  });
-});
-
-export const PUT = withErrorHandler(async (request: NextRequest) => {
-  return withAuth(async (session) => {
-    const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
     const body = await request.json();
-    const { id, ...updateData } = body;
-
-    if (!id) {
-      return ApiResponse.badRequest('Warehouse ID required');
-    }
-
-    const updatedWarehouse = await updateWarehouse(id, organizationId, updateData);
-
-    if (!updatedWarehouse) {
-      return ApiResponse.notFound('Warehouse not found');
-    }
-
-    return ApiResponse.success(updatedWarehouse);
+    const validatedData = createWarehouseSchema.parse(body);
+    
+    const warehouse = await createWarehouse({
+      ...validatedData,
+      organizationId,
+      workspaceId,
+    } as any);
+    
+    return ApiResponse.success(warehouse, 201);
   });
 });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
-  return withAuth(async (session) => {
-    const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
-    const searchParams = request.nextUrl.searchParams;
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return ApiResponse.badRequest('Warehouse ID required');
-    }
-
-    const deletedWarehouse = await deleteWarehouse(id, organizationId);
-
-    if (!deletedWarehouse) {
-      return ApiResponse.notFound('Warehouse not found');
-    }
-
-    return ApiResponse.success({ success: true });
-  });
-});

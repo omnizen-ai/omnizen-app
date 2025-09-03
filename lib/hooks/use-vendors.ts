@@ -39,7 +39,7 @@ export function useUpdateVendor() {
   
   return useMutation({
     mutationFn: ({ id, ...data }: Partial<Contact> & { id: string }) =>
-      apiClient.put<Contact>(`/api/purchasing/vendors`, { id, ...data }),
+      apiClient.put<Contact>(`/api/purchasing/vendors/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vendors'] });
       queryClient.invalidateQueries({ queryKey: ['vendors-summary'] });
@@ -53,7 +53,7 @@ export function useDeleteVendor() {
   
   return useMutation({
     mutationFn: (id: string) =>
-      apiClient.delete(`/api/purchasing/vendors?id=${id}`),
+      apiClient.delete(`/api/purchasing/vendors/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vendors'] });
       queryClient.invalidateQueries({ queryKey: ['vendors-summary'] });
