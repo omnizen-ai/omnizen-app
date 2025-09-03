@@ -48,19 +48,15 @@ export function TeamSwitcher() {
                   />
                 </svg>
               </div>
-              <span style={{ 
+              <span className="text-muted-foreground" style={{ 
                 fontFamily: 'League Spartan', 
                 fontWeight: 900, 
                 fontSize: '1.72rem', 
                 lineHeight: '1',
                 letterSpacing: '-0.02em',
-                marginTop: '0.30rem',
-                borderBottom: '2px solid #F97316',
-                paddingBottom: '0'
+                marginTop: '0.30rem'
               }}>
-                <span className="text-foreground">OMNI</span>
-                <span style={{ color: '#F97316' }}>ZEN</span>
-                <span className="text-foreground">.ai</span>
+                omnizen.ai
               </span>
             </div>
           </SidebarMenuButton>

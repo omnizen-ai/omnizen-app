@@ -1532,3 +1532,371 @@ Created Supabase auth user: f9f67aef-accd-4305-82be-8ffe0b1b2234
 [DeepSeek] Intermediate step text: "Based on my analysis of your database setup, here's what I found and what you need to complete your ..."
  POST /api/chat 200 in 149667ms
  GET /api/history?limit=20 200 in 34ms
+ GET /api/auth/session 200 in 44ms
+ GET /api/auth/session 200 in 32ms
+ GET /api/auth/session 200 in 50ms
+ GET /api/auth/session 200 in 37ms
+ GET /api/auth/session 200 in 49ms
+ GET /api/auth/session 200 in 39ms
+ GET /chat/79df584b-3bcd-443b-b7a4-6408b6128f35 200 in 201ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 233ms
+ GET /api/auth/session 200 in 133ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 224ms
+ GET /api/vote?chatId=79df584b-3bcd-443b-b7a4-6408b6128f35 200 in 163ms
+ GET /api/history?limit=20 200 in 179ms
+ GET /api/auth/session 200 in 38ms
+ GET /chat/79df584b-3bcd-443b-b7a4-6408b6128f35 200 in 180ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 234ms
+ GET /api/history?limit=20 200 in 85ms
+ GET /api/auth/session 200 in 85ms
+ GET /api/vote?chatId=79df584b-3bcd-443b-b7a4-6408b6128f35 200 in 85ms
+ GET /api/auth/session 200 in 27ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 230ms
+ GET /api/auth/session 200 in 31ms
+ GET /api/auth/session 200 in 27ms
+ GET /api/auth/session 200 in 27ms
+ GET /api/auth/session 200 in 23ms
+ GET /api/auth/session 200 in 35ms
+ GET /api/auth/session 200 in 25ms
+ GET /chat/79df584b-3bcd-443b-b7a4-6408b6128f35 200 in 172ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 297ms
+ GET /api/history?limit=20 200 in 89ms
+ GET /api/auth/session 200 in 90ms
+ GET /api/vote?chatId=79df584b-3bcd-443b-b7a4-6408b6128f35 200 in 93ms
+ GET /api/auth/session 200 in 32ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 251ms
+ GET / 200 in 146ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 225ms
+ GET /api/history?limit=20 200 in 46ms
+ GET /api/auth/session 200 in 39ms
+ GET /api/auth/session 200 in 37ms
+ GET /api/auth/session 200 in 28ms
+ GET /api/auth/session 200 in 25ms
+ ✓ Compiled in 127ms
+ GET /api/auth/session 200 in 40ms
+ GET /api/auth/session 200 in 25ms
+ GET /api/auth/session 200 in 41ms
+ GET /api/auth/session 200 in 32ms
+ GET / 200 in 1019ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 232ms
+ GET /api/auth/session 200 in 31ms
+ GET /api/history?limit=20 200 in 27ms
+ ✓ Compiled in 73ms
+ GET /api/auth/session 200 in 44ms
+ GET /api/auth/session 200 in 34ms
+ ✓ Compiled in 68ms
+ GET /api/auth/session 200 in 38ms
+ GET /api/auth/session 200 in 61ms
+ GET / 200 in 1028ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 225ms
+ GET /api/history?limit=20 200 in 63ms
+ GET /api/auth/session 200 in 64ms
+ GET /api/auth/session 200 in 26ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 229ms
+ GET / 200 in 111ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 225ms
+ GET /api/history?limit=20 200 in 57ms
+ GET /api/auth/session 200 in 58ms
+ GET /api/auth/session 200 in 23ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 220ms
+ GET /api/auth/session 200 in 52ms
+ GET /api/auth/session 200 in 29ms
+ GET / 200 in 128ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 230ms
+ GET /api/history?limit=20 200 in 50ms
+ GET /api/auth/session 200 in 52ms
+ GET /api/auth/session 200 in 36ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 225ms
+ GET / 200 in 127ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 222ms
+ GET /api/auth/session 200 in 48ms
+ GET /api/history?limit=20 200 in 53ms
+ GET /api/auth/session 200 in 39ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 248ms
+ GET / 200 in 129ms
+ GET /api/history?limit=20 200 in 46ms
+ GET /api/auth/session 200 in 46ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 236ms
+ GET /api/auth/session 200 in 28ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 235ms
+[Database Tools] User context: {
+  userId: '894e4c8e-2c62-4bc6-9cc4-4d6c9d290e60',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  workspaceId: undefined,
+  role: 'user'
+}
+[Database Tools] Loaded 5 tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Database Tools] Tools object: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[QueryMemory] Injected 1 examples into prompt
+[Prompt Analysis]
+- Characters: 7310
+- Estimated tokens: 1828
+- Cost (DeepSeek): $0.000256
+- Sections: Full Schema, Invoice Context
+[DeepSeek Detailed] Type: write, Tokens: 1892 (complete schema for accuracy)
+[Model Selection] Using model: deepseek-chat
+[Tools Registration] Available tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Tools Registration] Tool names for activeTools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+ GET /api/vote?chatId=85d1589a-0ada-450e-9c70-0ad3ca8ed31a 200 in 48ms
+[dbRead] Error: [Error [PostgresError]: invalid input syntax for type uuid: "org_123"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '22P02',
+  position: '90',
+  file: 'uuid.c',
+  line: '138',
+  routine: 'string_to_uuid'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_S2BHX7LWFsv442icGTUNTFlj' } ]
+[QueryMemory] Stored: query:contacts:query_invoice (usage: 1)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_fSsnPFGWVgIJZ2v0LWUkh5pk' } ]
+[QueryMemory] Stored: query:contacts:query_invoice (usage: 2)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_HIJAvPX47Cy7cd7m7uRd5zYQ' } ]
+[QueryMemory] Stored: query:contacts:query_invoice (usage: 3)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_Xbrrr6nJvjGM4icLOmxLM4SH' } ]
+[QueryMemory] Stored: query:contacts:query_invoice (usage: 4)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '64',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_ik4DIMWdvYGBkVcq7uU8wSEV' } ]
+[QueryMemory] Stored: query:finance:query_invoice (usage: 1)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '64',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_Mj8d3kEUqKNHRXrJULaTOmFa' } ]
+[QueryMemory] Stored: query:finance:query_invoice (usage: 2)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '43',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_G7Dgdfkpz4s8mJSzYoSUOkkS' } ]
+[QueryMemory] Stored: query:finance:query_invoice (usage: 3)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'schemaInfo', id: 'call_00_yjL98jPrd46eWxYH8whGBUTV' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '43',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_DzWyMaZsCx6LRhs2CxmiLCqa' } ]
+[QueryMemory] Stored: query:finance:query_invoice (usage: 4)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[explainQuery] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '51',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'explainQuery', id: 'call_00_hX736rKsPHzen1gPWEgJbMav' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "ORDER"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '43',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_NsWV7GitXbpVQH5SDQ7p6Us3' } ]
+[QueryMemory] Stored: query:finance:query_invoice (usage: 5)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_AcQgNjwTAspfcUHnJgK1hkEy' } ]
+[QueryMemory] Stored: query:finance:query_invoice (usage: 6)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Audit] {
+  userId: '894e4c8e-2c62-4bc6-9cc4-4d6c9d290e60',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  operation: 'INSERT',
+  query: "INSERT INTO invoices (organization_id, invoice_number, customer_id, issue_date, due_date, subtotal, tax_amount, total_amount, balance_due, status, notes) VALUES ('11111111-1111-1111-1111-111111111111', 'INV-002', 'ee1bbb76-02ee-4999-a74f-d6470df29425', CURRENT_DATE, '2025-09-21', 200000, 0, 200000, 200000, 'draft', 'USSD App Support')",
+  success: true,
+  executionTime: 4
+}
+[Step] Tool calls: [ { name: 'dbWrite', id: 'call_00_wVPHtjy40L1OPkVq5HQt8KgK' } ]
+[Step] Tool results received: 1
+ ✓ Compiled in 78ms
+ GET /api/auth/session 200 in 45ms
+ GET /api/auth/session 200 in 38ms
+ POST /api/chat 200 in 98448ms
+ GET /chat/85d1589a-0ada-450e-9c70-0ad3ca8ed31a 200 in 915ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 220ms
+ GET /api/auth/session 200 in 49ms
+ GET /api/history?limit=20 200 in 52ms
+ GET /api/auth/session 200 in 34ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 228ms
+ ○ Compiling /api/chat/[id]/stream ...
+ ✓ Compiled /api/chat/[id]/stream in 628ms
+ GET /api/vote?chatId=85d1589a-0ada-450e-9c70-0ad3ca8ed31a 200 in 37ms
+ GET /api/chat/85d1589a-0ada-450e-9c70-0ad3ca8ed31a/stream 200 in 2812ms
+ GET /chat/85d1589a-0ada-450e-9c70-0ad3ca8ed31a 200 in 145ms
+TypeError: Invalid state: Controller is already closed
+    at <unknown> (../src/index.ts:295:29)
+    at #emitPubSubMessage (../../../lib/client/pub-sub.ts:406:6)
+    at PubSub.handleMessageReply (../../../lib/client/pub-sub.ts:350:8)
+    at #onPush (../../../lib/client/commands-queue.ts:80:21)
+    at decoder.onReply (../../../lib/client/commands-queue.ts:183:25)
+    at #handleDecodedValue (../../../lib/RESP/decoder.ts:215:4)
+    at #decodeTypeValue (../../../lib/RESP/decoder.ts:182:10)
+    at Decoder.write (../../../lib/RESP/decoder.ts:90:32)
+    at RedisSocket.<anonymous> (../../../lib/client/index.ts:560:30)
+    at Socket.<anonymous> (../../../lib/client/socket.ts:256:31) {
+  code: 'ERR_INVALID_STATE'
+}
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 257ms
+ GET /api/auth/session 200 in 73ms
+ GET /api/history?limit=20 200 in 90ms
+ GET /api/auth/session 200 in 45ms
+ GET /api/vote?chatId=85d1589a-0ada-450e-9c70-0ad3ca8ed31a 200 in 28ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 268ms
+[DeepSeek] Intermediate step text: "Invoice has been created successfully for bKash:
+
+- **Invoice Number**: INV-002
+- **Customer**: bKas..."
+ GET /api/chat/85d1589a-0ada-450e-9c70-0ad3ca8ed31a/stream 200 in 761ms
+ GET /api/history?limit=20 200 in 34ms
+ GET /api/auth/session 200 in 81ms
+ GET /api/auth/session 200 in 90ms
+ GET /api/auth/session 200 in 46ms
+ GET /api/auth/session 200 in 29ms
+ GET /api/auth/session 200 in 37ms
+ GET /api/auth/session 200 in 33ms
+ GET /chat/85d1589a-0ada-450e-9c70-0ad3ca8ed31a 200 in 158ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 223ms
+ GET /api/auth/session 200 in 74ms
+ GET /api/history?limit=20 200 in 81ms
+ GET /api/vote?chatId=85d1589a-0ada-450e-9c70-0ad3ca8ed31a 200 in 80ms
+ GET /api/auth/session 200 in 35ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 260ms
+ GET /api/auth/session 200 in 54ms
+ GET /api/auth/session 200 in 35ms
+[Database Tools] User context: {
+  userId: '894e4c8e-2c62-4bc6-9cc4-4d6c9d290e60',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  workspaceId: undefined,
+  role: 'user'
+}
+[Database Tools] Loaded 5 tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Database Tools] Tools object: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[QueryMemory] Injected 2 examples into prompt
+[Prompt Analysis]
+- Characters: 7310
+- Estimated tokens: 1828
+- Cost (DeepSeek): $0.000256
+- Sections: Full Schema, Invoice Context
+[DeepSeek Detailed] Type: business, Tokens: 1942 (complete schema for accuracy)
+[Model Selection] Using model: deepseek-chat
+[Tools Registration] Available tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Tools Registration] Tool names for activeTools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_pX1dYD5CDEh8JoRLF5SoQc2L' } ]
+[QueryMemory] Stored: query:finance:lookup_invoice (usage: 1)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[DeepSeek] Intermediate step text: "Here is your invoice list:
+
+| Invoice # | Issue Date | Due Date | Customer | Total Amount | Paid | B..."
+ POST /api/chat 200 in 21704ms
+ GET /api/history?limit=20 200 in 42ms
+ ✓ Compiled in 105ms
+ GET /api/auth/session 200 in 42ms
+ GET /api/auth/session 200 in 28ms
+ ✓ Compiled in 84ms
+ GET /api/auth/session 200 in 59ms
+ GET /api/auth/session 200 in 38ms
+[Database Tools] User context: {
+  userId: '894e4c8e-2c62-4bc6-9cc4-4d6c9d290e60',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  workspaceId: undefined,
+  role: 'user'
+}
+[Database Tools] Loaded 5 tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Database Tools] Tools object: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[QueryMemory] Injected 1 examples into prompt
+[Prompt Analysis]
+- Characters: 7073
+- Estimated tokens: 1768
+- Cost (DeepSeek): $0.000248
+- Sections: Full Schema
+[DeepSeek Detailed] Type: write, Tokens: 1855 (complete schema for accuracy)
+[Model Selection] Using model: deepseek-chat
+[Tools Registration] Available tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Tools Registration] Tool names for activeTools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Step] Tool calls: [ { name: 'schemaInfo', id: 'call_00_FBb3B9sLs9Z8va4w3H3T09Kp' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '45',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_xpUuMuWxDun0FSltLy6FOKj2' } ]
+[QueryMemory] Stored: query:finance:query (usage: 5)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '65',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_pB1tt9G5m3c9OxqR6d3FZ9aA' } ]
+[QueryMemory] Stored: query:finance:query (usage: 6)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_WNW0gXHhw0AlAgxms5GY4itN' } ]
+[QueryMemory] Stored: query:finance:query (usage: 7)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_Pu73xAYmBAkGNcIrLGvDxR2p' } ]
+[QueryMemory] Stored: query:finance:query (usage: 8)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[DeepSeek] Intermediate step text: "No, journal entries have not been created for these invoices yet. The invoices are currently in draf..."
+ POST /api/chat 200 in 47452ms
+ GET /api/history?limit=20 200 in 50ms
