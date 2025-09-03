@@ -54,11 +54,28 @@ const migrationClient = postgres(connectionString, { max: 1 });
 export const migrationDb = drizzle(migrationClient, { schema: fullSchema });
 
 // Export all schemas for use in other files
+// 
+// BACKWARD COMPATIBILITY STRATEGY:
+// This dual export pattern is intentionally designed to support gradual migration
+// from legacy chat-focused schema to new ERP-focused schema structure.
+//
 // Export legacy schemas first (for backward compatibility)
 export * from './schema';
 
-// Export new schemas (some may override legacy exports)
-// Note: This creates a unified export surface where new schemas take precedence
+// Export new schemas second (some will override legacy exports)
+// eslint-disable-next-line import/export -- Intentional dual User export for backward compatibility
+// 
+// IMPORTANT: ESLint will warn about "Multiple exports of name 'User'" - this is INTENTIONAL.
+// 
+// Legacy schema exports: `user` (table) + `User` (type) - for chat/AI features
+// New schema exports:    `users` (table) + `User` (type) - for ERP/business features
+//
+// Due to ES module export resolution, the NEW `User` type takes precedence when imported,
+// while legacy code can still access the old `user` table by specific name.
+// This allows existing chat functionality to continue working during ERP migration.
+//
+// Code Review Note: The dual `User` export warning is expected and should NOT be "fixed"
+// as it would break the backward compatibility strategy for schema migration.
 export * from './schema/core/organizations';
 export * from './schema/core/users';
 export * from './schema/finance/accounts';

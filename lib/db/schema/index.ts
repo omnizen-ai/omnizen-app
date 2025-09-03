@@ -15,14 +15,25 @@ export * from './erp/banking';
 export * from './erp/warehouses';
 export * from './erp/orders';
 
+// Document schemas
+export * from './documents/documents';
+export * from './vectors/schema';
+
 // Personal Finance schemas
 export * from './personal/finance';
 
 // Semantic schemas
 export * from './semantic/catalog';
 
-// Legacy schemas (for backward compatibility)
-// Re-export specific items to avoid conflicts
+// Legacy schemas (for backward compatibility during ERP migration)
+// 
+// LEGACY SCHEMA STRATEGY:
+// These exports maintain compatibility with existing chat/AI functionality
+// while new ERP features use the modern schema structure above.
+//
+// Re-export specific items to avoid conflicts where possible
+// Note: `User` type is intentionally NOT re-exported here to allow
+// the new ERP `User` type to take precedence (see lib/db/index.ts)
 export { 
   chat, 
   type Chat,

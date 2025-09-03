@@ -11,7 +11,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useDebounceCallback, useWindowSize } from 'usehooks-ts';
 import type { Document, Vote } from '@/lib/db/schema';
-import { useDocuments, useUpdateDocument } from '@/lib/api/hooks/use-documents';
+import { useChatDocuments, useUpdateDocument } from '@/lib/api/hooks/use-chat-documents';
 import { MultimodalInput } from './multimodal-input';
 import { Toolbar } from './toolbar';
 import { VersionFooter } from './version-footer';
@@ -89,7 +89,7 @@ function PureArtifact({
     data: documents,
     isLoading: isDocumentsFetching,
     refetch: refetchDocuments,
-  } = useDocuments(
+  } = useChatDocuments(
     artifact.documentId !== 'init' && artifact.status !== 'streaming' ? artifact.documentId : null
   );
 

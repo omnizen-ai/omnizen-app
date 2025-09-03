@@ -1,7 +1,7 @@
 'use client';
 import { motion } from 'framer-motion';
 import { useWindowSize } from 'usehooks-ts';
-import { useRestoreDocumentVersion } from '@/lib/api/hooks/use-documents';
+import { useRestoreDocumentVersion } from '@/lib/api/hooks/use-chat-documents';
 
 import type { Document } from '@/lib/db/schema';
 import { getDocumentTimestampByIndex } from '@/lib/utils';

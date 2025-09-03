@@ -15,8 +15,8 @@ import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
 import { ArrowUpIcon, } from './icons';
-import { Share2Icon, RadiobuttonIcon, MaskOnIcon } from '@radix-ui/react-icons';
-import { SquareIcon, ArrowDown } from 'lucide-react';
+import { Share2Icon, RadiobuttonIcon, MaskOnIcon, FileTextIcon } from '@radix-ui/react-icons';
+import { SquareIcon, ArrowDown, Upload } from 'lucide-react';
 import { PreviewAttachment } from './preview-attachment';
 import { Button } from './ui/button';
 import { QuickActions } from './quick-actions';
@@ -33,6 +33,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 import type { VisibilityType } from './visibility-selector';
 import type { Attachment, ChatMessage } from '@/lib/types';
+import { useUploadDocument } from '@/lib/hooks/use-documents';
 
 function PureMultimodalInput({
   chatId,
@@ -114,6 +115,11 @@ function PureMultimodalInput({
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  
+  // Document processing
+  const uploadDocument = useUploadDocument();
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [processingDocuments, setProcessingDocuments] = useState<Set<string>>(new Set());
 
   const submitForm = useCallback(() => {
     window.history.replaceState({}, '', `/chat/${chatId}`);
@@ -180,23 +186,81 @@ function PureMultimodalInput({
     }
   };
 
+  // Document-specific file types that should be processed for RAG
+  const isDocumentFile = (file: File) => {
+    const documentTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/csv',
+      'text/plain',
+    ];
+    return documentTypes.includes(file.type) || file.name.endsWith('.pdf') || file.name.endsWith('.docx') || file.name.endsWith('.xlsx');
+  };
+
+  const processDocument = async (file: File) => {
+    const fileName = file.name;
+    setProcessingDocuments(prev => new Set(prev.add(fileName)));
+    
+    try {
+      await uploadDocument.mutateAsync({ 
+        file, 
+        options: {
+          category: 'chat-uploaded',
+          generateEmbeddings: true,
+          performOCR: true,
+        }
+      });
+      
+      // Add a text attachment showing document was processed
+      const documentAttachment = {
+        url: `/documents/${fileName}`,
+        name: `📄 ${fileName} (Processed for AI search)`,
+        contentType: 'text/plain',
+      };
+      
+      setAttachments(prev => [...prev, documentAttachment]);
+      toast.success(`Document "${fileName}" processed and available for AI search`);
+    } catch (error) {
+      toast.error(`Failed to process document "${fileName}"`);
+    } finally {
+      setProcessingDocuments(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fileName);
+        return newSet;
+      });
+    }
+  };
+
   const handleFileChange = useCallback(
     async (event: ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(event.target.files || []);
+      
+      // Separate documents from regular files
+      const documentFiles = files.filter(isDocumentFile);
+      const regularFiles = files.filter(file => !isDocumentFile(file));
 
-      setUploadQueue(files.map((file) => file.name));
+      setUploadQueue(regularFiles.map((file) => file.name));
 
       try {
-        const uploadPromises = files.map((file) => uploadFile(file));
-        const uploadedAttachments = await Promise.all(uploadPromises);
-        const successfullyUploadedAttachments = uploadedAttachments.filter(
-          (attachment) => attachment !== undefined,
-        );
+        // Process documents for RAG
+        for (const docFile of documentFiles) {
+          await processDocument(docFile);
+        }
 
-        setAttachments((currentAttachments) => [
-          ...currentAttachments,
-          ...successfullyUploadedAttachments,
-        ]);
+        // Handle regular file uploads
+        if (regularFiles.length > 0) {
+          const uploadPromises = regularFiles.map((file) => uploadFile(file));
+          const uploadedAttachments = await Promise.all(uploadPromises);
+          const successfullyUploadedAttachments = uploadedAttachments.filter(
+            (attachment) => attachment !== undefined,
+          );
+
+          setAttachments((currentAttachments) => [
+            ...currentAttachments,
+            ...successfullyUploadedAttachments,
+          ]);
+        }
       } catch (error) {
         console.error('Error uploading files!', error);
       } finally {
@@ -207,6 +271,67 @@ function PureMultimodalInput({
   );
 
   const { isAtBottom, scrollToBottom } = useScrollToBottom();
+
+  // Drag and drop handlers
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(
+    async (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragOver(false);
+
+      const files = Array.from(e.dataTransfer.files);
+      if (files.length === 0) return;
+
+      // Process the dropped files same as file input
+      const documentFiles = files.filter(isDocumentFile);
+      const regularFiles = files.filter(file => !isDocumentFile(file));
+
+      setUploadQueue(regularFiles.map((file) => file.name));
+
+      try {
+        // Process documents for RAG
+        for (const docFile of documentFiles) {
+          await processDocument(docFile);
+        }
+
+        // Handle regular file uploads
+        if (regularFiles.length > 0) {
+          const uploadPromises = regularFiles.map((file) => uploadFile(file));
+          const uploadedAttachments = await Promise.all(uploadPromises);
+          const successfullyUploadedAttachments = uploadedAttachments.filter(
+            (attachment) => attachment !== undefined,
+          );
+
+          setAttachments((currentAttachments) => [
+            ...currentAttachments,
+            ...successfullyUploadedAttachments,
+          ]);
+        }
+      } catch (error) {
+        console.error('Error uploading dropped files!', error);
+      } finally {
+        setUploadQueue([]);
+      }
+    },
+    [setAttachments],
+  );
 
   useEffect(() => {
     if (status === 'submitted') {
@@ -260,7 +385,15 @@ function PureMultimodalInput({
   };
 
   return (
-    <div className="flex relative flex-col gap-4 w-full">
+    <div 
+      className={`flex relative flex-col gap-4 w-full ${
+        isDragOver ? 'bg-blue-50 border-2 border-blue-300 border-dashed rounded-lg' : ''
+      }`}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       <AnimatePresence>
         {!isAtBottom && messages.length > 0 && (
           <motion.div
@@ -291,6 +424,7 @@ function PureMultimodalInput({
         className="fixed -top-4 -left-4 size-0.5 opacity-0 pointer-events-none"
         ref={fileInputRef}
         multiple
+        accept="image/*,audio/*,video/*,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain"
         onChange={handleFileChange}
         tabIndex={-1}
       />
@@ -306,7 +440,7 @@ function PureMultimodalInput({
           }
         }}
       >
-        {(attachments.length > 0 || uploadQueue.length > 0) && (
+        {(attachments.length > 0 || uploadQueue.length > 0 || processingDocuments.size > 0) && (
           <div
             data-testid="attachments-preview"
             className="flex overflow-x-scroll flex-row gap-2 items-end px-3 py-2"
@@ -337,13 +471,25 @@ function PureMultimodalInput({
                 isUploading={true}
               />
             ))}
+
+            {Array.from(processingDocuments).map((filename) => (
+              <PreviewAttachment
+                key={`processing-${filename}`}
+                attachment={{
+                  url: '',
+                  name: `📄 ${filename} (Processing...)`,
+                  contentType: 'application/pdf',
+                }}
+                isUploading={true}
+              />
+            ))}
           </div>
         )}
 
         <PromptInputTextarea
           data-testid="multimodal-input"
           ref={textareaRef}
-          placeholder="Send a message..."
+          placeholder={isDragOver ? "Drop documents here to process with AI..." : "Send a message..."}
           value={input}
           onChange={handleInput}
           minHeight={messages.length === 0 ? 80 : 40}
@@ -354,7 +500,9 @@ function PureMultimodalInput({
             minHeight: messages.length === 0 ? '80px' : '40px', 
             maxHeight: messages.length === 0 ? '80px' : '40px' 
           }}
-          className="text-sm resize-none border-b-0 focus:border-0 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-6 py-4"
+          className={`text-sm resize-none border-b-0 focus:border-0 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-6 py-4 ${
+            isDragOver ? 'bg-blue-50' : ''
+          }`}
           rows={1}
           autoFocus
         />
@@ -364,6 +512,7 @@ function PureMultimodalInput({
           </PromptInputTools>
           <div className="flex items-center gap-1">
             <AttachmentsButton fileInputRef={fileInputRef} status={status} />
+            <DocumentUploadButton fileInputRef={fileInputRef} status={status} />
             <VoiceButton 
               isRecording={isRecording}
               startRecording={startRecording}
@@ -502,6 +651,51 @@ function PureVoiceButton({
 }
 
 const VoiceButton = memo(PureVoiceButton);
+
+function PureDocumentUploadButton({
+  fileInputRef,
+  status,
+}: {
+  fileInputRef: React.MutableRefObject<HTMLInputElement | null>;
+  status: UseChatHelpers<ChatMessage>['status'];
+}) {
+  const documentInputRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <>
+      <input
+        type="file"
+        className="fixed -top-4 -left-4 size-0.5 opacity-0 pointer-events-none"
+        ref={documentInputRef}
+        multiple
+        accept="application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain"
+        onChange={(e) => {
+          // Trigger the main file handler
+          if (fileInputRef.current) {
+            fileInputRef.current.files = e.target.files;
+            fileInputRef.current.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }}
+        tabIndex={-1}
+      />
+      <Button
+        data-testid="document-upload-button"
+        className="bg-green-600 hover:bg-green-700 text-white size-8"
+        onClick={(event) => {
+          event.preventDefault();
+          documentInputRef.current?.click();
+        }}
+        disabled={status !== 'ready'}
+        size="sm"
+        title="Upload documents (PDF, DOCX, XLSX, CSV, TXT) for AI processing"
+      >
+        <FileTextIcon className="size-4" />
+      </Button>
+    </>
+  );
+}
+
+const DocumentUploadButton = memo(PureDocumentUploadButton);
 
 function PureSendButton({
   submitForm,

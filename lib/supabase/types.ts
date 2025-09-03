@@ -768,10 +768,10 @@ export type Database = {
         Row: {
           account_name: string
           account_number: string | null
-          account_type: Database["public"]["Enums"]["bank_account_type"]
           allow_deposits: boolean
           allow_payments: boolean
           available_balance: number
+          bank_account_type: Database["public"]["Enums"]["bank_account_type"]
           bank_branch: string | null
           bank_feed_credentials: Json | null
           bank_feed_enabled: boolean
@@ -798,10 +798,10 @@ export type Database = {
         Insert: {
           account_name: string
           account_number?: string | null
-          account_type: Database["public"]["Enums"]["bank_account_type"]
           allow_deposits?: boolean
           allow_payments?: boolean
           available_balance?: number
+          bank_account_type: Database["public"]["Enums"]["bank_account_type"]
           bank_branch?: string | null
           bank_feed_credentials?: Json | null
           bank_feed_enabled?: boolean
@@ -828,10 +828,10 @@ export type Database = {
         Update: {
           account_name?: string
           account_number?: string | null
-          account_type?: Database["public"]["Enums"]["bank_account_type"]
           allow_deposits?: boolean
           allow_payments?: boolean
           available_balance?: number
+          bank_account_type?: Database["public"]["Enums"]["bank_account_type"]
           bank_branch?: string | null
           bank_feed_credentials?: Json | null
           bank_feed_enabled?: boolean
@@ -1377,6 +1377,70 @@ export type Database = {
           },
         ]
       }
+      budget_rules: {
+        Row: {
+          alert_threshold: number | null
+          budget_amount: number
+          category_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          organization_id: string
+          period: Database["public"]["Enums"]["budget_period"] | null
+          rollover: boolean | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          alert_threshold?: number | null
+          budget_amount: number
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          organization_id: string
+          period?: Database["public"]["Enums"]["budget_period"] | null
+          rollover?: boolean | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          alert_threshold?: number | null
+          budget_amount?: number
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          organization_id?: string
+          period?: Database["public"]["Enums"]["budget_period"] | null
+          rollover?: boolean | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_rules_category_id_personal_categories_id_fk"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "personal_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_rules_organization_id_organizations_id_fk"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budget_rules_workspace_id_workspaces_id_fk"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_metrics: {
         Row: {
           aggregation_method: string | null
@@ -1861,26 +1925,40 @@ export type Database = {
       currencies: {
         Row: {
           code: string
+          created_at: string
           decimals: number
           is_active: boolean
           name: string
+          organization_id: string
           symbol: string
         }
         Insert: {
           code: string
+          created_at?: string
           decimals?: number
           is_active?: boolean
           name: string
+          organization_id: string
           symbol: string
         }
         Update: {
           code?: string
+          created_at?: string
           decimals?: number
           is_active?: boolean
           name?: string
+          organization_id?: string
           symbol?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "currencies_organization_id_organizations_id_fk"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       Document: {
         Row: {
@@ -1913,6 +1991,333 @@ export type Database = {
             columns: ["userId"]
             isOneToOne: false
             referencedRelation: "User"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_access_logs: {
+        Row: {
+          access_type: string
+          accessed_at: string
+          context: Json | null
+          document_id: string
+          id: string
+          ip_address: string | null
+          organization_id: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          access_type: string
+          accessed_at?: string
+          context?: Json | null
+          document_id: string
+          id?: string
+          ip_address?: string | null
+          organization_id: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          access_type?: string
+          accessed_at?: string
+          context?: Json | null
+          document_id?: string
+          id?: string
+          ip_address?: string | null
+          organization_id?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_access_logs_document_id_documents_id_fk"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_access_logs_organization_id_organizations_id_fk"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_access_logs_user_id_User_id_fk"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "User"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_embeddings: {
+        Row: {
+          category: string | null
+          chunk_count: number
+          chunk_index: number
+          content: string
+          content_hash: string | null
+          created_at: string
+          document_id: string
+          document_type: Database["public"]["Enums"]["document_type"] | null
+          embedding: string | null
+          id: string
+          metadata: Json
+          organization_id: string
+          search_text: string | null
+          updated_at: string
+          workspace_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          chunk_count?: number
+          chunk_index?: number
+          content: string
+          content_hash?: string | null
+          created_at?: string
+          document_id: string
+          document_type?: Database["public"]["Enums"]["document_type"] | null
+          embedding?: string | null
+          id?: string
+          metadata?: Json
+          organization_id: string
+          search_text?: string | null
+          updated_at?: string
+          workspace_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          chunk_count?: number
+          chunk_index?: number
+          content?: string
+          content_hash?: string | null
+          created_at?: string
+          document_id?: string
+          document_type?: Database["public"]["Enums"]["document_type"] | null
+          embedding?: string | null
+          id?: string
+          metadata?: Json
+          organization_id?: string
+          search_text?: string | null
+          updated_at?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_embeddings_document_id_documents_id_fk"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_embeddings_organization_id_organizations_id_fk"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_embeddings_workspace_id_workspaces_id_fk"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_processing_jobs: {
+        Row: {
+          completed_at: string | null
+          config: Json
+          created_at: string
+          current_step: number | null
+          document_id: string
+          duration: number | null
+          error: string | null
+          id: string
+          job_type: string
+          organization_id: string
+          progress: number | null
+          result: Json | null
+          started_at: string | null
+          status: string
+          total_steps: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          config?: Json
+          created_at?: string
+          current_step?: number | null
+          document_id: string
+          duration?: number | null
+          error?: string | null
+          id?: string
+          job_type: string
+          organization_id: string
+          progress?: number | null
+          result?: Json | null
+          started_at?: string | null
+          status?: string
+          total_steps?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          config?: Json
+          created_at?: string
+          current_step?: number | null
+          document_id?: string
+          duration?: number | null
+          error?: string | null
+          id?: string
+          job_type?: string
+          organization_id?: string
+          progress?: number | null
+          result?: Json | null
+          started_at?: string | null
+          status?: string
+          total_steps?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_processing_jobs_document_id_documents_id_fk"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_processing_jobs_organization_id_organizations_id_fk"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          allowed_users: Json | null
+          auto_tags: Json | null
+          category: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          extracted_text: string | null
+          file_name: string
+          file_size: number
+          file_type: Database["public"]["Enums"]["document_type"]
+          id: string
+          is_public: boolean
+          language: string | null
+          metadata: Json
+          mime_type: string | null
+          organization_id: string
+          processed_at: string | null
+          processing_error: string | null
+          related_bill_id: string | null
+          related_contract_id: string | null
+          related_invoice_id: string | null
+          search_text: string | null
+          status: Database["public"]["Enums"]["document_status"]
+          storage_bucket: string
+          storage_key: string
+          storage_url: string
+          tags: Json | null
+          text_length: number | null
+          title: string
+          updated_at: string
+          workspace_id: string | null
+        }
+        Insert: {
+          allowed_users?: Json | null
+          auto_tags?: Json | null
+          category?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          extracted_text?: string | null
+          file_name: string
+          file_size: number
+          file_type: Database["public"]["Enums"]["document_type"]
+          id?: string
+          is_public?: boolean
+          language?: string | null
+          metadata?: Json
+          mime_type?: string | null
+          organization_id: string
+          processed_at?: string | null
+          processing_error?: string | null
+          related_bill_id?: string | null
+          related_contract_id?: string | null
+          related_invoice_id?: string | null
+          search_text?: string | null
+          status?: Database["public"]["Enums"]["document_status"]
+          storage_bucket?: string
+          storage_key: string
+          storage_url: string
+          tags?: Json | null
+          text_length?: number | null
+          title: string
+          updated_at?: string
+          workspace_id?: string | null
+        }
+        Update: {
+          allowed_users?: Json | null
+          auto_tags?: Json | null
+          category?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          extracted_text?: string | null
+          file_name?: string
+          file_size?: number
+          file_type?: Database["public"]["Enums"]["document_type"]
+          id?: string
+          is_public?: boolean
+          language?: string | null
+          metadata?: Json
+          mime_type?: string | null
+          organization_id?: string
+          processed_at?: string | null
+          processing_error?: string | null
+          related_bill_id?: string | null
+          related_contract_id?: string | null
+          related_invoice_id?: string | null
+          search_text?: string | null
+          status?: Database["public"]["Enums"]["document_status"]
+          storage_bucket?: string
+          storage_key?: string
+          storage_url?: string
+          tags?: Json | null
+          text_length?: number | null
+          title?: string
+          updated_at?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_created_by_User_id_fk"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "User"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_organization_id_organizations_id_fk"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_workspace_id_workspaces_id_fk"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -2078,6 +2483,81 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "currencies"
             referencedColumns: ["code"]
+          },
+        ]
+      }
+      financial_goals: {
+        Row: {
+          allocation_amount: number | null
+          allocation_frequency: string | null
+          auto_allocate: boolean | null
+          completed_date: string | null
+          created_at: string
+          current_amount: number | null
+          description: string | null
+          goal_type: Database["public"]["Enums"]["goal_type"]
+          id: string
+          name: string
+          organization_id: string
+          priority: number | null
+          status: Database["public"]["Enums"]["goal_status"] | null
+          target_amount: number
+          target_date: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          allocation_amount?: number | null
+          allocation_frequency?: string | null
+          auto_allocate?: boolean | null
+          completed_date?: string | null
+          created_at?: string
+          current_amount?: number | null
+          description?: string | null
+          goal_type: Database["public"]["Enums"]["goal_type"]
+          id?: string
+          name: string
+          organization_id: string
+          priority?: number | null
+          status?: Database["public"]["Enums"]["goal_status"] | null
+          target_amount: number
+          target_date?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          allocation_amount?: number | null
+          allocation_frequency?: string | null
+          auto_allocate?: boolean | null
+          completed_date?: string | null
+          created_at?: string
+          current_amount?: number | null
+          description?: string | null
+          goal_type?: Database["public"]["Enums"]["goal_type"]
+          id?: string
+          name?: string
+          organization_id?: string
+          priority?: number | null
+          status?: Database["public"]["Enums"]["goal_status"] | null
+          target_amount?: number
+          target_date?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_goals_organization_id_organizations_id_fk"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_goals_workspace_id_workspaces_id_fk"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2428,6 +2908,79 @@ export type Database = {
           },
         ]
       }
+      investment_holdings: {
+        Row: {
+          asset_type: Database["public"]["Enums"]["asset_type"] | null
+          cost_basis: number
+          created_at: string
+          current_price: number | null
+          id: string
+          investment_account_id: string | null
+          last_updated: string | null
+          market_value: number | null
+          name: string
+          organization_id: string
+          quantity: number
+          symbol: string
+          unrealized_gain_loss: number | null
+          workspace_id: string
+        }
+        Insert: {
+          asset_type?: Database["public"]["Enums"]["asset_type"] | null
+          cost_basis: number
+          created_at?: string
+          current_price?: number | null
+          id?: string
+          investment_account_id?: string | null
+          last_updated?: string | null
+          market_value?: number | null
+          name: string
+          organization_id: string
+          quantity: number
+          symbol: string
+          unrealized_gain_loss?: number | null
+          workspace_id: string
+        }
+        Update: {
+          asset_type?: Database["public"]["Enums"]["asset_type"] | null
+          cost_basis?: number
+          created_at?: string
+          current_price?: number | null
+          id?: string
+          investment_account_id?: string | null
+          last_updated?: string | null
+          market_value?: number | null
+          name?: string
+          organization_id?: string
+          quantity?: number
+          symbol?: string
+          unrealized_gain_loss?: number | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investment_holdings_investment_account_id_chart_accounts_id_fk"
+            columns: ["investment_account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investment_holdings_organization_id_organizations_id_fk"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investment_holdings_workspace_id_workspaces_id_fk"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_lines: {
         Row: {
           account_id: string | null
@@ -2638,12 +3191,15 @@ export type Database = {
           entry_date: string
           entry_number: string
           id: string
+          is_balanced: boolean | null
           journal_id: string
           memo: string | null
           organization_id: string
           posted_at: string | null
           reversed_from_id: string | null
           status: Database["public"]["Enums"]["entry_status"]
+          total_credits: number
+          total_debits: number
           updated_at: string
           workspace_id: string | null
         }
@@ -2658,12 +3214,15 @@ export type Database = {
           entry_date: string
           entry_number: string
           id?: string
+          is_balanced?: boolean | null
           journal_id: string
           memo?: string | null
           organization_id: string
           posted_at?: string | null
           reversed_from_id?: string | null
           status?: Database["public"]["Enums"]["entry_status"]
+          total_credits?: number
+          total_debits?: number
           updated_at?: string
           workspace_id?: string | null
         }
@@ -2678,12 +3237,15 @@ export type Database = {
           entry_date?: string
           entry_number?: string
           id?: string
+          is_balanced?: boolean | null
           journal_id?: string
           memo?: string | null
           organization_id?: string
           posted_at?: string | null
           reversed_from_id?: string | null
           status?: Database["public"]["Enums"]["entry_status"]
+          total_credits?: number
+          total_debits?: number
           updated_at?: string
           workspace_id?: string | null
         }
@@ -2730,6 +3292,8 @@ export type Database = {
           department_id: string | null
           description: string | null
           exchange_rate: number | null
+          foreign_credit: number | null
+          foreign_debit: number | null
           id: string
           journal_entry_id: string
           line_number: number
@@ -2749,6 +3313,8 @@ export type Database = {
           department_id?: string | null
           description?: string | null
           exchange_rate?: number | null
+          foreign_credit?: number | null
+          foreign_debit?: number | null
           id?: string
           journal_entry_id: string
           line_number: number
@@ -2768,6 +3334,8 @@ export type Database = {
           department_id?: string | null
           description?: string | null
           exchange_rate?: number | null
+          foreign_credit?: number | null
+          foreign_debit?: number | null
           id?: string
           journal_entry_id?: string
           line_number?: number
@@ -3236,19 +3804,27 @@ export type Database = {
       }
       organizations: {
         Row: {
+          accounting_mode: Database["public"]["Enums"]["accounting_mode"]
+          base_currency: string
           country_code: string | null
           created_at: string
           currency: string
           data_retention_days: number
+          enforce_balance_on_post: boolean
           feature_flags: Json
           fiscal_year_start: number
           id: string
           is_active: boolean
+          is_personal_finance: boolean | null
           max_ai_agents: number
           max_users: number
           max_workspaces: number
           name: string
+          organization_type:
+            | Database["public"]["Enums"]["organization_type"]
+            | null
           plan_tier: Database["public"]["Enums"]["plan_tier"]
+          require_approval_workflow: boolean
           slug: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -3257,19 +3833,27 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          accounting_mode?: Database["public"]["Enums"]["accounting_mode"]
+          base_currency?: string
           country_code?: string | null
           created_at?: string
           currency?: string
           data_retention_days?: number
+          enforce_balance_on_post?: boolean
           feature_flags?: Json
           fiscal_year_start?: number
           id?: string
           is_active?: boolean
+          is_personal_finance?: boolean | null
           max_ai_agents?: number
           max_users?: number
           max_workspaces?: number
           name: string
+          organization_type?:
+            | Database["public"]["Enums"]["organization_type"]
+            | null
           plan_tier?: Database["public"]["Enums"]["plan_tier"]
+          require_approval_workflow?: boolean
           slug: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -3278,19 +3862,27 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          accounting_mode?: Database["public"]["Enums"]["accounting_mode"]
+          base_currency?: string
           country_code?: string | null
           created_at?: string
           currency?: string
           data_retention_days?: number
+          enforce_balance_on_post?: boolean
           feature_flags?: Json
           fiscal_year_start?: number
           id?: string
           is_active?: boolean
+          is_personal_finance?: boolean | null
           max_ai_agents?: number
           max_users?: number
           max_workspaces?: number
           name?: string
+          organization_type?:
+            | Database["public"]["Enums"]["organization_type"]
+            | null
           plan_tier?: Database["public"]["Enums"]["plan_tier"]
+          require_approval_workflow?: boolean
           slug?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -3427,6 +4019,149 @@ export type Database = {
           },
           {
             foreignKeyName: "payments_workspace_id_workspaces_id_fk"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          default_account_id: string | null
+          icon: string | null
+          id: string
+          name: string
+          organization_id: string
+          parent_category_id: string | null
+          tax_relevant: boolean | null
+          typical_merchants: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          default_account_id?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          parent_category_id?: string | null
+          tax_relevant?: boolean | null
+          typical_merchants?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          default_account_id?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          parent_category_id?: string | null
+          tax_relevant?: boolean | null
+          typical_merchants?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_categories_default_account_id_chart_accounts_id_fk"
+            columns: ["default_account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_categories_organization_id_organizations_id_fk"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_categories_parent_category_id_personal_categories_id_f"
+            columns: ["parent_category_id"]
+            isOneToOne: false
+            referencedRelation: "personal_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_subscriptions: {
+        Row: {
+          amount: number
+          cancellation_url: string | null
+          category_id: string | null
+          created_at: string
+          frequency:
+            | Database["public"]["Enums"]["subscription_frequency"]
+            | null
+          id: string
+          is_active: boolean | null
+          name: string
+          next_billing_date: string | null
+          notes: string | null
+          organization_id: string
+          updated_at: string
+          vendor_name: string | null
+          workspace_id: string
+        }
+        Insert: {
+          amount: number
+          cancellation_url?: string | null
+          category_id?: string | null
+          created_at?: string
+          frequency?:
+            | Database["public"]["Enums"]["subscription_frequency"]
+            | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          next_billing_date?: string | null
+          notes?: string | null
+          organization_id: string
+          updated_at?: string
+          vendor_name?: string | null
+          workspace_id: string
+        }
+        Update: {
+          amount?: number
+          cancellation_url?: string | null
+          category_id?: string | null
+          created_at?: string
+          frequency?:
+            | Database["public"]["Enums"]["subscription_frequency"]
+            | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          next_billing_date?: string | null
+          notes?: string | null
+          organization_id?: string
+          updated_at?: string
+          vendor_name?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_subscriptions_category_id_personal_categories_id_fk"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "personal_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_subscriptions_organization_id_organizations_id_fk"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_subscriptions_workspace_id_workspaces_id_fk"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -3976,6 +4711,372 @@ export type Database = {
             columns: ["warehouse_id"]
             isOneToOne: false
             referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      query_batch_jobs: {
+        Row: {
+          batch_id: string
+          completed_at: string | null
+          config: Json
+          created_at: string
+          errors: Json | null
+          failed_queries: number
+          id: string
+          organization_id: string
+          processed_queries: number
+          processing_time: number | null
+          results: Json | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["batch_status"]
+          total_queries: number
+          trigger_reason: string | null
+          triggered_by: string | null
+        }
+        Insert: {
+          batch_id: string
+          completed_at?: string | null
+          config?: Json
+          created_at?: string
+          errors?: Json | null
+          failed_queries?: number
+          id?: string
+          organization_id: string
+          processed_queries?: number
+          processing_time?: number | null
+          results?: Json | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["batch_status"]
+          total_queries: number
+          trigger_reason?: string | null
+          triggered_by?: string | null
+        }
+        Update: {
+          batch_id?: string
+          completed_at?: string | null
+          config?: Json
+          created_at?: string
+          errors?: Json | null
+          failed_queries?: number
+          id?: string
+          organization_id?: string
+          processed_queries?: number
+          processing_time?: number | null
+          results?: Json | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["batch_status"]
+          total_queries?: number
+          trigger_reason?: string | null
+          triggered_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "query_batch_jobs_organization_id_organizations_id_fk"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "query_batch_jobs_triggered_by_User_id_fk"
+            columns: ["triggered_by"]
+            isOneToOne: false
+            referencedRelation: "User"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      query_evolution: {
+        Row: {
+          adaptation_reason: string
+          context_similarity: number | null
+          created_at: string
+          execution_success: boolean
+          execution_time: number | null
+          feedback_loop: Json | null
+          id: string
+          new_context: string
+          organization_id: string
+          original_context: string
+          parent_query_id: string
+          query_modifications: Json
+          result_quality: number | null
+        }
+        Insert: {
+          adaptation_reason: string
+          context_similarity?: number | null
+          created_at?: string
+          execution_success: boolean
+          execution_time?: number | null
+          feedback_loop?: Json | null
+          id?: string
+          new_context: string
+          organization_id: string
+          original_context: string
+          parent_query_id: string
+          query_modifications?: Json
+          result_quality?: number | null
+        }
+        Update: {
+          adaptation_reason?: string
+          context_similarity?: number | null
+          created_at?: string
+          execution_success?: boolean
+          execution_time?: number | null
+          feedback_loop?: Json | null
+          id?: string
+          new_context?: string
+          organization_id?: string
+          original_context?: string
+          parent_query_id?: string
+          query_modifications?: Json
+          result_quality?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "query_evolution_organization_id_organizations_id_fk"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "query_evolution_parent_query_id_query_intelligence_id_fk"
+            columns: ["parent_query_id"]
+            isOneToOne: false
+            referencedRelation: "query_intelligence"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      query_feedback: {
+        Row: {
+          accuracy: number | null
+          comments: string | null
+          created_at: string
+          id: string
+          organization_id: string
+          performance: number | null
+          query_intelligence_id: string
+          rating: number
+          relevance: number | null
+          session_context: Json | null
+          suggested_improvements: string | null
+          user_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          comments?: string | null
+          created_at?: string
+          id?: string
+          organization_id: string
+          performance?: number | null
+          query_intelligence_id: string
+          rating: number
+          relevance?: number | null
+          session_context?: Json | null
+          suggested_improvements?: string | null
+          user_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          comments?: string | null
+          created_at?: string
+          id?: string
+          organization_id?: string
+          performance?: number | null
+          query_intelligence_id?: string
+          rating?: number
+          relevance?: number | null
+          session_context?: Json | null
+          suggested_improvements?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "query_feedback_organization_id_organizations_id_fk"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "query_feedback_query_intelligence_id_query_intelligence_id_fk"
+            columns: ["query_intelligence_id"]
+            isOneToOne: false
+            referencedRelation: "query_intelligence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "query_feedback_user_id_User_id_fk"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "User"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      query_intelligence: {
+        Row: {
+          adaptations: number
+          avg_execution_time: number | null
+          complexity: Database["public"]["Enums"]["query_complexity"]
+          confidence_score: number
+          context_embedding: string | null
+          created_at: string
+          execution_count: number
+          first_seen: string
+          id: string
+          intent: Database["public"]["Enums"]["query_intent"]
+          is_active: boolean
+          last_used: string
+          metadata: Json
+          organization_id: string
+          original_query: string
+          query_embedding: string | null
+          query_hash: string
+          query_pattern: string
+          similarity_searches: number
+          success_rate: number
+          tables_used: Json
+          total_execution_time: number
+          updated_at: string
+          user_prompt: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          adaptations?: number
+          avg_execution_time?: number | null
+          complexity: Database["public"]["Enums"]["query_complexity"]
+          confidence_score?: number
+          context_embedding?: string | null
+          created_at?: string
+          execution_count?: number
+          first_seen?: string
+          id?: string
+          intent: Database["public"]["Enums"]["query_intent"]
+          is_active?: boolean
+          last_used?: string
+          metadata?: Json
+          organization_id: string
+          original_query: string
+          query_embedding?: string | null
+          query_hash: string
+          query_pattern: string
+          similarity_searches?: number
+          success_rate?: number
+          tables_used?: Json
+          total_execution_time?: number
+          updated_at?: string
+          user_prompt?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          adaptations?: number
+          avg_execution_time?: number | null
+          complexity?: Database["public"]["Enums"]["query_complexity"]
+          confidence_score?: number
+          context_embedding?: string | null
+          created_at?: string
+          execution_count?: number
+          first_seen?: string
+          id?: string
+          intent?: Database["public"]["Enums"]["query_intent"]
+          is_active?: boolean
+          last_used?: string
+          metadata?: Json
+          organization_id?: string
+          original_query?: string
+          query_embedding?: string | null
+          query_hash?: string
+          query_pattern?: string
+          similarity_searches?: number
+          success_rate?: number
+          tables_used?: Json
+          total_execution_time?: number
+          updated_at?: string
+          user_prompt?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "query_intelligence_organization_id_organizations_id_fk"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "query_intelligence_workspace_id_workspaces_id_fk"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      query_patterns: {
+        Row: {
+          average_performance: number | null
+          business_domain: string | null
+          confidence_level: number
+          created_at: string
+          derived_from: Json | null
+          id: string
+          is_active: boolean
+          organization_id: string
+          parameters: Json
+          pattern_description: string | null
+          pattern_name: string
+          pattern_template: string
+          updated_at: string
+          usage_count: number
+          use_cases: Json | null
+          version: number
+        }
+        Insert: {
+          average_performance?: number | null
+          business_domain?: string | null
+          confidence_level?: number
+          created_at?: string
+          derived_from?: Json | null
+          id?: string
+          is_active?: boolean
+          organization_id: string
+          parameters?: Json
+          pattern_description?: string | null
+          pattern_name: string
+          pattern_template: string
+          updated_at?: string
+          usage_count?: number
+          use_cases?: Json | null
+          version?: number
+        }
+        Update: {
+          average_performance?: number | null
+          business_domain?: string | null
+          confidence_level?: number
+          created_at?: string
+          derived_from?: Json | null
+          id?: string
+          is_active?: boolean
+          organization_id?: string
+          parameters?: Json
+          pattern_description?: string | null
+          pattern_name?: string
+          pattern_template?: string
+          updated_at?: string
+          usage_count?: number
+          use_cases?: Json | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "query_patterns_organization_id_organizations_id_fk"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -5170,6 +6271,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      binary_quantize: {
+        Args: { "": string } | { "": unknown }
+        Returns: unknown
+      }
       bypass_rls: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -5177,6 +6282,47 @@ export type Database = {
       clear_auth_context: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      get_exchange_rate: {
+        Args: {
+          p_date?: string
+          p_from_currency: string
+          p_organization_id: string
+          p_to_currency: string
+        }
+        Returns: number
+      }
+      halfvec_avg: {
+        Args: { "": number[] }
+        Returns: unknown
+      }
+      halfvec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      halfvec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      halfvec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
+      hnsw_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_sparsevec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnswhandler: {
+        Args: { "": unknown }
+        Returns: unknown
       }
       is_valid_role: {
         Args: { role_name: string }
@@ -5186,6 +6332,26 @@ export type Database = {
         Args: { input_text: string }
         Returns: boolean
       }
+      ivfflat_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflat_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflathandler: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      l2_norm: {
+        Args: { "": unknown } | { "": unknown }
+        Returns: number
+      }
+      l2_normalize: {
+        Args: { "": string } | { "": unknown } | { "": unknown }
+        Returns: string
+      }
       set_auth_context: {
         Args: {
           p_org_id: string
@@ -5194,6 +6360,46 @@ export type Database = {
           p_workspace_id?: string
         }
         Returns: Json
+      }
+      sparsevec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      sparsevec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      sparsevec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
+      validate_journal_balance: {
+        Args: { p_enforce_mode?: string; p_journal_entry_id: string }
+        Returns: Json
+      }
+      vector_avg: {
+        Args: { "": number[] }
+        Returns: string
+      }
+      vector_dims: {
+        Args: { "": string } | { "": unknown }
+        Returns: number
+      }
+      vector_norm: {
+        Args: { "": string }
+        Returns: number
+      }
+      vector_out: {
+        Args: { "": string }
+        Returns: unknown
+      }
+      vector_send: {
+        Args: { "": string }
+        Returns: string
+      }
+      vector_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
       }
       verify_auth_context: {
         Args: Record<PropertyKey, never>
@@ -5210,6 +6416,7 @@ export type Database = {
         | "contra_asset"
         | "contra_liability"
         | "other"
+      accounting_mode: "simple" | "standard" | "strict"
       adjustment_reason:
         | "cycle_count"
         | "physical_inventory"
@@ -5230,6 +6437,13 @@ export type Database = {
         | "sales"
         | "data_processor"
         | "custom"
+      asset_type:
+        | "stock"
+        | "etf"
+        | "mutual_fund"
+        | "bond"
+        | "crypto"
+        | "commodity"
       automation_trigger:
         | "schedule"
         | "event"
@@ -5253,6 +6467,7 @@ export type Database = {
         | "interest"
         | "adjustment"
         | "opening_balance"
+      batch_status: "pending" | "processing" | "completed" | "failed"
       bill_status:
         | "draft"
         | "received"
@@ -5263,6 +6478,7 @@ export type Database = {
         | "disputed"
         | "cancelled"
         | "void"
+      budget_period: "weekly" | "monthly" | "quarterly" | "yearly"
       catalog_object_type:
         | "table"
         | "view"
@@ -5275,6 +6491,24 @@ export type Database = {
         | "vendor"
         | "customer_vendor"
         | "employee"
+        | "other"
+      document_status:
+        | "uploaded"
+        | "processing"
+        | "processed"
+        | "failed"
+        | "archived"
+      document_type:
+        | "pdf"
+        | "csv"
+        | "xlsx"
+        | "docx"
+        | "txt"
+        | "image"
+        | "receipt"
+        | "invoice"
+        | "contract"
+        | "statement"
         | "other"
       entry_status:
         | "draft"
@@ -5310,6 +6544,14 @@ export type Database = {
         | "delivered"
         | "returned"
         | "cancelled"
+      goal_status: "active" | "paused" | "completed" | "cancelled"
+      goal_type:
+        | "savings"
+        | "debt_payoff"
+        | "investment"
+        | "purchase"
+        | "emergency_fund"
+        | "retirement"
       invoice_status:
         | "draft"
         | "sent"
@@ -5341,6 +6583,7 @@ export type Database = {
         | "llama-2-70b"
         | "mistral-large"
         | "custom"
+      organization_type: "business" | "personal" | "hybrid"
       payment_method:
         | "cash"
         | "check"
@@ -5353,7 +6596,15 @@ export type Database = {
         | "stripe"
         | "other"
       permission_scope: "global" | "workspace" | "entity" | "record" | "field"
-      plan_tier: "starter" | "professional" | "enterprise" | "custom"
+      plan_tier:
+        | "starter"
+        | "professional"
+        | "enterprise"
+        | "custom"
+        | "personal-free"
+        | "personal-plus"
+        | "personal-pro"
+        | "family"
       purchase_order_status:
         | "draft"
         | "pending_approval"
@@ -5367,6 +6618,15 @@ export type Database = {
         | "completed"
         | "cancelled"
         | "on_hold"
+      query_complexity: "simple" | "moderate" | "complex" | "advanced"
+      query_intent:
+        | "read"
+        | "write"
+        | "analyze"
+        | "search"
+        | "report"
+        | "admin"
+        | "unknown"
       reconciliation_status:
         | "draft"
         | "in_progress"
@@ -5394,6 +6654,7 @@ export type Database = {
         | "return"
         | "damage"
         | "count"
+      subscription_frequency: "weekly" | "monthly" | "quarterly" | "annual"
       user_role:
         | "owner"
         | "admin"
@@ -5550,6 +6811,7 @@ export const Constants = {
         "contra_liability",
         "other",
       ],
+      accounting_mode: ["simple", "standard", "strict"],
       adjustment_reason: [
         "cycle_count",
         "physical_inventory",
@@ -5571,6 +6833,14 @@ export const Constants = {
         "sales",
         "data_processor",
         "custom",
+      ],
+      asset_type: [
+        "stock",
+        "etf",
+        "mutual_fund",
+        "bond",
+        "crypto",
+        "commodity",
       ],
       automation_trigger: [
         "schedule",
@@ -5598,6 +6868,7 @@ export const Constants = {
         "adjustment",
         "opening_balance",
       ],
+      batch_status: ["pending", "processing", "completed", "failed"],
       bill_status: [
         "draft",
         "received",
@@ -5609,6 +6880,7 @@ export const Constants = {
         "cancelled",
         "void",
       ],
+      budget_period: ["weekly", "monthly", "quarterly", "yearly"],
       catalog_object_type: [
         "table",
         "view",
@@ -5622,6 +6894,26 @@ export const Constants = {
         "vendor",
         "customer_vendor",
         "employee",
+        "other",
+      ],
+      document_status: [
+        "uploaded",
+        "processing",
+        "processed",
+        "failed",
+        "archived",
+      ],
+      document_type: [
+        "pdf",
+        "csv",
+        "xlsx",
+        "docx",
+        "txt",
+        "image",
+        "receipt",
+        "invoice",
+        "contract",
+        "statement",
         "other",
       ],
       entry_status: [
@@ -5662,6 +6954,15 @@ export const Constants = {
         "returned",
         "cancelled",
       ],
+      goal_status: ["active", "paused", "completed", "cancelled"],
+      goal_type: [
+        "savings",
+        "debt_payoff",
+        "investment",
+        "purchase",
+        "emergency_fund",
+        "retirement",
+      ],
       invoice_status: [
         "draft",
         "sent",
@@ -5696,6 +6997,7 @@ export const Constants = {
         "mistral-large",
         "custom",
       ],
+      organization_type: ["business", "personal", "hybrid"],
       payment_method: [
         "cash",
         "check",
@@ -5709,7 +7011,16 @@ export const Constants = {
         "other",
       ],
       permission_scope: ["global", "workspace", "entity", "record", "field"],
-      plan_tier: ["starter", "professional", "enterprise", "custom"],
+      plan_tier: [
+        "starter",
+        "professional",
+        "enterprise",
+        "custom",
+        "personal-free",
+        "personal-plus",
+        "personal-pro",
+        "family",
+      ],
       purchase_order_status: [
         "draft",
         "pending_approval",
@@ -5723,6 +7034,16 @@ export const Constants = {
         "completed",
         "cancelled",
         "on_hold",
+      ],
+      query_complexity: ["simple", "moderate", "complex", "advanced"],
+      query_intent: [
+        "read",
+        "write",
+        "analyze",
+        "search",
+        "report",
+        "admin",
+        "unknown",
       ],
       reconciliation_status: [
         "draft",
@@ -5754,6 +7075,7 @@ export const Constants = {
         "damage",
         "count",
       ],
+      subscription_frequency: ["weekly", "monthly", "quarterly", "annual"],
       user_role: [
         "owner",
         "admin",
