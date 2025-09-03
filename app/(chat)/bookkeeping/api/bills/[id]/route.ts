@@ -8,15 +8,15 @@ import {
 import { NextRequest } from 'next/server';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export const GET = withErrorHandler(async (request: NextRequest, { params }: RouteParams) => {
   return withAuth(async (session) => {
     const organizationId = session.user.organizationId || '11111111-1111-1111-1111-111111111111';
-    const { id } = params;
+    const { id } = await params;
     
     const bill = await getBillById(id, organizationId);
     
@@ -31,7 +31,7 @@ export const GET = withErrorHandler(async (request: NextRequest, { params }: Rou
 export const PUT = withErrorHandler(async (request: NextRequest, { params }: RouteParams) => {
   return withAuth(async (session) => {
     const organizationId = session.user.organizationId || '11111111-1111-1111-1111-111111111111';
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     
     const bill = await updateBill(id, organizationId, body);
@@ -47,7 +47,7 @@ export const PUT = withErrorHandler(async (request: NextRequest, { params }: Rou
 export const DELETE = withErrorHandler(async (request: NextRequest, { params }: RouteParams) => {
   return withAuth(async (session) => {
     const organizationId = session.user.organizationId || '11111111-1111-1111-1111-111111111111';
-    const { id } = params;
+    const { id } = await params;
     
     await deleteBill(id, organizationId);
     
@@ -58,7 +58,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest, { params }: 
 export const POST = withErrorHandler(async (request: NextRequest, { params }: RouteParams) => {
   return withAuth(async (session) => {
     const organizationId = session.user.organizationId || '11111111-1111-1111-1111-111111111111';
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     
     // Handle payment recording

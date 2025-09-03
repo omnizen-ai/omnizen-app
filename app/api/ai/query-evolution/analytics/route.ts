@@ -12,32 +12,31 @@ const analyticsQuerySchema = z.object({
   groupBy: z.enum(['day', 'week', 'month', 'intent', 'complexity', 'workspace']).optional().default('day'),
 });
 
-async function getAnalytics(request: NextRequest): Promise<ApiResponse<any>> {
-  const { organizationId } = request as any;
-  
-  try {
-    const { searchParams } = new URL(request.url);
-    const queryParams = Object.fromEntries(searchParams.entries());
+export const GET = withErrorHandler(async (request: NextRequest) => {
+  return withAuth(async (session) => {
+    const { organizationId } = request as any;
     
-    const validatedParams = analyticsQuerySchema.parse(queryParams);
-    const queryEvolution = new QueryEvolutionService();
-    
-    const analytics = await queryEvolution.getQueryAnalytics(organizationId, validatedParams);
+    try {
+      const { searchParams } = new URL(request.url);
+      const queryParams = Object.fromEntries(searchParams.entries());
+      
+      const validatedParams = analyticsQuerySchema.parse(queryParams);
+      const queryEvolution = new QueryEvolutionService();
+      
+      const analytics = await queryEvolution.getQueryAnalytics(organizationId, validatedParams);
 
-    return NextResponse.json({
-      success: true,
-      data: analytics
-    });
+      return NextResponse.json({
+        success: true,
+        data: analytics
+      });
+    } catch (error) {
+      console.error('Get analytics error:', error);
+      
+      if (error instanceof z.ZodError) {
+        return ApiResponse.badRequest('Invalid query parameters', error.errors);
+      }
 
-  } catch (error) {
-    console.error('Get analytics error:', error);
-    
-    if (error instanceof z.ZodError) {
-      return ApiResponse.badRequest('Invalid query parameters', error.errors);
+      return ApiResponse.error(error instanceof Error ? error.message : 'Failed to fetch analytics');
     }
-
-    return ApiResponse.error(error instanceof Error ? error.message : 'Failed to fetch analytics');
-  }
-}
-
-export const GET = withAuth(withErrorHandler(getAnalytics));
+  })(request);
+});

@@ -8,15 +8,15 @@ import {
 import { NextRequest } from 'next/server';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export const GET = withErrorHandler(async (request: NextRequest, { params }: RouteParams) => {
   return withAuth(async (session) => {
     const organizationId = session.user.organizationId || '11111111-1111-1111-1111-111111111111';
-    const { id } = params;
+    const { id } = await params;
     
     const account = await getChartOfAccountById(id, organizationId);
     
@@ -37,7 +37,7 @@ export const GET = withErrorHandler(async (request: NextRequest, { params }: Rou
 export const PUT = withErrorHandler(async (request: NextRequest, { params }: RouteParams) => {
   return withAuth(async (session) => {
     const organizationId = session.user.organizationId || '11111111-1111-1111-1111-111111111111';
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     
     const account = await updateChartOfAccount(id, organizationId, body);
@@ -53,7 +53,7 @@ export const PUT = withErrorHandler(async (request: NextRequest, { params }: Rou
 export const DELETE = withErrorHandler(async (request: NextRequest, { params }: RouteParams) => {
   return withAuth(async (session) => {
     const organizationId = session.user.organizationId || '11111111-1111-1111-1111-111111111111';
-    const { id } = params;
+    const { id } = await params;
     
     await deleteChartOfAccount(id, organizationId);
     

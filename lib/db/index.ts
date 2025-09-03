@@ -60,10 +60,10 @@ export const migrationDb = drizzle(migrationClient, { schema: fullSchema });
 // from legacy chat-focused schema to new ERP-focused schema structure.
 //
 // Export legacy schemas first (for backward compatibility)
+// eslint-disable-next-line import/export -- Intentional dual User export for backward compatibility
 export * from './schema';
 
 // Export new schemas second (some will override legacy exports)
-// eslint-disable-next-line import/export -- Intentional dual User export for backward compatibility
 // 
 // IMPORTANT: ESLint will warn about "Multiple exports of name 'User'" - this is INTENTIONAL.
 // 
@@ -77,6 +77,7 @@ export * from './schema';
 // Code Review Note: The dual `User` export warning is expected and should NOT be "fixed"
 // as it would break the backward compatibility strategy for schema migration.
 export * from './schema/core/organizations';
+// eslint-disable-next-line import/export -- Intentional dual User export for backward compatibility  
 export * from './schema/core/users';
 export * from './schema/finance/accounts';
 export * from './schema/finance/transactions';
@@ -85,6 +86,8 @@ export * from './schema/ai/erp-permissions';
 export * from './schema/erp/banking';
 export * from './schema/erp/warehouses';
 export * from './schema/erp/orders';
+export * from './schema/documents/documents';
+export * from './schema/vectors/schema';
 export * from './schema/personal/finance';
 export * from './schema/semantic/catalog';
 
