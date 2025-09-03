@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { DataTableCrud } from '@/components/ui/data-table-crud';
 import { TransactionForm } from '@/components/banking/transaction-form';
+import { NoBankAccountDialog } from '@/components/banking/no-bank-account-dialog';
+import { BankAccountForm } from '@/components/banking/bank-account-form';
 import {
   useBankAccounts,
   useBankTransactions,
@@ -10,6 +12,7 @@ import {
   useCreateBankTransaction,
   useUpdateBankTransaction,
   useDeleteBankTransaction,
+  useCreateBankAccount,
 } from '@/lib/hooks/use-banking';
 import type { BankTransaction, BankAccount } from '@/lib/db/schema/index';
 import { type ColumnDef } from '@tanstack/react-table';
@@ -39,6 +42,8 @@ export default function CashFlowPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<BankTransaction | null>(null);
   const [selectedAccountId, setSelectedAccountId] = useState<string>('all');
+  const [showNoBankAccountDialog, setShowNoBankAccountDialog] = useState(false);
+  const [showBankAccountForm, setShowBankAccountForm] = useState(false);
 
   // React Query hooks
   const { data: accounts = [], isLoading: accountsLoading } = useBankAccounts();
@@ -49,6 +54,7 @@ export default function CashFlowPage() {
   const createMutation = useCreateBankTransaction();
   const updateMutation = useUpdateBankTransaction();
   const deleteMutation = useDeleteBankTransaction();
+  const createAccountMutation = useCreateBankAccount();
 
   // Extract transactions from the query result
   const transactions = Array.isArray(transactionsData)
@@ -225,7 +231,7 @@ export default function CashFlowPage() {
   // Handlers
   const handleAdd = () => {
     if (accounts.length === 0) {
-      alert('Please create a bank account first before adding transactions.');
+      setShowNoBankAccountDialog(true);
       return;
     }
     setSelectedTransaction(null);
@@ -254,6 +260,20 @@ export default function CashFlowPage() {
     }
     setFormOpen(false);
     setSelectedTransaction(null);
+  };
+
+  const handleCreateBankAccount = () => {
+    setShowBankAccountForm(true);
+  };
+
+  const handleBankAccountSubmit = async (data: Partial<BankAccount>) => {
+    await createAccountMutation.mutateAsync(data);
+    setShowBankAccountForm(false);
+    // After creating an account, open the transaction form
+    setTimeout(() => {
+      setSelectedTransaction(null);
+      setFormOpen(true);
+    }, 200);
   };
 
   return (
@@ -363,6 +383,23 @@ export default function CashFlowPage() {
         </div>
       </div>
 
+      {/* No Bank Account Dialog */}
+      <NoBankAccountDialog
+        open={showNoBankAccountDialog}
+        onOpenChange={setShowNoBankAccountDialog}
+        onCreateAccount={handleCreateBankAccount}
+      />
+
+      {/* Bank Account Form */}
+      <BankAccountForm
+        open={showBankAccountForm}
+        onOpenChange={setShowBankAccountForm}
+        onSubmit={handleBankAccountSubmit}
+        account={null}
+        isLoading={createAccountMutation.isPending}
+      />
+
+      {/* Transaction Form - Only shown when accounts exist */}
       {accounts.length > 0 && (
         <TransactionForm
           open={formOpen}
