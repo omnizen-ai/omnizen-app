@@ -130,7 +130,7 @@ export function InvoiceForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-screen-toast-mobile max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>{invoice ? 'Edit Invoice' : 'Create Invoice'}</DialogTitle>
@@ -190,7 +190,7 @@ export function InvoiceForm({
                       )}
                       disabled={isLoading}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <CalendarIcon className="mr-2 size-4" />
                       {formData.issueDate ? format(formData.issueDate, "PPP") : <span>Pick a date</span>}
                     </Button>
                   </PopoverTrigger>
@@ -216,7 +216,7 @@ export function InvoiceForm({
                       )}
                       disabled={isLoading}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <CalendarIcon className="mr-2 size-4" />
                       {formData.dueDate ? format(formData.dueDate, "PPP") : <span>Pick a date</span>}
                     </Button>
                   </PopoverTrigger>

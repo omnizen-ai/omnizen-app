@@ -14,8 +14,7 @@ import {
 import { relations } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
 import { organizations, workspaces } from '../core/organizations';
-import { chartAccounts, journalEntries } from '../finance/accounts';
-import { currencies } from '../finance/accounts';
+import { chartAccounts, journalEntries , currencies } from '../finance/accounts';
 import { users } from '../core/users';
 import { payments } from '../finance/transactions';
 

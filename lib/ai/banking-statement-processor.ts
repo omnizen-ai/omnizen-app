@@ -2,13 +2,15 @@ import { db } from '@/lib/db';
 import { 
   bankTransactions, 
   bankAccounts,
+  type BankTransaction 
+} from '@/lib/db/schema/erp/banking';
+import { 
   contacts,
   chartOfAccounts,
   journalEntries,
-  journalLines,
-  documentEmbeddings,
-  type BankTransaction 
-} from '@/lib/db/schema';
+  journalLines
+} from '@/lib/db/schema/finance/transactions';
+import { documentEmbeddings } from '@/lib/db/schema/documents/documents';
 import { VectorService } from './vector-utils';
 import { documentProcessor } from './document-processor';
 import { eq, and, desc, sql, inArray } from 'drizzle-orm';

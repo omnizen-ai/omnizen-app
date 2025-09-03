@@ -1,13 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as pdf from 'pdf-parse';
-import * as mammoth from 'mammoth';
-import * as XLSX from 'xlsx';
-import * as sharp from 'sharp';
-import { createWorker } from 'tesseract.js';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '@/lib/db';
-import { documentsTable, documentEmbeddings, documentProcessingJobs } from '@/lib/db/schema';
+import { documentsTable, documentProcessingJobs, documentEmbeddings } from '@/lib/db/schema/documents/documents';
 import type { DocumentRow, DocumentEmbeddingRow, DocumentProcessingJobRow } from '@/lib/types/database';
 import { VectorService } from './vector-utils';
 import { eq } from 'drizzle-orm';
@@ -168,10 +163,13 @@ export class DocumentProcessor {
    */
   private async extractFromPDF(buffer: Buffer): Promise<string> {
     try {
+      // Use require for better compatibility with pdf-parse
+      const pdf = require('pdf-parse');
       const data = await pdf(buffer);
-      return data.text;
+      return data.text || '';
     } catch (error) {
-      throw new Error(`Failed to extract PDF text: ${error}`);
+      console.error('PDF extraction error:', error);
+      throw new Error(`Failed to extract PDF text: ${error.message || error}`);
     }
   }
 
@@ -180,6 +178,7 @@ export class DocumentProcessor {
    */
   private async extractFromDOCX(buffer: Buffer): Promise<string> {
     try {
+      const mammoth = require('mammoth');
       const result = await mammoth.extractRawText({ buffer });
       return result.value;
     } catch (error) {
@@ -192,6 +191,7 @@ export class DocumentProcessor {
    */
   private async extractFromXLSX(buffer: Buffer): Promise<string> {
     try {
+      const XLSX = require('xlsx');
       const workbook = XLSX.read(buffer, { type: 'buffer' });
       const texts: string[] = [];
 
@@ -214,6 +214,7 @@ export class DocumentProcessor {
    */
   private async extractFromCSV(buffer: Buffer): Promise<string> {
     try {
+      const XLSX = require('xlsx');
       const workbook = XLSX.read(buffer, { type: 'buffer' });
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
       return XLSX.utils.sheet_to_csv(firstSheet);
@@ -226,9 +227,13 @@ export class DocumentProcessor {
    * Extract text from images using OCR
    */
   private async extractFromImage(buffer: Buffer): Promise<string> {
-    let worker: Tesseract.Worker | null = null;
+    let worker: any = null;
     
     try {
+      // Use require for better compatibility
+      const sharp = require('sharp');
+      const { createWorker } = require('tesseract.js');
+      
       // Optimize image for OCR
       const optimizedBuffer = await sharp(buffer)
         .greyscale()
@@ -515,10 +520,10 @@ export class DocumentProcessor {
     return await this.vectorService.searchSimilar(query, {
       table: 'document_embeddings',
       organizationId: options.organizationId,
-      workspaceId: options.workspaceId,
       limit: options.limit || 10,
-      minSimilarity: options.minSimilarity || 0.7,
+      threshold: options.minSimilarity || 0.7,
       filters: {
+        workspace_id: options.workspaceId,
         document_type: options.documentTypes,
         category: options.categories,
       },

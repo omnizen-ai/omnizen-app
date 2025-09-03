@@ -106,7 +106,15 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
     // Process document (extract text, generate embeddings, etc.)
     const processingStartTime = Date.now();
-    const processingResult = await documentProcessor.processDocument(buffer, file.name, options);
+    const fileInfo = {
+      originalName: file.name,
+      mimeType: file.type,
+      size: file.size,
+      buffer: buffer,
+      storageUrl: publicUrlData.publicUrl,
+      storageKey: storagePath,
+    };
+    const processingResult = await documentProcessor.processDocument(fileInfo, options);
     const processingTime = Date.now() - processingStartTime;
 
     if (!processingResult.success) {

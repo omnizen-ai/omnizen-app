@@ -75,10 +75,10 @@ export default function FinancialReportsPage() {
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className={`p-2 rounded-lg ${report.bgColor}`}>
-                        <Icon className={`h-6 w-6 ${report.color}`} />
+                        <Icon className={`size-6 ${report.color}`} />
                       </div>
                       <Button size="sm" variant="ghost">
-                        <Download className="h-4 w-4" />
+                        <Download className="size-4" />
                       </Button>
                     </div>
                     <CardTitle className="mt-4">{report.title}</CardTitle>
@@ -103,19 +103,19 @@ export default function FinancialReportsPage() {
             <h3 className="text-lg font-semibold mb-2">Quick Actions</h3>
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm">
-                <FileText className="mr-2 h-4 w-4" />
+                <FileText className="mr-2 size-4" />
                 Monthly Reports
               </Button>
               <Button variant="outline" size="sm">
-                <TrendingUp className="mr-2 h-4 w-4" />
+                <TrendingUp className="mr-2 size-4" />
                 Year-to-Date Analysis
               </Button>
               <Button variant="outline" size="sm">
-                <PieChart className="mr-2 h-4 w-4" />
+                <PieChart className="mr-2 size-4" />
                 Custom Report Builder
               </Button>
               <Button variant="outline" size="sm">
-                <Download className="mr-2 h-4 w-4" />
+                <Download className="mr-2 size-4" />
                 Export All Reports
               </Button>
             </div>

@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     ppr: true,
   },
   devIndicators: false,
+  serverExternalPackages: ['pdf-parse', 'sharp', 'tesseract.js', 'mammoth'],
   images: {
     remotePatterns: [
       {

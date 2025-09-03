@@ -125,21 +125,21 @@ export default function CRMPage() {
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
             Customer
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-2 size-4" />
           </Button>
         );
       },
       cell: ({ row }) => {
         return (
           <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8">
+            <Avatar className="size-8">
               <AvatarImage src={row.original.avatar || undefined} />
               <AvatarFallback className="text-xs">{row.original.initials}</AvatarFallback>
             </Avatar>
             <div>
               <div className="font-medium">{row.original.name}</div>
               <div className="text-xs text-muted-foreground flex items-center gap-1">
-                <Building2 className="h-3 w-3" />
+                <Building2 className="size-3" />
                 {row.original.company}
               </div>
             </div>
@@ -154,11 +154,11 @@ export default function CRMPage() {
         return (
           <div className="text-sm">
             <div className="flex items-center gap-1">
-              <Mail className="h-3 w-3 text-muted-foreground" />
+              <Mail className="size-3 text-muted-foreground" />
               {row.original.email}
             </div>
             <div className="flex items-center gap-1 text-muted-foreground">
-              <Phone className="h-3 w-3" />
+              <Phone className="size-3" />
               {row.original.phone}
             </div>
           </div>
@@ -211,7 +211,7 @@ export default function CRMPage() {
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
             Total Value
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-2 size-4" />
           </Button>
         );
       },
@@ -239,7 +239,7 @@ export default function CRMPage() {
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
             Lead Score
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-2 size-4" />
           </Button>
         );
       },
@@ -276,7 +276,7 @@ export default function CRMPage() {
       cell: ({ row }) => {
         return (
           <div className="flex items-center gap-1">
-            <UserCheck className="h-3 w-3 text-muted-foreground" />
+            <UserCheck className="size-3 text-muted-foreground" />
             <span className="text-sm">{row.original.owner}</span>
           </div>
         );
@@ -300,7 +300,7 @@ export default function CRMPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+                <Users className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{totalCustomers}</div>
@@ -313,7 +313,7 @@ export default function CRMPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Active</CardTitle>
-                <UserCheck className="h-4 w-4 text-green-500" />
+                <UserCheck className="size-4 text-green-500" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">{activeCustomers}</div>
@@ -326,7 +326,7 @@ export default function CRMPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <DollarSign className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -341,7 +341,7 @@ export default function CRMPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Deals</CardTitle>
-                <TrendingUp className="h-4 w-4 text-blue-500" />
+                <TrendingUp className="size-4 text-blue-500" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{totalDeals}</div>
@@ -354,7 +354,7 @@ export default function CRMPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Avg Score</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <TrendingUp className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{avgLeadScore.toFixed(0)}</div>

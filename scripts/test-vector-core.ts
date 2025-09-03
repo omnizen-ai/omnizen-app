@@ -7,7 +7,7 @@
 
 import { VectorService } from '../lib/ai/vector-utils';
 import { db } from '../lib/db';
-import { documentEmbeddings } from '../lib/db/schema';
+import { documentEmbeddings } from '../lib/db/schema/documents/documents';
 import { eq, sql } from 'drizzle-orm';
 
 const TEST_ORG_ID = '11111111-1111-1111-1111-111111111111';

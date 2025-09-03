@@ -78,7 +78,7 @@ export default function BudgetingPage() {
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
             Budget Name
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-2 size-4" />
           </Button>
         );
       },
@@ -107,7 +107,7 @@ export default function BudgetingPage() {
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
             Budget
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-2 size-4" />
           </Button>
         );
       },
@@ -141,7 +141,7 @@ export default function BudgetingPage() {
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
             Variance
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-2 size-4" />
           </Button>
         );
       },
@@ -221,7 +221,7 @@ export default function BudgetingPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Budget</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <DollarSign className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -235,7 +235,7 @@ export default function BudgetingPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <TrendingUp className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -249,7 +249,7 @@ export default function BudgetingPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Variance</CardTitle>
-                <TrendingDown className="h-4 w-4 text-green-500" />
+                <TrendingDown className="size-4 text-green-500" />
               </CardHeader>
               <CardContent>
                 <div className={cn(
@@ -266,7 +266,7 @@ export default function BudgetingPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">At Risk</CardTitle>
-                <Target className="h-4 w-4 text-orange-500" />
+                <Target className="size-4 text-orange-500" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">

@@ -121,7 +121,7 @@ export default function InventoryPage() {
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
             SKU
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-2 size-4" />
           </Button>
         );
       },
@@ -147,7 +147,7 @@ export default function InventoryPage() {
       cell: ({ row }) => {
         return (
           <div className="flex items-center gap-1">
-            <WarehouseIcon className="h-3 w-3 text-muted-foreground" />
+            <WarehouseIcon className="size-3 text-muted-foreground" />
             <span className="text-sm">{row.original.warehouse}</span>
           </div>
         );
@@ -162,7 +162,7 @@ export default function InventoryPage() {
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
             On Hand
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-2 size-4" />
           </Button>
         );
       },
@@ -238,7 +238,7 @@ export default function InventoryPage() {
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
             Total Value
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-2 size-4" />
           </Button>
         );
       },
@@ -265,7 +265,7 @@ export default function InventoryPage() {
         const Icon = config.icon;
         return (
           <Badge variant="outline" className={cn('capitalize', config.color)}>
-            {Icon && <Icon className="h-3 w-3 mr-1" />}
+            {Icon && <Icon className="size-3 mr-1" />}
             {config.label}
           </Badge>
         );
@@ -289,7 +289,7 @@ export default function InventoryPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Items</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
+                <Package className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{totalItems}</div>
@@ -302,7 +302,7 @@ export default function InventoryPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Quantity</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
+                <Package className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -317,7 +317,7 @@ export default function InventoryPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
+                <Package className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -332,7 +332,7 @@ export default function InventoryPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Low Stock</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-orange-500" />
+                <AlertTriangle className="size-4 text-orange-500" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-orange-600">
@@ -347,7 +347,7 @@ export default function InventoryPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Out of Stock</CardTitle>
-                <TrendingDown className="h-4 w-4 text-red-500" />
+                <TrendingDown className="size-4 text-red-500" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-red-600">

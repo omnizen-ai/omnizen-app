@@ -6,7 +6,7 @@ import {
   queryPatterns,
   queryFeedback,
   type QueryIntelligence 
-} from '@/lib/db/schema';
+} from '@/lib/db/schema/ai/query-intelligence';
 import { VectorService } from './vector-utils';
 import { eq, and, desc, gt, lt, sql, inArray } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';

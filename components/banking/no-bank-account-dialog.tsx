@@ -37,7 +37,7 @@ export function NoBankAccountDialog({
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
             <div className="rounded-full bg-orange-100 p-3">
-              <Building2 className="h-6 w-6 text-orange-600" />
+              <Building2 className="size-6 text-orange-600" />
             </div>
             <DialogTitle className="text-xl">No Bank Accounts Found</DialogTitle>
           </div>
@@ -49,7 +49,7 @@ export function NoBankAccountDialog({
 
         <div className="space-y-4 py-4">
           <Alert>
-            <AlertCircle className="h-4 w-4" />
+            <AlertCircle className="size-4" />
             <AlertDescription>
               <strong>Why do I need a bank account?</strong>
               <ul className="mt-2 ml-4 space-y-1 text-sm">
@@ -81,9 +81,9 @@ export function NoBankAccountDialog({
             onClick={handleCreateAccount}
             className="gap-2"
           >
-            <Building2 className="h-4 w-4" />
+            <Building2 className="size-4" />
             Create Bank Account
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="size-4" />
           </Button>
         </DialogFooter>
       </DialogContent>

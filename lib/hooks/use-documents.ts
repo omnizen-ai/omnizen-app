@@ -117,7 +117,17 @@ export function useUploadDocument() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ file, options }: { file: File; options?: UploadOptions }) => {
+    mutationFn: async ({ 
+      file, 
+      options, 
+      organizationId,
+      workspaceId 
+    }: { 
+      file: File; 
+      options?: UploadOptions;
+      organizationId?: string;
+      workspaceId?: string;
+    }) => {
       const formData = new FormData();
       formData.append('file', file);
       
@@ -125,14 +135,43 @@ export function useUploadDocument() {
         formData.append('options', JSON.stringify(options));
       }
 
+      // Prepare headers
+      const headers: Record<string, string> = {};
+      if (organizationId) {
+        headers['x-organization-id'] = organizationId;
+      }
+      if (workspaceId) {
+        headers['x-workspace-id'] = workspaceId;
+      }
+
       const response = await fetch('/api/documents/upload', {
         method: 'POST',
+        headers,
         body: formData,
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Upload failed');
+        let errorMessage = 'Upload failed';
+        try {
+          const error = await response.json();
+          
+          // Handle different error response structures
+          if (typeof error.error === 'string') {
+            errorMessage = error.error;
+          } else if (typeof error.message === 'string') {
+            errorMessage = error.message;
+          } else if (typeof error.error === 'object' && error.error?.message) {
+            errorMessage = error.error.message;
+          } else if (typeof error === 'string') {
+            errorMessage = error;
+          } else {
+            errorMessage = `Upload failed with status ${response.status}`;
+          }
+        } catch (parseError) {
+          // If we can't parse the error response, use the status text
+          errorMessage = `Upload failed: ${response.status} ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       return response.json() as Promise<UploadResult>;

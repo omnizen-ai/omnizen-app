@@ -67,7 +67,7 @@ export default function AccountsReceivablePage() {
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
             Invoice #
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-2 size-4" />
           </Button>
         );
       },
@@ -100,7 +100,7 @@ export default function AccountsReceivablePage() {
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
             Date
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-2 size-4" />
           </Button>
         );
       },
@@ -131,7 +131,7 @@ export default function AccountsReceivablePage() {
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
             Total
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="ml-2 size-4" />
           </Button>
         );
       },
@@ -219,35 +219,35 @@ export default function AccountsReceivablePage() {
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
+              <Button variant="ghost" className="size-8 p-0">
                 <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
+                <MoreHorizontal className="size-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => handleEdit(invoice)}>
-                <FileText className="mr-2 h-4 w-4" />
+                <FileText className="mr-2 size-4" />
                 Edit
               </DropdownMenuItem>
               {canSend && (
                 <DropdownMenuItem onClick={() => handleSend(invoice)}>
-                  <Send className="mr-2 h-4 w-4" />
+                  <Send className="mr-2 size-4" />
                   Send Invoice
                 </DropdownMenuItem>
               )}
               {canPay && balance > 0 && (
                 <DropdownMenuItem onClick={() => handleRecordPayment(invoice)}>
-                  <CreditCard className="mr-2 h-4 w-4" />
+                  <CreditCard className="mr-2 size-4" />
                   Record Payment
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem>
-                <Eye className="mr-2 h-4 w-4" />
+                <Eye className="mr-2 size-4" />
                 Preview
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Printer className="mr-2 h-4 w-4" />
+                <Printer className="mr-2 size-4" />
                 Print
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -342,7 +342,7 @@ export default function AccountsReceivablePage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Outstanding</CardTitle>
-              <CreditCard className="h-4 w-4 text-muted-foreground" />
+              <CreditCard className="size-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -353,7 +353,7 @@ export default function AccountsReceivablePage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Overdue</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <FileText className="size-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-500">
@@ -364,7 +364,7 @@ export default function AccountsReceivablePage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Draft Invoices</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <FileText className="size-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -375,7 +375,7 @@ export default function AccountsReceivablePage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Invoices</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <FileText className="size-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.count}</div>

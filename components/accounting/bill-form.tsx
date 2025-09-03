@@ -128,7 +128,7 @@ export function BillForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-screen-toast-mobile">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>{bill ? 'Edit Bill' : 'Create Bill'}</DialogTitle>
@@ -188,7 +188,7 @@ export function BillForm({
                       )}
                       disabled={isLoading}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <CalendarIcon className="mr-2 size-4" />
                       {formData.billDate ? format(formData.billDate, "PPP") : <span>Pick a date</span>}
                     </Button>
                   </PopoverTrigger>
@@ -214,7 +214,7 @@ export function BillForm({
                       )}
                       disabled={isLoading}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <CalendarIcon className="mr-2 size-4" />
                       {formData.dueDate ? format(formData.dueDate, "PPP") : <span>Pick a date</span>}
                     </Button>
                   </PopoverTrigger>
