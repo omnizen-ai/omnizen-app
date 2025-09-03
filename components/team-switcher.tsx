@@ -51,7 +51,7 @@ export function TeamSwitcher() {
               <span className="text-muted-foreground" style={{ 
                 fontFamily: 'League Spartan', 
                 fontWeight: 900, 
-                fontSize: '1.72rem', 
+                fontSize: '2rem', 
                 lineHeight: '1',
                 letterSpacing: '-0.02em',
                 marginTop: '0.30rem'
