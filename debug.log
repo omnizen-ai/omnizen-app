@@ -1372,3 +1372,163 @@ Created Supabase auth user: f9f67aef-accd-4305-82be-8ffe0b1b2234
 ## Service Offering Templat..."
  POST /api/chat 200 in 52750ms
  GET /api/history?limit=20 200 in 38ms
+ GET /api/auth/session 200 in 54ms
+ GET /api/auth/session 200 in 37ms
+ GET /api/auth/session 200 in 55ms
+ GET /api/auth/session 200 in 37ms
+ GET /api/auth/session 200 in 56ms
+ GET /api/auth/session 200 in 61ms
+ GET / 200 in 64ms
+ GET /api/history?limit=20 200 in 37ms
+[Database Tools] User context: {
+  userId: '894e4c8e-2c62-4bc6-9cc4-4d6c9d290e60',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  workspaceId: undefined,
+  role: 'user'
+}
+[Database Tools] Loaded 5 tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Database Tools] Tools object: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[QueryMemory] Connected to Redis
+[Prompt Analysis]
+- Characters: 7073
+- Estimated tokens: 1768
+- Cost (DeepSeek): $0.000248
+- Sections: Full Schema
+[DeepSeek Detailed] Type: business, Tokens: 1769 (complete schema for accuracy)
+[Model Selection] Using model: deepseek-chat
+[Tools Registration] Available tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Tools Registration] Tool names for activeTools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+ GET /api/vote?chatId=79df584b-3bcd-443b-b7a4-6408b6128f35 200 in 34ms
+[Step] Tool calls: [ { name: 'schemaInfo', id: 'call_00_8ZzF8OOFRLpMBvZBKu75kKy9' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_0rGAL1VrkXGNS3Y0IWbPiUZW' } ]
+[QueryMemory] Stored: query:general:query (usage: 1)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_wZXCJpLOusJralLpTx22E6i9' } ]
+[QueryMemory] Stored: query:general:query (usage: 2)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: missing FROM-clause entry for table "invoices"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42P01',
+  position: '83',
+  file: 'parse_relation.c',
+  line: '3651',
+  routine: 'errorMissingRTE'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_jV2K4p3ztLbkGCBzJisTT4dL' } ]
+[QueryMemory] Stored: query:general:query (usage: 3)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '91',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_oTUCZ61AJUDZmgsFSNv4iutL' } ]
+[QueryMemory] Stored: query:finance:query (usage: 1)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_Lee5Wnm4ETEAWkEnF0zSMDcH' } ]
+[QueryMemory] Stored: query:general:query (usage: 4)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_Gw1IaI3RSDvfthp7Bno3Nhha' } ]
+[QueryMemory] Stored: query:contacts:query (usage: 1)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '79',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_oUiO3IAXXm0tuyx0YoDCkBB2' } ]
+[QueryMemory] Stored: query:inventory:query (usage: 1)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '53',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_ctRGrlyz2ICUUrjuSjcCWMne' } ]
+[QueryMemory] Stored: query:inventory:query (usage: 2)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_6We4ijy02gH0Mtnymcebc99v' } ]
+[QueryMemory] Stored: query:inventory:query (usage: 3)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_APjPHQlKpL4sUuu2acxhsxgV' } ]
+[QueryMemory] Stored: query:finance:query (usage: 2)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_maDmZHa3QAvvZZ4j2Ha1nUl5' } ]
+[QueryMemory] Stored: query:finance:query (usage: 3)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+ GET /api/auth/session 200 in 46ms
+ GET /api/auth/session 200 in 35ms
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_W8W2yLJDOr0ynAhSawjxAVdm' } ]
+[QueryMemory] Stored: query:finance:query (usage: 4)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column "account_code" does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42703',
+  position: '8',
+  file: 'parse_relation.c',
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_4ZaECjFVQtU76M1gI2JVpQ1R' } ]
+[QueryMemory] Stored: query:general:query (usage: 5)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'schemaInfo', id: 'call_00_faTQJnWg127s6tqUm2lOlTA8' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_hOWCWAGjap1q2EQF6TPREGSv' } ]
+[QueryMemory] Stored: query:general:query (usage: 6)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_qYPyOQmDgpyxO2z0kViTyyM2' } ]
+[QueryMemory] Stored: query:contacts:query (usage: 2)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '68',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_fW06Wc1xxdOe1nUz1ppB6hHE' } ]
+[QueryMemory] Stored: query:inventory:query (usage: 4)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_jROI3mebWtWGK8fPSyRIarb0' } ]
+[QueryMemory] Stored: query:inventory:query (usage: 5)
+[QueryMemory] Stored successful query
+[Step] Tool results received: 1
+ GET /api/auth/session 200 in 48ms
+ GET /api/auth/session 200 in 30ms
+[DeepSeek] Intermediate step text: "Based on my analysis of your database setup, here's what I found and what you need to complete your ..."
+ POST /api/chat 200 in 149667ms
+ GET /api/history?limit=20 200 in 34ms

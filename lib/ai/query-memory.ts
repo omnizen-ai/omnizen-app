@@ -4,6 +4,7 @@
  */
 
 import { createClient } from 'redis';
+import { sanitizeSQLQuery, sanitizeNaturalQuery } from './query-sanitizer';
 
 // Query memory structure
 export interface QueryMemory {
@@ -150,9 +151,14 @@ export async function storeSuccessfulQuery(
     const client = await getRedisClient();
     if (!client) return;
     
-    const tables = extractTables(sqlQuery);
+    // Sanitize queries before processing
+    const sanitizedSQL = sanitizeSQLQuery(sqlQuery);
+    const sanitizedNatural = sanitizeNaturalQuery(naturalQuery);
+    
+    // Use sanitized SQL for table extraction
+    const tables = extractTables(sqlQuery); // Still use original for accurate table names
     const domain = detectDomain(tables);
-    const intent = normalizeIntent(naturalQuery);
+    const intent = normalizeIntent(sanitizedNatural); // Use sanitized for intent
     
     // Create key: query:domain:intent
     const key = `query:${domain}:${intent}`;
@@ -167,8 +173,8 @@ export async function storeSuccessfulQuery(
     }
     
     const memory: QueryMemory = {
-      naturalQuery,
-      sqlQuery,
+      naturalQuery: sanitizedNatural,  // Store sanitized version
+      sqlQuery: sanitizedSQL,          // Store sanitized version
       tables,
       domain,
       intent,
