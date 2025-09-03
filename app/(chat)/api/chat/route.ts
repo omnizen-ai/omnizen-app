@@ -13,6 +13,8 @@ import { type RequestHints, systemPrompt } from '@/lib/ai/prompts';
 import { buildOptimizedPrompt, classifyQuery, estimateTokens } from '@/lib/ai/prompts-modular';
 import { buildMicroPrompt, AdaptiveCompressor } from '@/lib/ai/prompts-compressed';
 import { getDeepSeekPrompt } from '@/lib/ai/prompts-deepseek';
+import { getDeepSeekCompressedPrompt } from '@/lib/ai/prompts-deepseek-compressed';
+import { getDeepSeekDetailedPrompt, testPromptSize } from '@/lib/ai/prompts-deepseek-detailed';
 import {
   createStreamId,
   deleteChatById,
@@ -43,7 +45,7 @@ import {
   updateActiveTrace,
 } from '@langfuse/tracing';
 import { trace } from '@opentelemetry/api';
-import { mcpClient } from '@/lib/mcp/client';
+import { createDatabaseTools } from '@/lib/tools/database-tools';
 
 export const maxDuration = 60;
 
@@ -173,22 +175,22 @@ async function handleChatMessage(request: Request) {
     const streamId = generateUUID();
     await createStreamId({ streamId, chatId: id });
 
-    // Get MCP tools dynamically
-    let mcpTools = {};
-    let mcpToolNames: string[] = [];
-    let hasBusinessTools = false;
+    // Get database tools with user context
+    const userContext = {
+      userId: session.user.id,
+      orgId: session.user.organizationId || '11111111-1111-1111-1111-111111111111', // Use test org ID
+      workspaceId: session.user.workspaceId,
+      role: session.user.role || 'user',
+    };
     
-    try {
-      mcpTools = await mcpClient.getTools();
-      mcpToolNames = Object.keys(mcpTools);
-      console.log(`[MCP] Loaded ${mcpToolNames.length} tools:`, mcpToolNames);
-      
-      // Check if we have database/business tools
-      hasBusinessTools = mcpToolNames.some(name => name.startsWith('db_'));
-    } catch (error) {
-      console.error('[MCP] Failed to load tools:', error);
-      // Continue without MCP tools if they fail to load
-    }
+    const databaseTools = createDatabaseTools(userContext);
+    const dbToolNames = Object.keys(databaseTools);
+    console.log(`[Database Tools] User context:`, userContext);
+    console.log(`[Database Tools] Loaded ${dbToolNames.length} tools:`, dbToolNames);
+    console.log(`[Database Tools] Tools object:`, Object.keys(databaseTools));
+    
+    // Check if we have database/business tools
+    const hasBusinessTools = dbToolNames.length > 0;
 
     // Detect if this is a business-related query
     const messageText = message.parts
@@ -206,17 +208,21 @@ async function handleChatMessage(request: Request) {
     let optimizedSystemPrompt: string;
     
     if (isDeepSeekModel) {
-      // Use context-aware prompts for DeepSeek (400-800 tokens)
-      // With DeepSeek's low cost, prioritize intelligence over compression
+      // Use DETAILED prompts first to ensure accuracy
+      // We'll optimize after confirming queries work
       const queryType = messageText.match(/^(hi|hello|hey)/) ? 'greeting' :
                        messageText.includes('report') ? 'report' :
                        messageText.match(/create|add|new/) ? 'write' :
                        isBusinessQuery ? 'business' : 'simple';
       
-      optimizedSystemPrompt = getDeepSeekPrompt(queryType, true);
+      // Use detailed prompt with complete, accurate schema
+      optimizedSystemPrompt = getDeepSeekDetailedPrompt(queryType, messageText);
+      
+      // Test prompt size for analysis
+      testPromptSize(messageText);
       
       const tokens = estimateTokens(optimizedSystemPrompt);
-      console.log(`[DeepSeek Context-Aware] Type: ${queryType}, Tokens: ${tokens} (optimized for first-try success)`);
+      console.log(`[DeepSeek Detailed] Type: ${queryType}, Tokens: ${tokens} (complete schema for accuracy)`);
       
     } else {
       // Use compressed prompts for expensive models (Claude/GPT)
@@ -273,15 +279,18 @@ async function handleChatMessage(request: Request) {
           // Temporarily disable document tools to focus on text formatting
           // createDocument: createDocument({ session, dataStream }),
           // updateDocument: updateDocument({ session, dataStream }),
-          ...mcpTools, // Add MCP tools (database operations)
+          ...databaseTools, // Add database tools
         };
 
         // Combine tool names - removed weather and suggestions
         const allToolNames = [
           // 'createDocument',
           // 'updateDocument',
-          ...mcpToolNames, // Add MCP tool names
+          ...dbToolNames, // Add database tool names
         ];
+        
+        console.log(`[Tools Registration] Available tools:`, Object.keys(allTools));
+        console.log(`[Tools Registration] Tool names for activeTools:`, allToolNames);
 
         // Wrap DeepSeek models with extractReasoningMiddleware to handle <process> blocks
         const model = isDeepSeekModel

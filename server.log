@@ -1,0 +1,664 @@
+
+> ai-chatbot@3.1.0 dev /Users/kalam/Codespace/omnizen-app
+> lsof -ti:3333 | xargs kill -9 2>/dev/null; next dev --turbo --port 3333
+
+   ▲ Next.js 15.3.0-canary.31 (Turbopack)
+   - Local:        http://localhost:3333
+   - Network:      http://192.168.0.112:3333
+   - Environments: .env.local
+   - Experiments (use with caution):
+     ✓ ppr
+
+ ✓ Starting...
+ ✓ Compiled in 360ms
+Langfuse tracing initialized
+ ✓ Ready in 1007ms
+Langfuse tracing initialized
+ ○ Compiling / ...
+ ✓ Compiled / in 4.7s
+ GET / 200 in 5685ms
+ ○ Compiling /_not-found/page ...
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 785ms
+ GET /api/history?limit=20 200 in 987ms
+ ✓ Compiled /_not-found/page in 1447ms
+ GET /api/auth/session 200 in 1321ms
+ GET /api/auth/session 200 in 30ms
+ ○ Compiling /api/chat ...
+ ✓ Compiled /api/chat in 532ms
+[Database Tools] User context: {
+  userId: '7c08fc98-a801-407a-98fc-f24b7e352bfb',
+  orgId: 'default',
+  workspaceId: undefined,
+  role: 'user'
+}
+[Database Tools] Loaded 5 tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Database Tools] Tools object: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[DeepSeek Context-Aware] Type: business, Tokens: 2722 (optimized for first-try success)
+[Model Selection] Using model: deepseek-chat
+[Tools Registration] Available tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Tools Registration] Tool names for activeTools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+ ✓ Compiled /api/vote in 244ms
+ GET /api/vote?chatId=07645783-5dac-44e6-b47a-1f1b123222db 200 in 271ms
+[Error [AI_APICallError]: Invalid schema for function 'dbRead': schema must be a JSON Schema of 'type: "object"', got 'type: null'.] {
+  cause: undefined,
+  url: 'https://api.deepseek.com/v1/chat/completions',
+  requestBodyValues: [Object],
+  statusCode: 400,
+  responseHeaders: [Object],
+  responseBody: `{"error":{"message":"Invalid schema for function 'dbRead': schema must be a JSON Schema of 'type: \\"object\\"', got 'type: null'.","type":"invalid_request_error","param":null,"code":"invalid_request_error"}}`,
+  isRetryable: false,
+  data: [Object]
+}
+ POST /api/chat 200 in 2836ms
+ ○ Compiling /chat/[id] ...
+ ✓ Compiled /chat/[id] in 2.6s
+ GET /chat/07645783-5dac-44e6-b47a-1f1b123222db 200 in 3238ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 71ms
+ GET /api/auth/session 200 in 134ms
+ GET /api/vote?chatId=07645783-5dac-44e6-b47a-1f1b123222db 200 in 141ms
+ GET /api/history?limit=20 200 in 166ms
+ GET /api/auth/session 200 in 61ms
+ ✓ Compiled /favicon.ico in 330ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 559ms
+[Database Tools] User context: {
+  userId: '7c08fc98-a801-407a-98fc-f24b7e352bfb',
+  orgId: 'default',
+  workspaceId: undefined,
+  role: 'user'
+}
+[Database Tools] Loaded 5 tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Database Tools] Tools object: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[DeepSeek Context-Aware] Type: business, Tokens: 2722 (optimized for first-try success)
+[Model Selection] Using model: deepseek-chat
+[Tools Registration] Available tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Tools Registration] Tool names for activeTools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[dbRead] Error: [Error [PostgresError]: column i.contact_id does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42703',
+  position: '419',
+  file: 'parse_relation.c',
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_dxDZul5raZ6vtykXJXOGf8gH' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'schemaInfo', id: 'call_00_Gde7Hz1ez21zLcQX0i5IvqIK' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column "org_id" does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42703',
+  hint: 'Perhaps you meant to reference the column "c.tax_id".',
+  position: '410',
+  file: 'parse_relation.c',
+  line: '3723',
+  routine: 'errorMissingColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_xBkOtI1C1thEcoyBlycORxUA' } ]
+[Step] Tool results received: 1
+ GET / 200 in 129ms
+ GET /favicon.ico?favicon.46d6a819.ico 200 in 222ms
+ GET /api/history?limit=20 200 in 42ms
+ GET /api/auth/session 200 in 40ms
+[Step] Tool calls: [ { name: 'viewsList', id: 'call_00_X5fdEaTH7qeLelcXocx0tkyf' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column "org_id" does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42703',
+  hint: 'Perhaps you meant to reference the column "c.tax_id".',
+  position: '218',
+  file: 'parse_relation.c',
+  line: '3723',
+  routine: 'errorMissingColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_8iVfzBWtngdUDzvvGG0oRfsq' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column "org_id" does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42703',
+  hint: 'Perhaps you meant to reference the column "c.tax_id".',
+  position: '218',
+  file: 'parse_relation.c',
+  line: '3723',
+  routine: 'errorMissingColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_bbsAeub85o7oLRUwkfQ1wMHy' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column "org_id" does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42703',
+  position: '113',
+  file: 'parse_relation.c',
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_QvbudGnXBpOT8jc5bV7gsiBE' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column "org_id" does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42703',
+  position: '30',
+  file: 'parse_relation.c',
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_CcoI1A10ykOx0hFnBKMDynlR' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column "org_id" does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42703',
+  position: '43',
+  file: 'parse_relation.c',
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_GGh6m51isWbVHb2ZVVGViX2L' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'schemaInfo', id: 'call_00_8uAglwyCXYbq1Z2cZLseW8CB' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_lC6KTzyAY2CSlomvfkwaFxh2' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column "org_id" does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42703',
+  hint: 'Perhaps you meant to reference the column "c.tax_id".',
+  position: '218',
+  file: 'parse_relation.c',
+  line: '3723',
+  routine: 'errorMissingColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_KL2BzFkWoFuFbGsEVrVDYmop' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column "org_id" does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42703',
+  position: '77',
+  file: 'parse_relation.c',
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_xUYFhT5EhjyMzoH0jaKKRvJd' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column "org_id" does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42703',
+  position: '69',
+  file: 'parse_relation.c',
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_YejGBJVhWipinxM3gY4sWYCk' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column "org_id" does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42703',
+  position: '30',
+  file: 'parse_relation.c',
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_XyZYWjUyIW9JC1vhHnWmqKoP' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_LoeRoFrERoVvEufrMFBCmJbJ' } ]
+[Step] Tool results received: 1
+[DeepSeek] Intermediate step text: "I'm encountering a persistent error with the database queries that suggests there may be an issue wi..."
+ POST /api/chat 200 in 126441ms
+ GET /api/history?limit=20 200 in 27ms
+ GET / 200 in 156ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 92ms
+ GET /api/history?limit=20 200 in 38ms
+ GET /api/auth/session 200 in 51ms
+ GET /api/auth/session 200 in 25ms
+[Database Tools] User context: {
+  userId: '7c08fc98-a801-407a-98fc-f24b7e352bfb',
+  orgId: 'default',
+  workspaceId: undefined,
+  role: 'user'
+}
+[Database Tools] Loaded 5 tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Database Tools] Tools object: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[DeepSeek Context-Aware] Type: business, Tokens: 2722 (optimized for first-try success)
+[Model Selection] Using model: deepseek-chat
+[Tools Registration] Available tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Tools Registration] Tool names for activeTools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+ GET /api/vote?chatId=e75d201f-a7fc-49fa-97d4-4133560344ba 200 in 26ms
+[dbRead] Error: [Error [PostgresError]: column i.contact_id does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42703',
+  position: '332',
+  file: 'parse_relation.c',
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_x9JCiCrwRgDtCnD9rBOFXnjs' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'schemaInfo', id: 'call_00_egncVtXtYokCz72H6iEmPkLJ' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column c.contact_type does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42703',
+  position: '29',
+  file: 'parse_relation.c',
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_NNrENBUt1y1kaV98ECOVBK0u' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'schemaInfo', id: 'call_00_EYYDLrqdppaerqxLB1ibyijI' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '367',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_FoLBgJCW7bpDXebdW5xNNE4L' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '597',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_Kadpv6Amr20koqKGXfI8ppPP' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '597',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_7y3CPcn06XMWfjV3UYh9uzC0' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '597',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_4Eyecdd2XyoqOtynco6i8ayN' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '597',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_hkiuOOJNN3iQr8cQLNSKXN2s' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '597',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_rXArKiNbvIDACpn8YmXIY84K' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '597',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_fTIr5h9PtE7y30WXGmxtmlOm' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '597',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_PUJMRy4qQRH1Lar4CBAwIYEF' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '597',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_DUxqjz7XL11Dip20hGiI1fy4' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '597',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_EKjK6izwzZb6aWkolbQiSVxr' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '597',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_7dqqRiH0cHdcavxy5sBpw4ei' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '597',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_niVPyAffKwLWhXPxe0avxZQQ' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '597',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_l38ecYXbGPkOf0uCqWqtO7NS' } ]
+[Step] Tool results received: 1
+ POST /api/chat 200 in 221793ms
+[Database Tools] User context: {
+  userId: '7c08fc98-a801-407a-98fc-f24b7e352bfb',
+  orgId: 'default',
+  workspaceId: undefined,
+  role: 'user'
+}
+[Database Tools] Loaded 5 tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Database Tools] Tools object: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[DeepSeek Context-Aware] Type: business, Tokens: 2722 (optimized for first-try success)
+[Model Selection] Using model: deepseek-chat
+[Tools Registration] Available tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Tools Registration] Tool names for activeTools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[dbRead] Error: [Error [PostgresError]: column i.contact_id does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42703',
+  position: '112',
+  file: 'parse_relation.c',
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_dWKXMi0UwLphZ2GASeYsnS0Y' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '597',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_OSJYfTBQ9dwGTZpGynlyekhb' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'schemaInfo', id: 'call_00_RZDgyyrgNUUIXoA8nGTOb7q9' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: invalid input syntax for type uuid: "default"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '22P02',
+  position: '137',
+  file: 'uuid.c',
+  line: '138',
+  routine: 'string_to_uuid'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_MY3REV5lrWsfwjoxrMFZyy4O' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '597',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_qg5i1TQpi2t2PvBxOuKgLV5a' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '30',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_Hnejx1EmDYMBFGorWKCxWEzJ' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '30',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_1h469eYY8vMTXFwOEFo4TI4i' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'viewsList', id: 'call_00_aYm34UU4OpKPPiDXXrL0Ckqn' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '597',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_ao5BWtI25DIEorVeTBDMLsMf' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '126',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_UWeEqJC0RhkEK3tojYfqkxJF' } ]
+[Step] Tool results received: 1
+[explainQuery] Error: [Error [PostgresError]: syntax error at or near "WHERE"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '134',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'explainQuery', id: 'call_00_ufZDZGEVz1ma48jxADGtvp2n' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '597',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_jTfpCDIHDqc5ge8wdzV7GWxw' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: syntax error at or near "LIMIT"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42601',
+  position: '43',
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_K0S8kZCD0J9v6miLTxT514kp' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: invalid input syntax for type uuid: "default"] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '22P02',
+  position: '70',
+  file: 'uuid.c',
+  line: '138',
+  routine: 'string_to_uuid'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_4VoGwM9gPLFWDzCcFKmGAM74' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '597',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_w4yz5XqC9unWMg24t1iEpYAh' } ]
+[Step] Tool results received: 1
+ POST /api/chat 200 in 71388ms
+ GET / 200 in 115ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 76ms
+ GET /api/auth/session 200 in 106ms
+ GET /api/history?limit=20 200 in 111ms
+ GET /api/auth/session 200 in 113ms
+[DeepSeek] Intermediate step text: "
+
+I'm experiencing technical difficulties accessing the invoice database at the moment. The system i..."
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '597',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_Irl2e3py4RFY5O4rV1IXYqGM' } ]
+[Step] Tool results received: 1
+[Database Tools] User context: {
+  userId: '7c08fc98-a801-407a-98fc-f24b7e352bfb',
+  orgId: '11111111-1111-1111-1111-111111111111',
+  workspaceId: undefined,
+  role: 'user'
+}
+[Database Tools] Loaded 5 tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Database Tools] Tools object: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[DeepSeek Context-Aware] Type: business, Tokens: 2722 (optimized for first-try success)
+[Model Selection] Using model: deepseek-chat
+[Tools Registration] Available tools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+[Tools Registration] Tool names for activeTools: [ 'dbRead', 'dbWrite', 'schemaInfo', 'viewsList', 'explainQuery' ]
+ GET /api/vote?chatId=d52cec4d-1b71-4ce8-a440-3f832b542fd0 200 in 33ms
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '597',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_SjpHOCM7nIITl42EweHv9WnR' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column i.contact_id does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42703',
+  position: '113',
+  file: 'parse_relation.c',
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_bONCY7iKqWyVGkjJAc9wn6bn' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'schemaInfo', id: 'call_00_q5O3t6lvxZFFr0Mr3lh2KuGv' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column reference "organization_id" is ambiguous] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42702',
+  position: '597',
+  file: 'parse_relation.c',
+  line: '831',
+  routine: 'scanRTEForColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_odaDv02S1S3O5O60YIvU3DpI' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_ZIhwrYlcLgoKSW9WdRKocO7z' } ]
+[Step] Tool results received: 1
+[dbRead] Error: [Error [PostgresError]: column p.product_name does not exist] {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42703',
+  position: '14',
+  file: 'parse_relation.c',
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_fn4OBuUiso7WfPi4CPfUWWD3' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'schemaInfo', id: 'call_00_eORnMrdZO6saKYwzv1vyyMjM' } ]
+[Step] Tool results received: 1
+[Step] Tool calls: [ { name: 'dbRead', id: 'call_00_LHoQj9Q81Xj7eHaH4Qk7vVjc' } ]
+[Step] Tool results received: 1
+[DeepSeek] Intermediate step text: "Invoice INV-001 Details:
+
+| Field | Value |
+|-------|-------|
+| **Invoice Number** | INV-001 |
+| **S..."
+ POST /api/chat 200 in 56417ms
+ GET /api/history?limit=20 200 in 29ms
+ GET /chat/d52cec4d-1b71-4ce8-a440-3f832b542fd0 200 in 99ms
+ GET /api/history?limit=20 200 in 42ms
+ GET /api/vote?chatId=d52cec4d-1b71-4ce8-a440-3f832b542fd0 200 in 43ms
+ GET /chat/e75d201f-a7fc-49fa-97d4-4133560344ba 200 in 41ms
+ GET /api/vote?chatId=e75d201f-a7fc-49fa-97d4-4133560344ba 200 in 24ms
+ GET /chat/07645783-5dac-44e6-b47a-1f1b123222db 200 in 54ms
+ GET /api/vote?chatId=07645783-5dac-44e6-b47a-1f1b123222db 200 in 23ms
+ GET /chat/d52cec4d-1b71-4ce8-a440-3f832b542fd0 200 in 54ms
