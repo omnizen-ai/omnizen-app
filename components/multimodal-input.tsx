@@ -354,7 +354,7 @@ function PureMultimodalInput({
             minHeight: messages.length === 0 ? '80px' : '40px', 
             maxHeight: messages.length === 0 ? '80px' : '40px' 
           }}
-          className="text-sm resize-none border-b-0 focus:border-0 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          className="text-sm resize-none border-b-0 focus:border-0 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-6 py-4"
           rows={1}
           autoFocus
         />
