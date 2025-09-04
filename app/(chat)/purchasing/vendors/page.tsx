@@ -271,7 +271,7 @@ export default function VendorsPage() {
           <DataTableCrud
             columns={vendorColumns}
             data={vendors}
-            searchKey="companyName"
+            searchKey="name"
             searchPlaceholder="Search vendors..."
             onAdd={handleAdd}
             onRefresh={refetch}
