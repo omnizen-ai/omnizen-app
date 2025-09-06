@@ -12,8 +12,6 @@ import { auth, type UserType } from '@/app/(auth)/auth';
 import { type RequestHints, systemPrompt } from '@/lib/ai/prompts';
 import { buildOptimizedPrompt, classifyQuery, estimateTokens } from '@/lib/ai/prompts-modular';
 import { buildMicroPrompt, AdaptiveCompressor } from '@/lib/ai/prompts-compressed';
-import { getDeepSeekPrompt } from '@/lib/ai/prompts-deepseek';
-import { getDeepSeekCompressedPrompt } from '@/lib/ai/prompts-deepseek-compressed';
 import { getDeepSeekDetailedPrompt, testPromptSize } from '@/lib/ai/prompts-deepseek-detailed';
 import {
   createStreamId,
@@ -45,6 +43,9 @@ import {
   updateActiveTrace,
 } from '@langfuse/tracing';
 import { trace } from '@opentelemetry/api';
+import { createSalesApiTools } from '@/lib/tools/sales-api-tools';
+import { createInventoryApiTools } from '@/lib/tools/inventory-api-tools';
+import { createFinancialApiTools } from '@/lib/tools/financial-api-tools';
 import { createDatabaseTools } from '@/lib/tools/database-tools';
 import { storeSuccessfulQuery, getRelevantExamples, formatExamplesForPrompt } from '@/lib/ai/query-memory';
 
@@ -176,7 +177,7 @@ async function handleChatMessage(request: Request) {
     const streamId = generateUUID();
     await createStreamId({ streamId, chatId: id });
 
-    // Get database tools with user context
+    // Get hybrid AI agent tools with user context
     const userContext = {
       userId: session.user.id,
       orgId: session.user.organizationId || '11111111-1111-1111-1111-111111111111', // Use test org ID
@@ -184,14 +185,27 @@ async function handleChatMessage(request: Request) {
       role: session.user.role || 'user',
     };
     
+    // Create individual tool sets directly
+    const salesTools = createSalesApiTools(userContext);
+    const inventoryTools = createInventoryApiTools(userContext);
+    const financialTools = createFinancialApiTools(userContext);
     const databaseTools = createDatabaseTools(userContext);
-    const dbToolNames = Object.keys(databaseTools);
-    console.log(`[Database Tools] User context:`, userContext);
-    console.log(`[Database Tools] Loaded ${dbToolNames.length} tools:`, dbToolNames);
-    console.log(`[Database Tools] Tools object:`, Object.keys(databaseTools));
     
-    // Check if we have database/business tools
-    const hasBusinessTools = dbToolNames.length > 0;
+    // Combine all tools into a flat structure
+    const allAvailableTools = {
+      ...salesTools,
+      ...inventoryTools,
+      ...financialTools,
+      ...databaseTools,
+    };
+    
+    const allToolNames = Object.keys(allAvailableTools);
+    console.log(`[AI Tools] User context:`, userContext);
+    console.log(`[AI Tools] Loaded ${allToolNames.length} tools:`, allToolNames);
+    console.log(`[AI Tools] Sales: ${Object.keys(salesTools).length}, Inventory: ${Object.keys(inventoryTools).length}, Finance: ${Object.keys(financialTools).length}, Database: ${Object.keys(databaseTools).length}`);
+    
+    // Check if we have business tools
+    const hasBusinessTools = allToolNames.length > 0;
 
     // Detect if this is a business-related query
     const messageText = message.parts
@@ -283,23 +297,23 @@ async function handleChatMessage(request: Request) {
         // Log which model is being used
         console.log(`[Model Selection] Using model: ${selectedChatModel}`);
         
-        // Only include necessary tools
-        const allTools = {
+        // Use hybrid AI agent tools for optimal performance
+        const hybridTools = {
           // Temporarily disable document tools to focus on text formatting
           // createDocument: createDocument({ session, dataStream }),
           // updateDocument: updateDocument({ session, dataStream }),
-          ...databaseTools, // Add database tools
+          ...allAvailableTools, // Add all hybrid AI tools (API + SQL + Domain Agents)
         };
 
-        // Combine tool names - removed weather and suggestions
-        const allToolNames = [
+        // Use all available tool names for enhanced capabilities
+        const hybridToolNames = [
           // 'createDocument',
           // 'updateDocument',
-          ...dbToolNames, // Add database tool names
+          ...allToolNames, // Add all hybrid tool names
         ];
         
-        console.log(`[Tools Registration] Available tools:`, Object.keys(allTools));
-        console.log(`[Tools Registration] Tool names for activeTools:`, allToolNames);
+        console.log(`[Tools Registration] Available tools:`, Object.keys(hybridTools));
+        console.log(`[Tools Registration] Tool names for activeTools:`, hybridToolNames);
 
         // Wrap DeepSeek models with extractReasoningMiddleware to handle <process> blocks
         const model = isDeepSeekModel
@@ -320,10 +334,10 @@ async function handleChatMessage(request: Request) {
           // Enable multi-step tool calling (up to 5 steps)
           stopWhen: stepCountIs(25),
           experimental_transform: smoothStream({ chunking: 'word' }),
-          tools: allTools,
+          tools: hybridTools,
           // Use activeTools instead of experimental_activeTools
           // Enable tools for all models (both support tool calling)
-          activeTools: allToolNames as any,
+          activeTools: hybridToolNames as any,
           // Allow the model to choose whether to use tools
           toolChoice: 'auto',
           experimental_telemetry: {
