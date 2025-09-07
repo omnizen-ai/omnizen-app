@@ -38,8 +38,7 @@ import { AttachmentManager, useAttachmentManager } from './input/attachment-mana
 import { FileUploadHandler } from './input/file-upload-handler';
 import { VoiceRecorder } from './input/voice-recorder';
 import { useDocumentProcessor } from './input/document-processor';
-import { CommandMenu } from './command-menu';
-import { useCommandMenu } from '@/lib/hooks/use-command-menu';
+import { EnhancedTextarea } from './autocomplete';
 
 function PureMultimodalInput({
   chatId,
@@ -73,8 +72,6 @@ function PureMultimodalInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
   
-  // Command menu for slash commands and @ mentions
-  const { menuState, closeMenu, handleTextChange, insertCommand } = useCommandMenu(textareaRef);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -117,13 +114,8 @@ function PureMultimodalInput({
     setLocalStorageInput(input);
   }, [input, setLocalStorageInput]);
 
-  const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = event.target.value;
+  const handleInput = (newValue: string) => {
     setInput(newValue);
-    
-    // Handle command menu detection
-    const cursorPosition = event.target.selectionStart;
-    handleTextChange(newValue, cursorPosition);
   };
 
 
@@ -336,7 +328,7 @@ function PureMultimodalInput({
               processingDocuments={documentProcessor.processingDocuments}
             />
 
-            <PromptInputTextarea
+            <EnhancedTextarea
               ref={textareaRef}
               placeholder={dragState ? "Drop documents here to process with AI..." : "Send a message..."}
               value={input}
@@ -345,12 +337,6 @@ function PureMultimodalInput({
                 dragState ? 'bg-blue-50' : ''
               }`}
               onKeyDown={(event) => {
-                // Prevent Tab from switching focus when command menu is open
-                if (event.key === 'Tab' && menuState.isOpen) {
-                  event.preventDefault();
-                  return;
-                }
-                
                 if (event.key === 'Enter' && !event.shiftKey) {
                   event.preventDefault();
                   if (status === 'in_progress') {
@@ -360,7 +346,7 @@ function PureMultimodalInput({
                   }
                 }
               }}
-              rows={3}
+              disabled={status !== 'ready'}
             />
             <PromptInputToolbar className="px-2 py-1 border-t-0">
               <PromptInputTools className="gap-2">
@@ -400,23 +386,6 @@ function PureMultimodalInput({
               />
             )}
 
-          {/* Command Menu for slash commands and @ mentions */}
-          <CommandMenu
-            isOpen={menuState.isOpen}
-            onClose={closeMenu}
-            onSelect={(command) => {
-              console.log('CommandMenu onSelect called with command:', command);
-              console.log('Current input at time of selection:', input);
-              console.log('Textarea value at time of selection:', textareaRef.current?.value);
-              // Use the actual textarea value instead of the potentially stale input prop
-              const currentText = textareaRef.current?.value || input;
-              insertCommand(command, setInput, currentText);
-            }}
-            position={menuState.position}
-            filter={menuState.filter}
-            mode={menuState.mode || 'slash'}
-            entityType={menuState.entityType}
-          />
         </div>
       )}
     </FileUploadHandler>

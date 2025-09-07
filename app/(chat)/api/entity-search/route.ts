@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/app/(auth)/auth';
 import { searchEntities, getAvailableEntityTypes, type UserContext } from '@/lib/db/entity-search';
 
 export async function GET(request: NextRequest) {
@@ -8,13 +9,21 @@ export async function GET(request: NextRequest) {
     const searchTerm = searchParams.get('searchTerm');
     const limit = parseInt(searchParams.get('limit') || '10');
 
-    // For now, use mock user context until we have proper auth
-    // In production, this would come from the authenticated session
-    const mockUserContext: UserContext = {
-      userId: 'demo-user',
-      orgId: 'demo-org', 
-      workspaceId: 'demo-workspace',
-      role: 'admin'
+    // Get authenticated session
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Use session data for user context (RLS will handle filtering)
+    const userContext: UserContext = {
+      userId: session.user.id,
+      orgId: session.user.organizationId || '11111111-1111-1111-1111-111111111111', // Fallback for dev
+      workspaceId: session.user.workspaceId,
+      role: session.user.role || 'user'
     };
 
     if (entityType === 'types') {
@@ -30,7 +39,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const results = await searchEntities(entityType, searchTerm, mockUserContext, limit);
+    const results = await searchEntities(entityType, searchTerm, userContext, limit);
     
     return NextResponse.json({
       success: true,
@@ -54,12 +63,21 @@ export async function POST(request: NextRequest) {
   try {
     const { entityTypes, searchTerm, limit = 10 } = await request.json();
 
-    // Mock user context
-    const mockUserContext: UserContext = {
-      userId: 'demo-user',
-      orgId: 'demo-org',
-      workspaceId: 'demo-workspace', 
-      role: 'admin'
+    // Get authenticated session
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Use session data for user context (RLS will handle filtering)
+    const userContext: UserContext = {
+      userId: session.user.id,
+      orgId: session.user.organizationId || '11111111-1111-1111-1111-111111111111', // Fallback for dev
+      workspaceId: session.user.workspaceId,
+      role: session.user.role || 'user'
     };
 
     if (!entityTypes || !searchTerm) {
@@ -72,7 +90,7 @@ export async function POST(request: NextRequest) {
     // Search multiple entity types
     const allResults = [];
     for (const entityType of entityTypes) {
-      const results = await searchEntities(entityType, searchTerm, mockUserContext, limit);
+      const results = await searchEntities(entityType, searchTerm, userContext, limit);
       allResults.push(...results.map(r => ({ ...r, entityType })));
     }
 

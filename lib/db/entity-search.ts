@@ -1,6 +1,7 @@
 /**
  * Entity Search Functions for Frontend Autocomplete
  * TanStack Query compatible functions for @ mention autocomplete
+ * Uses transactions and RLS for proper auth context
  */
 
 import { db } from './index';
@@ -13,7 +14,7 @@ import {
 } from './schema/finance/transactions';
 import { chartAccounts } from './schema/finance/accounts';
 import { salesOrders, purchaseOrders } from './schema/erp/orders';
-import { and, eq, like, or, desc, asc } from 'drizzle-orm';
+import { and, eq, like, or, desc, asc, sql } from 'drizzle-orm';
 
 export interface UserContext {
   userId: string;
@@ -31,7 +32,7 @@ export interface EntitySearchResult {
 }
 
 /**
- * Search customers/contacts
+ * Search customers/contacts using transactions and RLS
  */
 export async function searchCustomers(
   searchTerm: string, 
@@ -39,32 +40,43 @@ export async function searchCustomers(
   limit: number = 10
 ): Promise<EntitySearchResult[]> {
   try {
-    const results = await db
-      .select({
-        id: contacts.id,
-        name: contacts.displayName,
-        companyName: contacts.companyName,
-        firstName: contacts.firstName,
-        lastName: contacts.lastName,
-        email: contacts.email,
-        type: contacts.type,
-      })
-      .from(contacts)
-      .where(
-        and(
-          eq(contacts.organizationId, userContext.orgId),
-          or(
-            like(contacts.displayName, `%${searchTerm}%`),
-            like(contacts.companyName, `%${searchTerm}%`),
-            like(contacts.firstName, `%${searchTerm}%`),
-            like(contacts.lastName, `%${searchTerm}%`),
-            like(contacts.email, `%${searchTerm}%`)
-          ),
-          eq(contacts.isActive, true)
+    // Execute in transaction to ensure auth context and query use same connection
+    const results = await db.transaction(async (tx) => {
+      // Set auth context for RLS
+      await tx.execute(sql`
+        SELECT set_config('auth.user_id', ${userContext.userId}, true),
+               set_config('auth.org_id', ${userContext.orgId}, true),
+               set_config('auth.workspace_id', ${userContext.workspaceId || ''}, true),
+               set_config('auth.role', ${userContext.role}, true)
+      `);
+
+      // Execute query - RLS handles organization filtering automatically
+      return await tx
+        .select({
+          id: contacts.id,
+          name: contacts.displayName,
+          companyName: contacts.companyName,
+          firstName: contacts.firstName,
+          lastName: contacts.lastName,
+          email: contacts.email,
+          type: contacts.type,
+        })
+        .from(contacts)
+        .where(
+          and(
+            or(
+              like(contacts.displayName, `%${searchTerm}%`),
+              like(contacts.companyName, `%${searchTerm}%`),
+              like(contacts.firstName, `%${searchTerm}%`),
+              like(contacts.lastName, `%${searchTerm}%`),
+              like(contacts.email, `%${searchTerm}%`)
+            ),
+            eq(contacts.isActive, true)
+          )
         )
-      )
-      .orderBy(asc(contacts.displayName))
-      .limit(limit);
+        .orderBy(asc(contacts.displayName))
+        .limit(limit);
+    });
 
     return results.map(contact => ({
       id: contact.id,
@@ -181,7 +193,7 @@ export async function searchInvoices(
 }
 
 /**
- * Search vendors
+ * Search vendors using transactions and RLS
  */
 export async function searchVendors(
   searchTerm: string,
@@ -189,32 +201,43 @@ export async function searchVendors(
   limit: number = 10
 ): Promise<EntitySearchResult[]> {
   try {
-    const results = await db
-      .select({
-        id: contacts.id,
-        name: contacts.displayName,
-        companyName: contacts.companyName,
-        email: contacts.email,
-        type: contacts.type,
-      })
-      .from(contacts)
-      .where(
-        and(
-          eq(contacts.organizationId, userContext.orgId),
-          or(
-            eq(contacts.type, 'vendor'),
-            eq(contacts.type, 'customer_vendor')
-          ),
-          or(
-            like(contacts.displayName, `%${searchTerm}%`),
-            like(contacts.companyName, `%${searchTerm}%`),
-            like(contacts.email, `%${searchTerm}%`)
-          ),
-          eq(contacts.isActive, true)
+    // Execute in transaction to ensure auth context and query use same connection
+    const results = await db.transaction(async (tx) => {
+      // Set auth context for RLS
+      await tx.execute(sql`
+        SELECT set_config('auth.user_id', ${userContext.userId}, true),
+               set_config('auth.org_id', ${userContext.orgId}, true),
+               set_config('auth.workspace_id', ${userContext.workspaceId || ''}, true),
+               set_config('auth.role', ${userContext.role}, true)
+      `);
+
+      // Execute query - RLS handles organization filtering automatically
+      return await tx
+        .select({
+          id: contacts.id,
+          name: contacts.displayName,
+          companyName: contacts.companyName,
+          email: contacts.email,
+          type: contacts.type,
+        })
+        .from(contacts)
+        .where(
+          and(
+            or(
+              eq(contacts.type, 'vendor'),
+              eq(contacts.type, 'customer_vendor')
+            ),
+            or(
+              like(contacts.displayName, `%${searchTerm}%`),
+              like(contacts.companyName, `%${searchTerm}%`),
+              like(contacts.email, `%${searchTerm}%`)
+            ),
+            eq(contacts.isActive, true)
+          )
         )
-      )
-      .orderBy(asc(contacts.displayName))
-      .limit(limit);
+        .orderBy(asc(contacts.displayName))
+        .limit(limit);
+    });
 
     return results.map(vendor => ({
       id: vendor.id,

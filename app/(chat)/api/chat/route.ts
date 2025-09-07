@@ -364,7 +364,7 @@ async function handleChatMessage(request: Request) {
                     // Store if query was successful
                     if (isSuccess && query) {
                       // Use enhanced storage with workflow + entity context
-                      const { storeSuccessfulQueryWithContext } = await import('../../../lib/ai/workflow-prompts');
+                      const { storeSuccessfulQueryWithContext } = await import('../../../../lib/ai/workflow-prompts');
                       await storeSuccessfulQueryWithContext(
                         messageText,  // Natural language query
                         query,        // SQL query
