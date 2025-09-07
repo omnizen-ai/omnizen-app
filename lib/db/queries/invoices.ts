@@ -8,6 +8,7 @@ import {
   type InvoiceLine,
   type Contact
 } from '@/lib/db/schema/index';
+import { generateDocumentNumber } from '@/lib/db/document-numbering';
 import { eq, desc, and, gte, lte, sql, or, like } from 'drizzle-orm';
 
 // Get all invoices with customer information
@@ -107,6 +108,7 @@ export async function getInvoiceById(id: string, organizationId: string) {
   };
 }
 
+// Create invoice with auto-numbering support (backward compatible)
 export async function createInvoice(data: Omit<Invoice, 'id' | 'createdAt' | 'updatedAt'>) {
   const [invoice] = await db
     .insert(invoices)
@@ -117,6 +119,43 @@ export async function createInvoice(data: Omit<Invoice, 'id' | 'createdAt' | 'up
     })
     .returning();
   return invoice;
+}
+
+// New function with auto-numbering (use this for new integrations)
+export async function createInvoiceWithAutoNumber(
+  data: Omit<Invoice, 'id' | 'createdAt' | 'updatedAt' | 'invoiceNumber'> & { 
+    invoiceNumber?: string,
+    userId?: string  // For audit tracking
+  }
+) {
+  try {
+    // Auto-generate invoice number if not provided
+    let invoiceNumber = data.invoiceNumber;
+    if (!invoiceNumber) {
+      invoiceNumber = await generateDocumentNumber(
+        data.organizationId, 
+        'invoice',
+        data.userId
+      );
+    }
+
+    const [invoice] = await db
+      .insert(invoices)
+      .values({
+        ...data,
+        invoiceNumber,
+        balanceDue: data.totalAmount,
+        paidAmount: '0',
+      })
+      .returning();
+    return invoice;
+  } catch (error) {
+    // Handle unique constraint violations gracefully
+    if (error instanceof Error && error.message.includes('unique constraint')) {
+      throw new Error(`Invoice number already exists. Please try again or provide a manual number.`);
+    }
+    throw error;
+  }
 }
 
 export async function updateInvoice(

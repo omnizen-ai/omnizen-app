@@ -1,5 +1,6 @@
 import { db } from '../index';
 import { salesOrders, salesOrderLines, contacts, products } from '../schema/index';
+import { generateDocumentNumber } from '@/lib/db/document-numbering';
 import { eq, and, like, or, desc, gte, lte, count, sum, sql } from 'drizzle-orm';
 
 // Sales Order queries
@@ -95,9 +96,42 @@ export async function getSalesOrderById(orderId: string, organizationId: string)
   return result[0] || null;
 }
 
+// Create sales order (backward compatible - requires orderNumber)
 export async function createSalesOrder(data: typeof salesOrders.$inferInsert) {
   const result = await db.insert(salesOrders).values(data).returning();
   return result[0];
+}
+
+// Create sales order with auto-numbering (use this for new integrations)
+export async function createSalesOrderWithAutoNumber(
+  data: Omit<typeof salesOrders.$inferInsert, 'orderNumber'> & { 
+    orderNumber?: string,
+    userId?: string  // For audit tracking
+  }
+) {
+  try {
+    // Auto-generate order number if not provided
+    let orderNumber = data.orderNumber;
+    if (!orderNumber) {
+      orderNumber = await generateDocumentNumber(
+        data.organizationId, 
+        'sales_order',
+        data.userId
+      );
+    }
+
+    const result = await db.insert(salesOrders).values({
+      ...data,
+      orderNumber,
+    }).returning();
+    return result[0];
+  } catch (error) {
+    // Handle unique constraint violations gracefully
+    if (error instanceof Error && error.message.includes('unique constraint')) {
+      throw new Error(`Sales order number already exists. Please try again or provide a manual number.`);
+    }
+    throw error;
+  }
 }
 
 export async function updateSalesOrder(orderId: string, organizationId: string, data: Partial<typeof salesOrders.$inferInsert>) {

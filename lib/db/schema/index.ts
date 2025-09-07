@@ -1,6 +1,7 @@
 // Core schemas
 export * from './core/organizations';
 export * from './core/users';
+export * from './core/document-sequences';
 
 // Finance schemas
 export * from './finance/accounts';

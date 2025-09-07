@@ -4,6 +4,7 @@ import postgres from 'postgres';
 import * as schema from './schema';
 import * as coreSchema from './schema/core/organizations';
 import * as usersSchema from './schema/core/users';
+import * as documentSequencesSchema from './schema/core/document-sequences';
 import * as accountsSchema from './schema/finance/accounts';
 import * as transactionsSchema from './schema/finance/transactions';
 import * as aiSchema from './schema/ai/agents';
@@ -22,6 +23,7 @@ const fullSchema = {
   // Core schemas
   ...coreSchema,
   ...usersSchema,
+  ...documentSequencesSchema,
   
   // Finance schemas
   ...accountsSchema,

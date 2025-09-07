@@ -8,6 +8,7 @@ import {
   type SalesQuotation,
   type QuotationLine,
 } from '@/lib/db/schema/index';
+import { generateDocumentNumber } from '@/lib/db/document-numbering';
 import { eq, desc, and, gte, lte, sql, or, like, asc } from 'drizzle-orm';
 
 // Get all quotations with filters
@@ -116,13 +117,48 @@ export async function getQuotationById(quotationId: string, organizationId: stri
   return quotation || null;
 }
 
-// Create quotation
+// Create quotation (backward compatible - requires quotationNumber)
 export async function createQuotation(data: Omit<SalesQuotation, 'id' | 'createdAt' | 'updatedAt'>) {
   const [quotation] = await db
     .insert(salesQuotations)
     .values(data)
     .returning();
   return quotation;
+}
+
+// Create quotation with auto-numbering (use this for new integrations)
+export async function createQuotationWithAutoNumber(
+  data: Omit<SalesQuotation, 'id' | 'createdAt' | 'updatedAt' | 'quotationNumber'> & { 
+    quotationNumber?: string,
+    userId?: string  // For audit tracking
+  }
+) {
+  try {
+    // Auto-generate quotation number if not provided
+    let quotationNumber = data.quotationNumber;
+    if (!quotationNumber) {
+      quotationNumber = await generateDocumentNumber(
+        data.organizationId, 
+        'quotation',
+        data.userId
+      );
+    }
+
+    const [quotation] = await db
+      .insert(salesQuotations)
+      .values({
+        ...data,
+        quotationNumber,
+      })
+      .returning();
+    return quotation;
+  } catch (error) {
+    // Handle unique constraint violations gracefully
+    if (error instanceof Error && error.message.includes('unique constraint')) {
+      throw new Error(`Quotation number already exists. Please try again or provide a manual number.`);
+    }
+    throw error;
+  }
 }
 
 // Update quotation

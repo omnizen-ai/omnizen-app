@@ -43,6 +43,13 @@
       "when": 1756928901722,
       "tag": "0005_stale_living_mummy",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1757258439467,
+      "tag": "0006_strong_gorilla_man",
+      "breakpoints": true
     }
   ]
 }

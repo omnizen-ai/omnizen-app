@@ -1,7 +1,7 @@
 import { ApiResponse, withAuth, withErrorHandler } from '@/lib/api/base';
 import { 
   getInvoices,
-  createInvoice,
+  createInvoiceWithAutoNumber,
   getInvoiceStats
 } from '@/lib/db/queries/invoices';
 import { NextRequest } from 'next/server';
@@ -38,15 +38,16 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const organizationId = session.user.organizationId || '11111111-1111-1111-1111-111111111111';
     const workspaceId = session.user.workspaceId || '22222222-2222-2222-2222-222222222222';
     
-    // Validate required fields
-    if (!body.invoiceNumber || !body.customerId || !body.issueDate || !body.dueDate || !body.totalAmount) {
-      return ApiResponse.badRequest('Missing required fields');
+    // Validate required fields (invoiceNumber is now optional - will be auto-generated)
+    if (!body.customerId || !body.issueDate || !body.dueDate || !body.totalAmount) {
+      return ApiResponse.badRequest('Missing required fields: customerId, issueDate, dueDate, totalAmount');
     }
     
-    const invoice = await createInvoice({
+    const invoice = await createInvoiceWithAutoNumber({
       ...body,
       organizationId,
       workspaceId,
+      userId: session.user?.id, // For audit tracking
       status: body.status || 'draft',
       currencyCode: body.currencyCode || 'USD',
       subtotal: body.subtotal || body.totalAmount,

@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { withAuth, withErrorHandler, ApiResponse } from '@/lib/api/base';
 import { 
   getQuotations, 
-  createQuotation,
+  createQuotationWithAutoNumber,
   getQuotationsSummary
 } from '@/lib/db/queries/quotations';
 import { z } from 'zod';
@@ -107,13 +107,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const body = await request.json();
     const validatedData = createQuotationSchema.parse(body);
     
-    const quotation = await createQuotation({
+    const quotation = await createQuotationWithAutoNumber({
       ...validatedData,
       organizationId,
       workspaceId,
       createdBy: userId,
       quotationDate: validatedData.quotationDate,
       validUntil: validatedData.validUntil,
+      userId, // For audit tracking
     } as any);
     
     return ApiResponse.success(quotation, 201);

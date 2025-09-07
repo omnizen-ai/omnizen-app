@@ -1,5 +1,6 @@
 import { auth } from '@/app/(auth)/auth';
 import { NextResponse } from 'next/server';
+import { withRLSContext, RLSContext, RLSApiResponse, withRLSTransaction } from './rls-middleware';
 
 export type ApiError = {
   code: string;
@@ -7,37 +8,17 @@ export type ApiError = {
   details?: any;
 };
 
-export class ApiResponse {
-  static success<T>(data: T, status = 200) {
-    return NextResponse.json(data, { status });
-  }
+// Export RLS-enhanced response class as the main ApiResponse
+export const ApiResponse = RLSApiResponse;
 
-  static error(message: string, code = 'ERROR', status = 500, details?: any) {
-    const error: ApiError = {
-      code,
-      message,
-      ...(details && { details }),
-    };
-    return NextResponse.json({ error }, { status });
-  }
+// Export RLS types for external use
+export type { RLSContext };
+export { withRLSTransaction };
 
-  static unauthorized(message = 'Unauthorized') {
-    return this.error(message, 'UNAUTHORIZED', 401);
-  }
-
-  static forbidden(message = 'Forbidden') {
-    return this.error(message, 'FORBIDDEN', 403);
-  }
-
-  static notFound(message = 'Not found') {
-    return this.error(message, 'NOT_FOUND', 404);
-  }
-
-  static badRequest(message = 'Bad request', details?: any) {
-    return this.error(message, 'BAD_REQUEST', 400, details);
-  }
-}
-
+/**
+ * Legacy auth wrapper for backward compatibility
+ * @deprecated Use withRLSContext instead for new APIs
+ */
 export async function withAuth<T>(
   handler: (session: any) => Promise<T>
 ): Promise<T | NextResponse> {
@@ -49,6 +30,12 @@ export async function withAuth<T>(
   
   return handler(session);
 }
+
+/**
+ * Enhanced auth wrapper that provides RLS context
+ * Use this for new APIs that need database access
+ */
+export const withRLS = withRLSContext;
 
 export function withErrorHandler<T extends (...args: any[]) => Promise<any>>(
   handler: T

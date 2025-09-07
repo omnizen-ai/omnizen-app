@@ -8,6 +8,7 @@ import {
   type BillLine,
   type Contact
 } from '@/lib/db/schema/index';
+import { generateDocumentNumber } from '@/lib/db/document-numbering';
 import { eq, desc, and, gte, lte, sql, or, like } from 'drizzle-orm';
 
 // Get all bills with vendor information
@@ -107,6 +108,7 @@ export async function getBillById(id: string, organizationId: string) {
   };
 }
 
+// Create bill (backward compatible - requires billNumber)
 export async function createBill(data: Omit<Bill, 'id' | 'createdAt' | 'updatedAt'>) {
   const [bill] = await db
     .insert(bills)
@@ -117,6 +119,43 @@ export async function createBill(data: Omit<Bill, 'id' | 'createdAt' | 'updatedA
     })
     .returning();
   return bill;
+}
+
+// Create bill with auto-numbering (use this for new integrations)
+export async function createBillWithAutoNumber(
+  data: Omit<Bill, 'id' | 'createdAt' | 'updatedAt' | 'billNumber'> & { 
+    billNumber?: string,
+    userId?: string  // For audit tracking
+  }
+) {
+  try {
+    // Auto-generate bill number if not provided
+    let billNumber = data.billNumber;
+    if (!billNumber) {
+      billNumber = await generateDocumentNumber(
+        data.organizationId, 
+        'bill',
+        data.userId
+      );
+    }
+
+    const [bill] = await db
+      .insert(bills)
+      .values({
+        ...data,
+        billNumber,
+        balanceDue: data.totalAmount,
+        paidAmount: '0',
+      })
+      .returning();
+    return bill;
+  } catch (error) {
+    // Handle unique constraint violations gracefully
+    if (error instanceof Error && error.message.includes('unique constraint')) {
+      throw new Error(`Bill number already exists. Please try again or provide a manual number.`);
+    }
+    throw error;
+  }
 }
 
 export async function updateBill(
