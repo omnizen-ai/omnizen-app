@@ -38,6 +38,8 @@ import { AttachmentManager, useAttachmentManager } from './input/attachment-mana
 import { FileUploadHandler } from './input/file-upload-handler';
 import { VoiceRecorder } from './input/voice-recorder';
 import { useDocumentProcessor } from './input/document-processor';
+import { CommandMenu } from './command-menu';
+import { useCommandMenu } from '@/lib/hooks/use-command-menu';
 
 function PureMultimodalInput({
   chatId,
@@ -70,6 +72,9 @@ function PureMultimodalInput({
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
+  
+  // Command menu for slash commands and @ mentions
+  const { menuState, closeMenu, handleTextChange, insertCommand } = useCommandMenu(textareaRef);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -113,7 +118,12 @@ function PureMultimodalInput({
   }, [input, setLocalStorageInput]);
 
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(event.target.value);
+    const newValue = event.target.value;
+    setInput(newValue);
+    
+    // Handle command menu detection
+    const cursorPosition = event.target.selectionStart;
+    handleTextChange(newValue, cursorPosition);
   };
 
 
@@ -268,110 +278,116 @@ function PureMultimodalInput({
     }
   }, [status, scrollToBottom]);
 
+  // Track drag state for FileUploadHandler
+  const [isDragging, setIsDragging] = useState(false);
+
   return (
     <FileUploadHandler
       onFileSelect={handleFileSelect}
-      onDragStateChange={() => {}}
+      onDragStateChange={setIsDragging}
     >
-      {({ isDragging, handleDragEnter, handleDragLeave, handleDragOver, handleDrop, handleFileSelect, fileInputRef }) => (
+      {({ fileInputRef, isDragging: dragState, handleFileSelect: openFileDialog, handleDragEnter, handleDragLeave, handleDragOver, handleDrop }) => (
         <div 
-          className={`flex relative flex-col gap-4 w-full ${
-            isDragging ? 'bg-blue-50 border-2 border-blue-300 border-dashed rounded-lg' : ''
-          }`}
+          className="flex relative flex-col gap-4 w-full"
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
         >
-      <AnimatePresence>
-        {!isAtBottom && messages.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            className="absolute bottom-28 left-1/2 z-50 -translate-x-1/2"
-          >
-            <Button
-              data-testid="scroll-to-bottom-button"
-              className="rounded-full"
-              size="icon"
-              variant="outline"
-              onClick={(event) => {
-                event.preventDefault();
-                scrollToBottom();
-              }}
-            >
-              <ArrowDown />
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          <AnimatePresence>
+            {!isAtBottom && messages.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                className="absolute bottom-28 left-1/2 z-50 -translate-x-1/2"
+              >
+                <Button
+                  data-testid="scroll-to-bottom-button"
+                  className="rounded-full"
+                  size="icon"
+                  variant="outline"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    scrollToBottom();
+                  }}
+                >
+                  <ArrowDown />
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-
-      <PromptInput
-        className="border-2 border-border/50 rounded-3xl shadow-sm transition-all duration-200 hover:border-border focus-within:border-muted-foreground/50"
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (status !== 'ready') {
-            toast.error('Please wait for the model to finish its response!');
-          } else {
-            submitForm();
-          }
-        }}
-      >
-        <AttachmentManager
-          attachments={attachments}
-          onAttachmentsChange={setAttachments}
-          processingDocuments={documentProcessor.processingDocuments}
-        />
-
-        <PromptInputTextarea
-          ref={textareaRef}
-          placeholder={isDragging ? "Drop documents here to process with AI..." : "Send a message..."}
-          value={input}
-          onChange={handleInput}
-          className={`text-sm resize-none border-b-0 focus:border-0 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-6 py-4 w-full ${
-            isDragging ? 'bg-blue-50' : ''
-          }`}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
+          <PromptInput
+            className="border-2 border-border/50 rounded-3xl shadow-sm transition-all duration-200 hover:border-border focus-within:border-muted-foreground/50"
+            onSubmit={(event) => {
               event.preventDefault();
-              if (status === 'in_progress') {
-                stop();
+              if (status !== 'ready') {
+                toast.error('Please wait for the model to finish its response!');
               } else {
                 submitForm();
               }
-            }
-          }}
-          rows={3}
-        />
-        <PromptInputToolbar className="px-2 py-1 border-t-0">
-          <PromptInputTools className="gap-2">
-            {/* Empty left side */}
-          </PromptInputTools>
-          <div className="flex items-center gap-1">
-            <AttachmentsButton onFileSelect={handleFileSelect} status={status} />
-            <DocumentUploadButton onFileSelect={handleFileSelect} status={status} />
-            <VoiceRecorder
-              isRecording={isRecording}
-              onRecordingStart={handleRecordingStart}
-              onRecordingStop={handleRecordingStop}
-              onRecordingError={handleRecordingError}
+            }}
+          >
+            <AttachmentManager
+              attachments={attachments}
+              onAttachmentsChange={setAttachments}
+              processingDocuments={documentProcessor.processingDocuments}
             />
-            {status === 'submitted' || status === 'streaming' ? (
-              <StopButton stop={stop} setMessages={setMessages} />
-            ) : (
-              <PromptInputSubmit
-                status={status}
-                disabled={!input.trim() || documentProcessor.isProcessing}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground size-8"
-                size="sm"
-              />
-            )}
-          </div>
-        </PromptInputToolbar>
-      </PromptInput>
+
+            <PromptInputTextarea
+              ref={textareaRef}
+              placeholder={dragState ? "Drop documents here to process with AI..." : "Send a message..."}
+              value={input}
+              onChange={handleInput}
+              className={`text-sm resize-none border-b-0 focus:border-0 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-6 py-4 w-full ${
+                dragState ? 'bg-blue-50' : ''
+              }`}
+              onKeyDown={(event) => {
+                // Prevent Tab from switching focus when command menu is open
+                if (event.key === 'Tab' && menuState.isOpen) {
+                  event.preventDefault();
+                  return;
+                }
+                
+                if (event.key === 'Enter' && !event.shiftKey) {
+                  event.preventDefault();
+                  if (status === 'in_progress') {
+                    stop();
+                  } else {
+                    submitForm();
+                  }
+                }
+              }}
+              rows={3}
+            />
+            <PromptInputToolbar className="px-2 py-1 border-t-0">
+              <PromptInputTools className="gap-2">
+                {/* Empty left side */}
+              </PromptInputTools>
+              <div className="flex items-center gap-1">
+                <AttachmentsButton onFileSelect={openFileDialog} status={status} />
+                <DocumentUploadButton onFileSelect={openFileDialog} status={status} />
+                <VoiceRecorder
+                  isRecording={isRecording}
+                  onRecordingStart={handleRecordingStart}
+                  onRecordingStop={handleRecordingStop}
+                  onRecordingError={handleRecordingError}
+                />
+                {status === 'submitted' || status === 'streaming' ? (
+                  <StopButton stop={stop} setMessages={setMessages} />
+                ) : (
+                  <PromptInputSubmit
+                    status={status}
+                    disabled={!input.trim() || documentProcessor.isProcessing}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground size-8"
+                    size="sm"
+                  />
+                )}
+              </div>
+            </PromptInputToolbar>
+          </PromptInput>
 
           {messages.length === 0 &&
             attachments.length === 0 &&
@@ -383,6 +399,24 @@ function PureMultimodalInput({
                 inputRef={textareaRef}
               />
             )}
+
+          {/* Command Menu for slash commands and @ mentions */}
+          <CommandMenu
+            isOpen={menuState.isOpen}
+            onClose={closeMenu}
+            onSelect={(command) => {
+              console.log('CommandMenu onSelect called with command:', command);
+              console.log('Current input at time of selection:', input);
+              console.log('Textarea value at time of selection:', textareaRef.current?.value);
+              // Use the actual textarea value instead of the potentially stale input prop
+              const currentText = textareaRef.current?.value || input;
+              insertCommand(command, setInput, currentText);
+            }}
+            position={menuState.position}
+            filter={menuState.filter}
+            mode={menuState.mode || 'slash'}
+            entityType={menuState.entityType}
+          />
         </div>
       )}
     </FileUploadHandler>
