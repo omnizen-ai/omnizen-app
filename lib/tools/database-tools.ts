@@ -1,8 +1,8 @@
 import { tool } from 'ai';
 import { z } from 'zod';
-import { db } from '@/lib/db';
+import { db, setAuthContext } from '@/lib/db';
 import { sql } from 'drizzle-orm';
-import { validateSQL, sanitizeSQL } from './safety';
+import { validateSQL } from './safety';
 import { getRelevantSchema } from './schema-helper';
 
 // Helper to get current user context (you'll need to pass this from the route)
@@ -17,9 +17,9 @@ interface UserContext {
  * Safe database read tool - executes SELECT queries with RLS
  */
 export const createDbReadTool = (context: UserContext) => tool({
-  description: 'Execute safe SELECT queries on the database with automatic RLS filtering',
+  description: 'Execute pure business logic SELECT queries - organization/user filtering handled automatically by Row-Level Security (RLS). Write clean SQL without organization_id or user_id filters.',
   inputSchema: z.object({
-    query: z.string().describe('The SELECT query to execute'),
+    query: z.string().describe('Pure business logic SELECT query (e.g., "SELECT * FROM invoices WHERE status = \'unpaid\'"). Do NOT include organization_id or user_id filters - RLS handles this automatically.'),
     explain: z.boolean().optional().describe('Show query execution plan instead of results'),
   }),
   execute: async ({ query, explain }) => {
@@ -33,21 +33,26 @@ export const createDbReadTool = (context: UserContext) => tool({
         };
       }
 
-      // Add RLS context
-      const contextualQuery = sanitizeSQL(query, context);
+      // Set RLS context before executing any queries
+      await setAuthContext(
+        context.userId,
+        context.orgId,
+        context.workspaceId,
+        context.role
+      );
 
       // Explain mode
       if (explain) {
-        const explainResult = await db.execute(sql.raw(`EXPLAIN ${contextualQuery}`));
+        const explainResult = await db.execute(sql.raw(`EXPLAIN ${query}`));
         return {
           success: true,
           plan: explainResult,
         };
       }
 
-      // Execute query
+      // Execute query directly (RLS policies handle organization filtering)
       const startTime = Date.now();
-      const result = await db.execute(sql.raw(contextualQuery));
+      const result = await db.execute(sql.raw(query));
       const executionTime = Date.now() - startTime;
 
       return {
@@ -64,7 +69,7 @@ export const createDbReadTool = (context: UserContext) => tool({
       };
     }
   },
-});
+});;
 
 /**
  * Safe database write tool - executes INSERT/UPDATE/DELETE with validation
@@ -88,11 +93,19 @@ export const createDbWriteTool = (context: UserContext) => tool({
         };
       }
 
+      // Set RLS context before executing any queries
+      await setAuthContext(
+        context.userId,
+        context.orgId,
+        context.workspaceId,
+        context.role
+      );
+
       // Check if confirmation is needed
       if (validation.needsConfirmation && !confirm) {
         // Preview mode - show what would be affected
         const previewQuery = query.replace(/^(DELETE|UPDATE)/i, 'SELECT * FROM');
-        const previewResult = await db.execute(sql.raw(sanitizeSQL(previewQuery, context)));
+        const previewResult = await db.execute(sql.raw(previewQuery));
         
         return {
           success: false,
@@ -102,16 +115,13 @@ export const createDbWriteTool = (context: UserContext) => tool({
         };
       }
 
-      // Add RLS context
-      const contextualQuery = sanitizeSQL(query, context);
-
       // Preview mode
       if (preview) {
         const countQuery = query.toLowerCase().startsWith('delete') 
           ? query.replace(/^DELETE/i, 'SELECT COUNT(*) as count')
           : query.replace(/^UPDATE.*?SET.*?(?=WHERE)/i, 'SELECT COUNT(*) as count FROM');
         
-        const countResult = await db.execute(sql.raw(sanitizeSQL(countQuery, context)));
+        const countResult = await db.execute(sql.raw(countQuery));
         return {
           success: true,
           preview: true,
@@ -119,9 +129,9 @@ export const createDbWriteTool = (context: UserContext) => tool({
         };
       }
 
-      // Execute mutation
+      // Execute mutation (RLS policies handle organization filtering)
       const startTime = Date.now();
-      const result = await db.execute(sql.raw(contextualQuery));
+      const result = await db.execute(sql.raw(query));
       const executionTime = Date.now() - startTime;
 
       // Log to audit trail (you'll implement this based on your audit table)
@@ -129,7 +139,7 @@ export const createDbWriteTool = (context: UserContext) => tool({
         userId: context.userId,
         orgId: context.orgId,
         operation: query.split(' ')[0].toUpperCase(),
-        query: contextualQuery,
+        query: query,
         success: true,
         executionTime,
       });
@@ -159,7 +169,7 @@ export const createDbWriteTool = (context: UserContext) => tool({
       };
     }
   },
-});
+});;
 
 /**
  * Schema information tool - provides table structures and relationships
@@ -270,20 +280,25 @@ export const createExplainQueryTool = (context: UserContext) => tool({
         };
       }
 
-      // Add RLS context
-      const contextualQuery = sanitizeSQL(query, context);
+      // Set RLS context before executing any queries
+      await setAuthContext(
+        context.userId,
+        context.orgId,
+        context.workspaceId,
+        context.role
+      );
       
-      // Build explain query
+      // Build explain query (RLS policies handle organization filtering)
       const explainQuery = analyze 
-        ? `EXPLAIN ANALYZE ${contextualQuery}`
-        : `EXPLAIN ${contextualQuery}`;
+        ? `EXPLAIN ANALYZE ${query}`
+        : `EXPLAIN ${query}`;
 
       const result = await db.execute(sql.raw(explainQuery));
 
       return {
         success: true,
         plan: result,
-        query: contextualQuery,
+        query: query,
       };
     } catch (error) {
       console.error('[explainQuery] Error:', error);
@@ -293,7 +308,7 @@ export const createExplainQueryTool = (context: UserContext) => tool({
       };
     }
   },
-});
+});;
 
 // Helper functions
 async function logAuditTrail(entry: {

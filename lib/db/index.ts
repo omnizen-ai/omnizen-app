@@ -1,4 +1,5 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
+import { sql } from 'drizzle-orm';
 import postgres from 'postgres';
 import * as schema from './schema';
 import * as coreSchema from './schema/core/organizations';
@@ -98,14 +99,12 @@ export async function setAuthContext(
   workspaceId?: string,
   role = 'employee'
 ) {
-  await db.execute(`
-    SELECT set_auth_context(
-      $1::uuid,
-      $2::uuid,
-      $3::uuid,
-      $4::text
-    )
-  `, [userId, organizationId, workspaceId || null, role]);
+  await db.execute(sql`
+    SELECT set_config('auth.user_id', ${userId}, true),
+           set_config('auth.org_id', ${organizationId}, true),
+           set_config('auth.workspace_id', ${workspaceId || ''}, true),
+           set_config('auth.role', ${role}, true)
+  `);
 }
 
 // Helper function to get current auth context

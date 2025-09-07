@@ -9,11 +9,6 @@ import {
   extractReasoningMiddleware,
 } from 'ai';
 import { auth, type UserType } from '@/app/(auth)/auth';
-import { type RequestHints, systemPrompt } from '@/lib/ai/prompts';
-import { buildOptimizedPrompt, classifyQuery, estimateTokens } from '@/lib/ai/prompts-modular';
-import { buildMicroPrompt, AdaptiveCompressor } from '@/lib/ai/prompts-compressed';
-import { getDeepSeekPrompt } from '@/lib/ai/prompts-deepseek';
-import { getDeepSeekCompressedPrompt } from '@/lib/ai/prompts-deepseek-compressed';
 import { getDeepSeekDetailedPrompt, testPromptSize } from '@/lib/ai/prompts-deepseek-detailed';
 import {
   createStreamId,
@@ -203,80 +198,27 @@ async function handleChatMessage(request: Request) {
     const businessKeywords = ['customer', 'invoice', 'revenue', 'expense', 'payment', 'product', 'inventory', 'account', 'business', 'sales', 'purchase', 'vendor', 'profit', 'cash', 'financial'];
     const isBusinessQuery = businessKeywords.some(keyword => messageText.includes(keyword)) || hasBusinessTools;
     
-    // Check if using DeepSeek models
-    const isDeepSeekModel = selectedChatModel.startsWith('deepseek-');
+    // Simplified: Use primary prompt for all models
+    const queryType = messageText.match(/^(hi|hello|hey)/) ? 'greeting' :
+                     messageText.includes('report') ? 'report' :
+                     messageText.match(/create|add|new/) ? 'write' :
+                     isBusinessQuery ? 'business' : 'simple';
     
-    let optimizedSystemPrompt: string;
+    // Use primary prompt with complete, accurate schema
+    let optimizedSystemPrompt = getDeepSeekDetailedPrompt(queryType, messageText);
     
-    if (isDeepSeekModel) {
-      // Use DETAILED prompts first to ensure accuracy
-      // We'll optimize after confirming queries work
-      const queryType = messageText.match(/^(hi|hello|hey)/) ? 'greeting' :
-                       messageText.includes('report') ? 'report' :
-                       messageText.match(/create|add|new/) ? 'write' :
-                       isBusinessQuery ? 'business' : 'simple';
-      
-      // Use detailed prompt with complete, accurate schema
-      optimizedSystemPrompt = getDeepSeekDetailedPrompt(queryType, messageText);
-      
-      // Inject relevant query examples from memory
-      const examples = await getRelevantExamples(messageText, 2);
-      if (examples.length > 0) {
-        const examplesPrompt = formatExamplesForPrompt(examples);
-        optimizedSystemPrompt += examplesPrompt;
-        console.log(`[QueryMemory] Injected ${examples.length} examples into prompt`);
-      }
-      
-      // Test prompt size for analysis
-      testPromptSize(messageText);
-      
-      const tokens = estimateTokens(optimizedSystemPrompt);
-      console.log(`[DeepSeek Detailed] Type: ${queryType}, Tokens: ${tokens} (complete schema for accuracy)`);
-      
-    } else {
-      // Use compressed prompts for expensive models (Claude/GPT)
-      const useUltraCompression = true; // Feature flag
-      const useModularPrompts = !useUltraCompression; // Fallback option
-      
-      if (useUltraCompression) {
-        // Ultra-compressed prompts (10-50 tokens)
-        const queryType = messageText.match(/^(hi|hello|hey)/) ? 'greeting' :
-                         messageText.includes('invoice') && messageText.match(/for|from/) ? 'customer_lookup' :
-                         messageText.includes('report') ? 'report' :
-                         messageText.match(/create|add|new/) ? 'write' :
-                         'simple_query';
-        
-        // Use micro prompt or adaptive compression
-        if (queryType === 'report' || queryType === 'customer_lookup') {
-          // Use adaptive compressor for complex queries
-          const compressor = new AdaptiveCompressor(100); // 100 token budget
-          optimizedSystemPrompt = compressor.buildWithinBudget(queryType, ['schema', 'format', 'intelligence']);
-        } else {
-          optimizedSystemPrompt = buildMicroPrompt(queryType);
-        }
-        
-        // Log extreme token savings
-        const originalTokens = estimateTokens(systemPrompt({ selectedChatModel, requestHints, useOmniMode: isBusinessQuery }));
-        const ultraTokens = estimateTokens(optimizedSystemPrompt);
-        const savings = Math.round((1 - ultraTokens / originalTokens) * 100);
-        
-        console.log(`[Ultra Compression] Type: ${queryType}, Tokens: ${ultraTokens} (saved ${savings}%)`);
-        
-      } else if (useModularPrompts) {
-        // Modular system (200-700 tokens)
-        const promptConfig = classifyQuery(messageText);
-        optimizedSystemPrompt = buildOptimizedPrompt(promptConfig);
-        
-        const originalTokens = estimateTokens(systemPrompt({ selectedChatModel, requestHints, useOmniMode: isBusinessQuery }));
-        const optimizedTokens = estimateTokens(optimizedSystemPrompt);
-        const savings = Math.round((1 - optimizedTokens / originalTokens) * 100);
-        
-        console.log(`[Token Optimization] Query type: ${promptConfig.queryType}, Tokens: ${optimizedTokens} (saved ${savings}%)`);
-      } else {
-        // Fallback to original prompt
-        optimizedSystemPrompt = systemPrompt({ selectedChatModel, requestHints, useOmniMode: isBusinessQuery });
-      }
+    // Inject relevant query examples from memory
+    const examples = await getRelevantExamples(messageText, 2);
+    if (examples.length > 0) {
+      const examplesPrompt = formatExamplesForPrompt(examples);
+      optimizedSystemPrompt += examplesPrompt;
+      console.log(`[QueryMemory] Injected ${examples.length} examples into prompt`);
     }
+    
+    console.log(`[Unified Prompt] Model: ${selectedChatModel}, Type: ${queryType}`);
+    
+    // Check if using DeepSeek model for reasoning middleware
+    const isDeepSeekModel = selectedChatModel.includes('deepseek');
 
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {

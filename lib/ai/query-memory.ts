@@ -273,15 +273,33 @@ export function formatExamplesForPrompt(examples: QueryMemory[]): string {
   if (examples.length === 0) return '';
   
   let prompt = '\n## Recent Successful Queries (Examples):\n';
+  prompt += '\n🔒 **CRITICAL: ROW-LEVEL SECURITY (RLS) INSTRUCTIONS**\n';
+  prompt += '• Write PURE BUSINESS LOGIC SQL only\n';
+  prompt += '• DO NOT add WHERE clauses for organization_id, user_id, or workspace_id\n';
+  prompt += '• DO NOT use placeholders like {{org_id}}, {{user_id}}, {{organization_id}}\n';
+  prompt += '• The PostgreSQL RLS system automatically filters data by organization/user context\n';
+  prompt += '• Examples below may show placeholder syntax - IGNORE this and write clean SQL\n';
+  prompt += '• Focus only on business logic: customer names, invoice status, date ranges, etc.\n\n';
   
   for (const example of examples) {
-    prompt += `\n**User Query**: "${example.naturalQuery}"`;
-    prompt += `\n**SQL**: \`\`\`sql\n${example.sqlQuery}\n\`\`\``;
-    prompt += `\n**Tables Used**: ${example.tables.join(', ')}`;
-    prompt += '\n';
+    prompt += `**User Query**: "${example.naturalQuery}"\n`;
+    prompt += `**SQL Pattern**: \`\`\`sql\n${example.sqlQuery}\n\`\`\`\n`;
+    prompt += `**Tables Used**: ${example.tables.join(', ')}\n\n`;
   }
   
-  prompt += '\nUse these examples as reference for similar queries.\n';
+  prompt += '✅ **Example of CORRECT SQL Generation**:\n';
+  prompt += '```sql\n';
+  prompt += 'SELECT invoice_number, total_amount, status\n';
+  prompt += 'FROM invoices\n';
+  prompt += 'WHERE status = \'unpaid\'\n';
+  prompt += 'ORDER BY total_amount DESC;\n';
+  prompt += '```\n\n';
+  
+  prompt += '❌ **DO NOT Generate** (RLS handles this automatically):\n';
+  prompt += '```sql\n';
+  prompt += '-- WRONG: Do not add organization_id filters\n';
+  prompt += 'SELECT * FROM invoices WHERE organization_id = \'{{org_id}}\' AND status = \'unpaid\';\n';
+  prompt += '```\n\n';
   
   return prompt;
 }

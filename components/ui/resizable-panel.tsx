@@ -16,7 +16,7 @@ interface ResizablePanelProps {
 export function ResizableSidePanel({
   children,
   className,
-  minWidth = 400,
+  minWidth = 50, // percentage
   maxWidth = 80, // percentage
   defaultWidth = 600,
 }: ResizablePanelProps) {
@@ -58,7 +58,10 @@ export function ResizableSidePanel({
 
           const handleMouseMove = (e: MouseEvent) => {
             const delta = startX - e.clientX;
-            const newWidth = Math.max(minWidth, Math.min(window.innerWidth * (maxWidth / 100), startWidth + delta));
+            const newWidth = Math.max(
+              window.innerWidth * (minWidth / 100), 
+              Math.min(window.innerWidth * (maxWidth / 100), startWidth + delta)
+            );
             setWidth(newWidth);
             setPanelWidth(newWidth);
           };
