@@ -208,7 +208,7 @@ async function handleChatMessage(request: Request) {
     let optimizedSystemPrompt = getDeepSeekDetailedPrompt(queryType, messageText);
     
     // Inject workflow prompts if slash commands are present
-    const { parseWorkflowCommands, getWorkflowPrompt, initializeWorkflowPrompts } = await import('../../../lib/ai/workflow-prompts');
+    const { parseWorkflowCommands, getWorkflowPrompt, initializeWorkflowPrompts } = await import('@/lib/ai/workflow-prompts');
     
     // Initialize workflow prompts if needed (first time setup)
     await initializeWorkflowPrompts();
@@ -364,7 +364,7 @@ async function handleChatMessage(request: Request) {
                     // Store if query was successful
                     if (isSuccess && query) {
                       // Use enhanced storage with workflow + entity context
-                      const { storeSuccessfulQueryWithContext } = await import('../../../../lib/ai/workflow-prompts');
+                      const { storeSuccessfulQueryWithContext } = await import('@/lib/ai/workflow-prompts');
                       await storeSuccessfulQueryWithContext(
                         messageText,  // Natural language query
                         query,        // SQL query
