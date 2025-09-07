@@ -1,7 +1,7 @@
 'use client';
 import { AnimatePresence, motion } from 'framer-motion';
 import { memo, useState } from 'react';
-import type { Vote } from '@/lib/db/schema';
+import type { Vote } from '@/lib/types/database';
 import { DocumentToolResult } from './document';
 import { PencilEditIcon, } from './icons';
 import { Response } from './elements/response';

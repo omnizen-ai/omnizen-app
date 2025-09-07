@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
-import type { InventoryLevel, StockMove, Warehouse, Product } from '@/lib/db/schema/index';
+import type { InventoryLevel, StockMove, Warehouse, Product } from '@/lib/types/database';
 
 // Inventory levels hooks
 export function useInventoryLevels(filters?: {

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useWindowSize } from 'usehooks-ts';
 import { useRestoreDocumentVersion } from '@/lib/api/hooks/use-chat-documents';
 
-import type { Document } from '@/lib/db/schema';
+import type { Document } from '@/lib/types/database';
 import { getDocumentTimestampByIndex } from '@/lib/utils';
 
 import { LoaderIcon } from './icons';

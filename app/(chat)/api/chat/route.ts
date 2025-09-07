@@ -207,7 +207,24 @@ async function handleChatMessage(request: Request) {
     // Use primary prompt with complete, accurate schema
     let optimizedSystemPrompt = getDeepSeekDetailedPrompt(queryType, messageText);
     
-    // Inject relevant query examples from memory
+    // Inject workflow prompts if slash commands are present
+    const { parseWorkflowCommands, getWorkflowPrompt, initializeWorkflowPrompts } = await import('../../../lib/ai/workflow-prompts');
+    
+    // Initialize workflow prompts if needed (first time setup)
+    await initializeWorkflowPrompts();
+    
+    const workflowCommands = parseWorkflowCommands(messageText);
+    if (workflowCommands.length > 0) {
+      for (const workflowType of workflowCommands) {
+        const workflowPrompt = await getWorkflowPrompt(workflowType);
+        if (workflowPrompt) {
+          optimizedSystemPrompt += `\n\n## ${workflowType.toUpperCase()} WORKFLOW CONTEXT:\n${workflowPrompt}`;
+          console.log(`[WorkflowPrompts] Injected ${workflowType} workflow into prompt`);
+        }
+      }
+    }
+    
+    // Inject relevant query examples from memory (enhanced with workflow + entity context)
     const examples = await getRelevantExamples(messageText, 2);
     if (examples.length > 0) {
       const examplesPrompt = formatExamplesForPrompt(examples);
@@ -346,12 +363,14 @@ async function handleChatMessage(request: Request) {
                     
                     // Store if query was successful
                     if (isSuccess && query) {
-                      await storeSuccessfulQuery(
+                      // Use enhanced storage with workflow + entity context
+                      const { storeSuccessfulQueryWithContext } = await import('../../../lib/ai/workflow-prompts');
+                      await storeSuccessfulQueryWithContext(
                         messageText,  // Natural language query
                         query,        // SQL query
                         true
                       );
-                      console.log('[QueryMemory] Stored successful query');
+                      console.log('[QueryMemory] Stored successful query with enhanced context');
                     } else if (!isSuccess && query) {
                       console.log('[QueryMemory] Query failed, not storing');
                     } else {

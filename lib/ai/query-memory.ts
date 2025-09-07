@@ -45,7 +45,7 @@ const TABLE_DOMAINS: Record<string, string> = {
 // Redis client singleton
 let redisClient: ReturnType<typeof createClient> | null = null;
 
-async function getRedisClient() {
+export async function getRedisClient() {
   if (!redisClient) {
     const redisUrl = process.env.REDIS_URL || 'redis://:myredissecret@localhost:6379';
     
@@ -70,6 +70,15 @@ export function normalizeIntent(naturalQuery: string): string {
   const query = naturalQuery.toLowerCase();
   const parts: string[] = [];
   
+  // Workflow detection (slash commands)
+  if (query.includes('/workflow:invoice')) parts.push('workflow_invoice');
+  if (query.includes('/workflow:payment')) parts.push('workflow_payment');
+  if (query.includes('/workflow:reconcile')) parts.push('workflow_reconcile');
+  if (query.includes('/workflow:month-end')) parts.push('workflow_month_end');
+  if (query.includes('/workflow:inventory')) parts.push('workflow_inventory');
+  if (query.includes('/workflow:expense')) parts.push('workflow_expense');
+  if (query.includes('/workflow:revenue')) parts.push('workflow_revenue');
+  
   // Action detection
   if (query.includes('show') || query.includes('list') || query.includes('get')) {
     parts.push('lookup');
@@ -77,22 +86,41 @@ export function normalizeIntent(naturalQuery: string): string {
     parts.push('aggregate');
   } else if (query.includes('report')) {
     parts.push('report');
+  } else if (query.includes('create') || query.includes('add') || query.includes('new')) {
+    parts.push('create');
+  } else if (query.includes('update') || query.includes('modify') || query.includes('change')) {
+    parts.push('update');
   } else {
     parts.push('query');
   }
   
-  // Entity detection
-  if (query.includes('invoice')) parts.push('invoice');
-  if (query.includes('customer')) parts.push('customer');
-  if (query.includes('product')) parts.push('product');
-  if (query.includes('payment')) parts.push('payment');
-  if (query.includes('vendor')) parts.push('vendor');
-  if (query.includes('inventory') || query.includes('stock')) parts.push('inventory');
+  // Entity detection (both regular keywords and @ mentions)
+  if (query.includes('invoice') || query.includes('@invoice:')) parts.push('invoice');
+  if (query.includes('customer') || query.includes('@customer:')) parts.push('customer');
+  if (query.includes('product') || query.includes('@product:')) parts.push('product');
+  if (query.includes('payment') || query.includes('@payment:')) parts.push('payment');
+  if (query.includes('vendor') || query.includes('@vendor:')) parts.push('vendor');
+  if (query.includes('inventory') || query.includes('stock') || query.includes('@inventory:')) parts.push('inventory');
+  if (query.includes('account') || query.includes('@account:')) parts.push('account');
+  if (query.includes('contact') || query.includes('@contact:')) parts.push('contact');
+  
+  // Entity mention context detection (specific entities)
+  const entityMentions = query.match(/@(\w+):([^@\s]+)/g) || [];
+  for (const mention of entityMentions) {
+    const [, entityType, entityValue] = mention.match(/@(\w+):([^@\s]+)/) || [];
+    if (entityType && entityValue) {
+      // Normalize entity values (remove special chars, limit length)
+      const normalizedValue = entityValue.replace(/[^a-zA-Z0-9]/g, '').substring(0, 20);
+      parts.push(`${entityType}_${normalizedValue}`);
+    }
+  }
   
   // Qualifier detection
   if (query.includes('unpaid') || query.includes('overdue')) parts.push('unpaid');
   if (query.includes('month')) parts.push('monthly');
   if (query.includes('year')) parts.push('yearly');
+  if (query.includes('pending')) parts.push('pending');
+  if (query.includes('completed') || query.includes('paid')) parts.push('completed');
   
   return parts.join('_');
 }
@@ -208,7 +236,7 @@ export async function storeSuccessfulQuery(
 }
 
 /**
- * Retrieve relevant query examples
+ * Retrieve relevant query examples with workflow and entity context
  */
 export async function getRelevantExamples(
   naturalQuery: string,
@@ -226,27 +254,101 @@ export async function getRelevantExamples(
     
     const examples: QueryMemory[] = [];
     
-    // Try exact intent match first
+    // Extract workflow and entity context from query
+    const workflowMatches = naturalQuery.match(/\/workflow:(\w+)/g) || [];
+    const entityMentions = naturalQuery.match(/@(\w+):([^@\s]+)/g) || [];
+    
+    // Priority 1: Try exact intent match with workflow and entity context
+    if (workflowMatches.length > 0 || entityMentions.length > 0) {
+      const contextParts = [domain, intent];
+      
+      if (workflowMatches.length > 0) {
+        const workflow = workflowMatches[0].replace('/workflow:', '');
+        contextParts.push(`workflow_${workflow}`);
+      }
+      
+      if (entityMentions.length > 0) {
+        const entityContext = entityMentions
+          .map(mention => {
+            const [, type, value] = mention.match(/@(\w+):([^@\s]+)/) || [];
+            return `${type}_${value.replace(/[^a-zA-Z0-9]/g, '').substring(0, 10)}`;
+          })
+          .join('_');
+        contextParts.push(entityContext);
+      }
+      
+      const enhancedKey = `query:${contextParts.join(':')}`;
+      const enhanced = await client.get(enhancedKey);
+      if (enhanced) {
+        examples.push(JSON.parse(enhanced));
+        console.log(`[QueryMemory] Found enhanced example: ${enhancedKey}`);
+      }
+    }
+    
+    // Priority 2: Try exact intent match (standard)
     const exactKey = `query:${domain}:${intent}`;
     const exact = await client.get(exactKey);
-    if (exact) {
+    if (exact && !examples.find(ex => ex.naturalQuery === JSON.parse(exact).naturalQuery)) {
       examples.push(JSON.parse(exact));
     }
     
-    // If not enough examples, search by domain pattern
+    // Priority 3: Search for workflow-specific examples if workflow is present
+    if (examples.length < limit && workflowMatches.length > 0) {
+      const workflow = workflowMatches[0].replace('/workflow:', '');
+      const workflowKeys = await client.keys(`query:${domain}:*workflow_${workflow}*`);
+      
+      for (const key of workflowKeys.slice(0, 5)) {
+        if (examples.length >= limit) break;
+        
+        const value = await client.get(key);
+        if (value) {
+          const example = JSON.parse(value);
+          if (!examples.find(ex => ex.naturalQuery === example.naturalQuery)) {
+            examples.push(example);
+          }
+        }
+      }
+    }
+    
+    // Priority 4: Search for entity-specific examples if entities are present
+    if (examples.length < limit && entityMentions.length > 0) {
+      for (const mention of entityMentions) {
+        if (examples.length >= limit) break;
+        
+        const [, type, value] = mention.match(/@(\w+):([^@\s]+)/) || [];
+        const normalizedValue = value.replace(/[^a-zA-Z0-9]/g, '').substring(0, 10);
+        const entityKeys = await client.keys(`query:${domain}:*${type}_${normalizedValue}*`);
+        
+        for (const key of entityKeys.slice(0, 3)) {
+          if (examples.length >= limit) break;
+          
+          const value = await client.get(key);
+          if (value) {
+            const example = JSON.parse(value);
+            if (!examples.find(ex => ex.naturalQuery === example.naturalQuery)) {
+              examples.push(example);
+            }
+          }
+        }
+      }
+    }
+    
+    // Priority 5: If not enough examples, search by domain pattern (fallback)
     if (examples.length < limit) {
       const keys = await client.keys(`query:${domain}:*`);
       
-      // Get all matching queries
-      for (const key of keys.slice(0, 10)) { // Limit scan
-        if (key !== exactKey) { // Skip if already added
+      for (const key of keys.slice(0, 10)) {
+        if (examples.length >= limit) break;
+        
+        if (key !== exactKey) {
           const value = await client.get(key);
           if (value) {
-            examples.push(JSON.parse(value));
+            const example = JSON.parse(value);
+            if (!examples.find(ex => ex.naturalQuery === example.naturalQuery)) {
+              examples.push(example);
+            }
           }
         }
-        
-        if (examples.length >= limit) break;
       }
     }
     
@@ -259,6 +361,7 @@ export async function getRelevantExamples(
       return b.timestamp - a.timestamp;
     });
     
+    console.log(`[QueryMemory] Retrieved ${examples.length} examples for: ${intent}`);
     return examples.slice(0, limit);
   } catch (error) {
     console.log('[QueryMemory] Retrieval error:', error);

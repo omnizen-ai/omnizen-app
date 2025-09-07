@@ -1,7 +1,7 @@
 import { useSWRConfig } from 'swr';
 import { useCopyToClipboard } from 'usehooks-ts';
 
-import type { Vote } from '@/lib/db/schema';
+import type { Vote } from '@/lib/types/database';
 
 import { CopyIcon, ThumbDownIcon, ThumbUpIcon } from './icons';
 import { Actions, Action } from './elements/actions';

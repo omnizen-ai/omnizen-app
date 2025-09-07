@@ -247,6 +247,7 @@ export function Chat({
                   setMessages={setMessages}
                   sendMessage={sendMessage}
                   selectedVisibilityType={visibilityType}
+                  session={session}
                 />
               )}
             </div>
@@ -278,6 +279,7 @@ export function Chat({
                   setMessages={setMessages}
                   sendMessage={sendMessage}
                   selectedVisibilityType={visibilityType}
+                  session={session}
                 />
               )}
             </div>

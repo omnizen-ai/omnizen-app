@@ -3,7 +3,7 @@ import { ApiClient ,
   handleMutationError, 
   handleMutationSuccess 
 } from '@/lib/api/client';
-import type { ChartAccount } from '@/lib/db/schema/index';
+import type { ChartAccount } from '@/lib/types/database';
 
 const QUERY_KEY = 'chart-of-accounts';
 

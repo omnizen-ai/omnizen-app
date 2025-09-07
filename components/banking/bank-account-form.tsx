@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import type { BankAccount } from '@/lib/db/schema/index';
+import type { BankAccount } from '@/lib/types/database';
 import { useCurrencies } from '@/lib/hooks/use-banking';
 import { useChartAccounts } from '@/lib/hooks/use-chart-of-accounts';
 

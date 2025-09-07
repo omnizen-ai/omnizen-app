@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
-import { type Contact } from '@/lib/db/schema/index';
+import { type Contact, type VendorsSummary } from '@/lib/types/database';
 
 // Fetch vendors
 export function useVendors(params?: {
@@ -65,11 +65,6 @@ export function useDeleteVendor() {
 export function useVendorsSummary() {
   return useQuery({
     queryKey: ['vendors-summary'],
-    queryFn: () => apiClient.get<{
-      totalVendors: number;
-      activeVendors: number;
-      recentVendors: number;
-      totalPurchases: number;
-    }>('/api/purchasing/vendors?summary=true'),
+    queryFn: () => apiClient.get<VendorsSummary>('/api/purchasing/vendors?summary=true'),
   });
 }

@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
-import { type SalesOrder } from '@/lib/db/schema/index';
+import { type SalesOrder } from '@/lib/types/database';
 
 // Fetch sales orders
 export function useSalesOrders(params?: {

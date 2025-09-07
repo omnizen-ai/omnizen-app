@@ -1,7 +1,7 @@
 import { PreviewMessage } from './message';
 import { MessageReasoning } from './message-reasoning';
 import { memo } from 'react';
-import type { Vote } from '@/lib/db/schema';
+import type { Vote } from '@/lib/types/database';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { motion } from 'framer-motion';

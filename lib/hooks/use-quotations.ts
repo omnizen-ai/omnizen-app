@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
-import { type SalesQuotation } from '@/lib/db/schema/index';
+import { type SalesQuotation } from '@/lib/types/database';
 
 // Fetch quotations
 export function useQuotations(params?: {

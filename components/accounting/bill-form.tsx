@@ -29,7 +29,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import type { Bill } from '@/lib/db/schema/index';
+import type { Bill } from '@/lib/types/database';
 
 const billStatuses = [
   { value: 'draft', label: 'Draft' },

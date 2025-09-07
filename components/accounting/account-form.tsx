@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import type { ChartAccount } from '@/lib/db/schema/index';
+import type { ChartAccount } from '@/lib/types/database';
 
 const accountTypes = [
   { value: 'asset', label: 'Asset' },

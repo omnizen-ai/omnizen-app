@@ -44,7 +44,7 @@ const fullSchema = {
 };
 
 // Create the connection
-const connectionString = process.env.POSTGRES_URL!;
+const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL!;
 
 // For query purposes
 const queryClient = postgres(connectionString);

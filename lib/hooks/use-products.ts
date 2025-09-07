@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
-import { type Product } from '@/lib/db/schema/index';
+import { type Product, type ProductsSummary } from '@/lib/types/database';
 
 // Fetch products
 export function useProducts(params?: {

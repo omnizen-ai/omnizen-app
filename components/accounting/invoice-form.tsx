@@ -29,7 +29,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import type { Invoice } from '@/lib/db/schema/index';
+import type { Invoice } from '@/lib/types/database';
 
 const invoiceStatuses = [
   { value: 'draft', label: 'Draft' },

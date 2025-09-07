@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
-import type { Bill } from '@/lib/db/schema/index';
+import type { Bill } from '@/lib/types/database';
 import { toast } from 'sonner';
 
 export function useBills(filters?: {

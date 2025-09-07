@@ -31,6 +31,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 import type { VisibilityType } from './visibility-selector';
 import type { Attachment, ChatMessage } from '@/lib/types';
+import type { Session } from 'next-auth';
 
 // Import focused components
 import { AttachmentManager, useAttachmentManager } from './input/attachment-manager';
@@ -51,6 +52,7 @@ function PureMultimodalInput({
   sendMessage,
   className,
   selectedVisibilityType,
+  session,
 }: {
   chatId: string;
   input: string;
@@ -64,6 +66,7 @@ function PureMultimodalInput({
   sendMessage: UseChatHelpers<ChatMessage>['sendMessage'];
   className?: string;
   selectedVisibilityType: VisibilityType;
+  session?: Session | null;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -112,6 +115,8 @@ function PureMultimodalInput({
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(event.target.value);
   };
+
+
 
   // Voice recording state
   const [isRecording, setIsRecording] = useState(false);
@@ -322,24 +327,24 @@ function PureMultimodalInput({
         />
 
         <PromptInputTextarea
-          data-testid="multimodal-input"
           ref={textareaRef}
           placeholder={isDragging ? "Drop documents here to process with AI..." : "Send a message..."}
           value={input}
           onChange={handleInput}
-          minHeight={messages.length === 0 ? 80 : 40}
-          maxHeight={messages.length === 0 ? 80 : 40}
-          disableAutoResize={true}
-          style={{ 
-            height: messages.length === 0 ? '80px' : '40px', 
-            minHeight: messages.length === 0 ? '80px' : '40px', 
-            maxHeight: messages.length === 0 ? '80px' : '40px' 
-          }}
-          className={`text-sm resize-none border-b-0 focus:border-0 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-6 py-4 ${
+          className={`text-sm resize-none border-b-0 focus:border-0 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-6 py-4 w-full ${
             isDragging ? 'bg-blue-50' : ''
           }`}
-          rows={1}
-          autoFocus
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+              event.preventDefault();
+              if (status === 'in_progress') {
+                stop();
+              } else {
+                submitForm();
+              }
+            }
+          }}
+          rows={3}
         />
         <PromptInputToolbar className="px-2 py-1 border-t-0">
           <PromptInputTools className="gap-2">

@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { type Product } from '@/lib/db/schema/index';
+import { type Product } from '@/lib/types/database';
 
 interface ProductFormProps {
   open: boolean;

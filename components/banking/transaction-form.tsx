@@ -24,7 +24,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import type { BankTransaction, BankAccount } from '@/lib/db/schema/index';
+import type { BankTransaction, BankAccount } from '@/lib/types/database';
 
 interface TransactionFormProps {
   open: boolean;

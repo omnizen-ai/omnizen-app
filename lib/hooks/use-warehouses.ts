@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
-import { type Warehouse } from '@/lib/db/schema/index';
+import { type Warehouse, type WarehousesSummary } from '@/lib/types/database';
 
 // Fetch warehouses
 export function useWarehouses(params?: {
@@ -67,11 +67,6 @@ export function useDeleteWarehouse() {
 export function useWarehousesSummary() {
   return useQuery({
     queryKey: ['warehouses-summary'],
-    queryFn: () => apiClient.get<{
-      totalWarehouses: number;
-      activeWarehouses: number;
-      mainWarehouses: number;
-      defaultWarehouses: number;
-    }>('/api/operations/warehouses?summary=true'),
+    queryFn: () => apiClient.get<WarehousesSummary>('/api/operations/warehouses?summary=true'),
   });
 }

@@ -10,7 +10,7 @@ import {
 } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDebounceCallback, useWindowSize } from 'usehooks-ts';
-import type { Document, Vote } from '@/lib/db/schema';
+import type { Document, Vote } from '@/lib/types/database';
 import { useChatDocuments, useUpdateDocument } from '@/lib/api/hooks/use-chat-documents';
 import { MultimodalInput } from './multimodal-input';
 import { Toolbar } from './toolbar';

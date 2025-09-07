@@ -22,7 +22,7 @@ import {
   SidebarMenu,
   useSidebar,
 } from '@/components/ui/sidebar';
-import type { Chat } from '@/lib/db/schema';
+import type { Chat } from '@/lib/types/database';
 import { ChatItem } from './sidebar-history-item';
 import { LoaderIcon } from './icons';
 import { useChatHistory, } from '@/lib/api/hooks/use-chat-history';

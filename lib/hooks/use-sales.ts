@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
-import { type Contact, type SalesOrder } from '@/lib/db/schema/index';
+import { type Contact, type SalesOrder, type SalesSummary } from '@/lib/types/database';
 
 // Fetch contacts/customers
 export function useContacts(params?: {
@@ -124,12 +124,6 @@ export function useDeleteSalesOrder() {
 export function useSalesSummary() {
   return useQuery({
     queryKey: ['sales-summary'],
-    queryFn: () => apiClient.get<{
-      totalContacts: number;
-      totalCustomers: number;
-      activeCustomers: number;
-      totalOrders: number;
-      totalOrderValue: number;
-    }>('/api/sales/contacts?summary=true'),
+    queryFn: () => apiClient.get<SalesSummary>('/api/sales/contacts?summary=true'),
   });
 }

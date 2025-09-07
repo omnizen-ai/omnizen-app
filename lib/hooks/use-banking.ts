@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
-import type { BankAccount, BankTransaction, Currency } from '@/lib/db/schema/index';
+import type { BankAccount, BankTransaction, Currency } from '@/lib/types/database';
 
 // Bank Accounts hooks
 export function useBankAccounts() {

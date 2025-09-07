@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { type Contact } from '@/lib/db/schema/index';
+import { type Contact } from '@/lib/types/database';
 
 interface ContactFormProps {
   open: boolean;
