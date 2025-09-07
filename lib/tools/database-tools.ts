@@ -5,6 +5,11 @@ import { sql } from 'drizzle-orm';
 import { validateSQL } from './safety';
 import { getRelevantSchema } from './schema-helper';
 
+// NOTE: All database operations use transactions to ensure that auth context setting
+// and the actual query execute on the same database connection. This prevents 
+// connection pooling issues where session variables (set by set_config) are lost
+// when queries use different connections from the pool.
+
 // Helper to get current user context (you'll need to pass this from the route)
 interface UserContext {
   userId: string;
@@ -33,26 +38,47 @@ export const createDbReadTool = (context: UserContext) => tool({
         };
       }
 
-      // Set RLS context before executing any queries
-      await setAuthContext(
-        context.userId,
-        context.orgId,
-        context.workspaceId,
-        context.role
-      );
+      // Execute in transaction to ensure auth context and query use same connection
+      const startTime = Date.now();
+      let result;
 
       // Explain mode
       if (explain) {
-        const explainResult = await db.execute(sql.raw(`EXPLAIN ${query}`));
+        result = await db.transaction(async (tx) => {
+          // Set auth context
+          await tx.execute(sql`
+            SELECT set_config('auth.user_id', ${context.userId}, true),
+                   set_config('auth.org_id', ${context.orgId}, true),
+                   set_config('auth.workspace_id', ${context.workspaceId || ''}, true),
+                   set_config('auth.role', ${context.role}, true)
+          `);
+          
+          // Execute explain query
+          return await tx.execute(sql.raw(`EXPLAIN ${query}`));
+        });
+        
+        const executionTime = Date.now() - startTime;
         return {
           success: true,
-          plan: explainResult,
+          plan: result,
+          executionTime,
         };
       }
 
-      // Execute query directly (RLS policies handle organization filtering)
-      const startTime = Date.now();
-      const result = await db.execute(sql.raw(query));
+      // Execute query in transaction (RLS policies handle organization filtering)
+      result = await db.transaction(async (tx) => {
+        // Set auth context in the transaction
+        await tx.execute(sql`
+          SELECT set_config('auth.user_id', ${context.userId}, true),
+                 set_config('auth.org_id', ${context.orgId}, true),
+                 set_config('auth.workspace_id', ${context.workspaceId || ''}, true),
+                 set_config('auth.role', ${context.role}, true)
+        `);
+        
+        // Execute the query in the same transaction
+        return await tx.execute(sql.raw(query));
+      });
+      
       const executionTime = Date.now() - startTime;
 
       return {
@@ -93,19 +119,26 @@ export const createDbWriteTool = (context: UserContext) => tool({
         };
       }
 
-      // Set RLS context before executing any queries
-      await setAuthContext(
-        context.userId,
-        context.orgId,
-        context.workspaceId,
-        context.role
-      );
-
+      // Execute in transaction to ensure auth context and query use same connection
+      const startTime = Date.now();
+      let result;
+      
       // Check if confirmation is needed
       if (validation.needsConfirmation && !confirm) {
-        // Preview mode - show what would be affected
-        const previewQuery = query.replace(/^(DELETE|UPDATE)/i, 'SELECT * FROM');
-        const previewResult = await db.execute(sql.raw(previewQuery));
+        // Preview mode - show what would be affected (in transaction)
+        const previewResult = await db.transaction(async (tx) => {
+          // Set auth context
+          await tx.execute(sql`
+            SELECT set_config('auth.user_id', ${context.userId}, true),
+                   set_config('auth.org_id', ${context.orgId}, true),
+                   set_config('auth.workspace_id', ${context.workspaceId || ''}, true),
+                   set_config('auth.role', ${context.role}, true)
+          `);
+          
+          // Execute preview query
+          const previewQuery = query.replace(/^(DELETE|UPDATE)/i, 'SELECT * FROM');
+          return await tx.execute(sql.raw(previewQuery));
+        });
         
         return {
           success: false,
@@ -117,11 +150,23 @@ export const createDbWriteTool = (context: UserContext) => tool({
 
       // Preview mode
       if (preview) {
-        const countQuery = query.toLowerCase().startsWith('delete') 
-          ? query.replace(/^DELETE/i, 'SELECT COUNT(*) as count')
-          : query.replace(/^UPDATE.*?SET.*?(?=WHERE)/i, 'SELECT COUNT(*) as count FROM');
+        const countResult = await db.transaction(async (tx) => {
+          // Set auth context
+          await tx.execute(sql`
+            SELECT set_config('auth.user_id', ${context.userId}, true),
+                   set_config('auth.org_id', ${context.orgId}, true),
+                   set_config('auth.workspace_id', ${context.workspaceId || ''}, true),
+                   set_config('auth.role', ${context.role}, true)
+          `);
+          
+          // Execute count query
+          const countQuery = query.toLowerCase().startsWith('delete') 
+            ? query.replace(/^DELETE/i, 'SELECT COUNT(*) as count')
+            : query.replace(/^UPDATE.*?SET.*?(?=WHERE)/i, 'SELECT COUNT(*) as count FROM');
+          
+          return await tx.execute(sql.raw(countQuery));
+        });
         
-        const countResult = await db.execute(sql.raw(countQuery));
         return {
           success: true,
           preview: true,
@@ -129,9 +174,20 @@ export const createDbWriteTool = (context: UserContext) => tool({
         };
       }
 
-      // Execute mutation (RLS policies handle organization filtering)
-      const startTime = Date.now();
-      const result = await db.execute(sql.raw(query));
+      // Execute mutation in transaction (ensures auth context and query use same connection)
+      result = await db.transaction(async (tx) => {
+        // Set auth context in the transaction
+        await tx.execute(sql`
+          SELECT set_config('auth.user_id', ${context.userId}, true),
+                 set_config('auth.org_id', ${context.orgId}, true),
+                 set_config('auth.workspace_id', ${context.workspaceId || ''}, true),
+                 set_config('auth.role', ${context.role}, true)
+        `);
+        
+        // Execute the mutation in the same transaction
+        return await tx.execute(sql.raw(query));
+      });
+      
       const executionTime = Date.now() - startTime;
 
       // Log to audit trail (you'll implement this based on your audit table)
@@ -280,20 +336,23 @@ export const createExplainQueryTool = (context: UserContext) => tool({
         };
       }
 
-      // Set RLS context before executing any queries
-      await setAuthContext(
-        context.userId,
-        context.orgId,
-        context.workspaceId,
-        context.role
-      );
-      
-      // Build explain query (RLS policies handle organization filtering)
+      // Execute explain query in transaction to ensure auth context
       const explainQuery = analyze 
         ? `EXPLAIN ANALYZE ${query}`
         : `EXPLAIN ${query}`;
 
-      const result = await db.execute(sql.raw(explainQuery));
+      const result = await db.transaction(async (tx) => {
+        // Set auth context in the transaction
+        await tx.execute(sql`
+          SELECT set_config('auth.user_id', ${context.userId}, true),
+                 set_config('auth.org_id', ${context.orgId}, true),
+                 set_config('auth.workspace_id', ${context.workspaceId || ''}, true),
+                 set_config('auth.role', ${context.role}, true)
+        `);
+        
+        // Execute the explain query in the same transaction
+        return await tx.execute(sql.raw(explainQuery));
+      });
 
       return {
         success: true,

@@ -17,7 +17,7 @@ export const OMNIZEN_COMPLETE_SCHEMA = `
 
 **invoices** - Customer invoices
 - id: UUID primary key
-- organization_id: UUID (required for all queries) # but handled by RLS
+- organization_id: UUID (automatically set by triggers)
 - invoice_number: Text unique identifier
 - customer_id: UUID -> contacts.id (NOT contact_id!)
 - issue_date: Timestamp (NOT invoice_date!)
@@ -31,7 +31,7 @@ export const OMNIZEN_COMPLETE_SCHEMA = `
 
 **contacts** - Unified customers and vendors
 - id: UUID primary key
-- organization_id: UUID (required) # but handled by RLS
+- organization_id: UUID (automatically set by triggers)
 - type: 'customer' | 'vendor' | 'customer_vendor' | 'employee' | 'other' (NOT 'both'!)
 - company_name: Text (business name - NOT just 'name'!)
 - first_name: Text (person's first name)
@@ -44,7 +44,7 @@ export const OMNIZEN_COMPLETE_SCHEMA = `
 
 **products** - Products and services
 - id: UUID primary key
-- organization_id: UUID (required) # but handled by RLS
+- organization_id: UUID (automatically set by triggers)
 - sku: Text unique
 - name: Text (NOT product_name!)
 - description: Text
@@ -57,7 +57,7 @@ export const OMNIZEN_COMPLETE_SCHEMA = `
 
 **payments** - Payment records
 - id: UUID primary key
-- organization_id: UUID (required) # but handled by RLS
+- organization_id: UUID (automatically set by triggers)
 - payment_date: Timestamp
 - amount: Decimal
 - payment_method: Text
@@ -67,7 +67,7 @@ export const OMNIZEN_COMPLETE_SCHEMA = `
 
 **bills** - Vendor bills
 - id: UUID primary key
-- organization_id: UUID (required) # but handled by RLS
+- organization_id: UUID (automatically set by triggers)
 - bill_number: Text
 - vendor_id: UUID -> contacts.id (where contact_type='vendor')
 - bill_date: Timestamp
@@ -78,7 +78,7 @@ export const OMNIZEN_COMPLETE_SCHEMA = `
 
 **chart_accounts** - GL accounts
 - id: UUID primary key
-- organization_id: UUID (required) # but handled by RLS
+- organization_id: UUID (automatically set by triggers)
 - account_code: Text unique
 - account_name: Text
 - account_type: 'asset' | 'liability' | 'equity' | 'revenue' | 'expense'
@@ -87,7 +87,7 @@ export const OMNIZEN_COMPLETE_SCHEMA = `
 
 **warehouses** - Inventory locations
 - id: UUID primary key
-- organization_id: UUID (required) # but handled by RLS
+- organization_id: UUID (automatically set by triggers)
 - warehouse_name: Text
 - location: Text
 - is_default: Boolean
@@ -101,7 +101,7 @@ export const OMNIZEN_COMPLETE_SCHEMA = `
 
 **sales_orders** - Customer orders
 - id: UUID primary key
-- organization_id: UUID (required) # but handled by RLS
+- organization_id: UUID (automatically set by triggers)
 - order_number: Text
 - customer_id: UUID -> contacts.id
 - order_date: Timestamp
@@ -111,7 +111,7 @@ export const OMNIZEN_COMPLETE_SCHEMA = `
 
 **purchase_orders** - Vendor orders
 - id: UUID primary key
-- organization_id: UUID (required) # but handled by RLS
+- organization_id: UUID (automatically set by triggers)
 - order_number: Text
 - vendor_id: UUID -> contacts.id
 - order_date: Timestamp
@@ -121,7 +121,9 @@ export const OMNIZEN_COMPLETE_SCHEMA = `
 
 ### CRITICAL RULES
 
-1. **NEVER include organization_id , user_id, workspace_id in WHERE clause as its handled by rls auth context**
+1. **NEVER include organization_id, user_id, workspace_id in queries - they are automatically handled**
+   - SELECT: RLS filters data to your organization automatically 
+   - INSERT/UPDATE: Database triggers set organization_id automatically
 2. **Column names are snake_case in database**
 3. **Use correct foreign key names (customer_id NOT contact_id)**
 4. **Join tables have table-prefixed names when ambiguous**
@@ -329,12 +331,12 @@ CRITICAL RULES:
 - viewsList: List business views
 - explainQuery: Query analysis
 
-Examples of CORRECT queries (RLS handles organization filtering):
+Examples of CORRECT queries (automatic auth context handling):
 - SELECT * FROM invoices WHERE status = 'unpaid'
-- SELECT * FROM chart_accounts WHERE account_type = 'asset'  
-- SELECT * FROM contacts WHERE contact_type = 'customer'
+- INSERT INTO contacts (company_name, type) VALUES ('Acme Corp', 'customer') 
+- UPDATE products SET sale_price = 99.99 WHERE sku = 'WIDGET-001'
 
-Note: Query examples below show successful patterns - use as reference.`;
+Note: organization_id is automatically added to INSERTs and filtered on SELECTs.`;
 
   return prompt;
 }
