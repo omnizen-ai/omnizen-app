@@ -2,7 +2,6 @@ import { createClient } from '@supabase/supabase-js';
 import { auth } from '@/app/(auth)/auth';
 import { cookies } from 'next/headers';
 import type { Session } from 'next-auth';
-import type { Database } from '@/lib/supabase/types';
 
 // Types
 interface SupabaseAuthContext {
@@ -25,7 +24,7 @@ interface BridgedSession extends Session {
  */
 export class AuthBridge {
   private static instance: AuthBridge;
-  private supabaseAdmin: ReturnType<typeof createClient<Database>>;
+  private supabaseAdmin: ReturnType<typeof createClient<any>>;
 
   private constructor() {
     // Initialize Supabase Admin client for service role operations
@@ -137,7 +136,7 @@ export class AuthBridge {
    * Set RLS context for the current database session
    */
   async setRLSContext(
-    supabase: ReturnType<typeof createClient<Database>>,
+    supabase: ReturnType<typeof createClient<any>>,
     context: SupabaseAuthContext
   ) {
     // Set the organization context for RLS
@@ -249,7 +248,7 @@ export class AuthBridge {
   /**
    * Verify that RLS context is properly set
    */
-  async verifyRLSContext(supabase: ReturnType<typeof createClient<Database>>) {
+  async verifyRLSContext(supabase: ReturnType<typeof createClient<any>>) {
     const { data: verification, error } = await supabase.rpc('verify_auth_context');
 
     if (error) {
@@ -267,7 +266,7 @@ export class AuthBridge {
   /**
    * Clear RLS context on logout
    */
-  async clearRLSContext(supabase: ReturnType<typeof createClient<Database>>) {
+  async clearRLSContext(supabase: ReturnType<typeof createClient<any>>) {
     const { data: result, error } = await supabase.rpc('clear_auth_context');
 
     if (error) {
