@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { db } from './index';
-import { documentNumberSequences, generatedDocumentNumbers, type DocumentSequence } from './schema';
+import { documentNumberSequences, generatedDocumentNumbers, type DocumentSequence } from './schema/index';
 
 // Document types that support auto-numbering
 export type DocumentType = 
