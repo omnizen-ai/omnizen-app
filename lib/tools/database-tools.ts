@@ -1,6 +1,6 @@
 import { tool } from 'ai';
 import { z } from 'zod';
-import { db, setAuthContext } from '@/lib/db';
+import { aiDb as db, setAuthContext } from '@/lib/db';
 import { sql } from 'drizzle-orm';
 import { validateSQL } from './safety';
 import { getRelevantSchema } from './schema-helper';

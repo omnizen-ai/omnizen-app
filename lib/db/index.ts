@@ -52,6 +52,11 @@ const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL!;
 const queryClient = postgres(connectionString);
 export const db = drizzle(queryClient, { schema: fullSchema });
 
+// Create RLS-compliant connection for AI tools
+const aiAgentConnectionString = 'postgresql://ai_agent_role:ai_agent_secure_password@127.0.0.1:54322/postgres';
+const aiQueryClient = postgres(aiAgentConnectionString);
+export const aiDb = drizzle(aiQueryClient, { schema: fullSchema });
+
 // For migrations
 const migrationClient = postgres(connectionString, { max: 1 });
 export const migrationDb = drizzle(migrationClient, { schema: fullSchema });
