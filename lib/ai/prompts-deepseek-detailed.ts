@@ -88,9 +88,21 @@ export const OMNIZEN_COMPLETE_SCHEMA = `
 **warehouses** - Inventory locations
 - id: UUID primary key
 - organization_id: UUID (automatically set by triggers)
-- warehouse_name: Text
-- location: Text
+- code: Text (warehouse code)
+- name: Text (warehouse name)
+- type: Enum (main, branch, retail, distribution, virtual, consignment, third_party)
+- address_line1: Text
+- address_line2: Text
+- city: Text
+- state: Text
+- postal_code: Text
+- country: Text
+- manager_name: Text
+- phone: Text
+- email: Text
 - is_default: Boolean
+- allow_negative_stock: Boolean
+- is_active: Boolean
 
 **inventory_levels** - Stock per warehouse
 - id: UUID primary key

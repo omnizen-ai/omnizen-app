@@ -87,7 +87,7 @@ export default function WarehousesPage() {
       },
     },
     {
-      accessorKey: 'location',
+      accessorKey: 'city',
       header: 'Location',
       cell: ({ row }) => {
         const warehouse = row.original;

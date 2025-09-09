@@ -116,7 +116,7 @@ async function getUserRLSContext(userId: string): Promise<RLSContext | null> {
         )
       ORDER BY 
         CASE WHEN om.organization_id = ${orgCookie?.value || ''} THEN 0 ELSE 1 END,
-        om.created_at ASC
+        om.joined_at ASC
       LIMIT 1
     `);
 
