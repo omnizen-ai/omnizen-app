@@ -306,7 +306,7 @@ export default function AccountsPayablePage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${parseFloat(stats.totalOutstanding).toLocaleString()}
+                ${(parseFloat(stats.totalOutstanding) || 0).toLocaleString()}
               </div>
             </CardContent>
           </Card>
@@ -317,7 +317,7 @@ export default function AccountsPayablePage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-500">
-                ${parseFloat(stats.totalOverdue).toLocaleString()}
+                ${(parseFloat(stats.totalOverdue) || 0).toLocaleString()}
               </div>
             </CardContent>
           </Card>
@@ -328,7 +328,7 @@ export default function AccountsPayablePage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${parseFloat(stats.totalDraft).toLocaleString()}
+                ${(parseFloat(stats.totalDraft) || 0).toLocaleString()}
               </div>
             </CardContent>
           </Card>
@@ -371,7 +371,7 @@ export default function AccountsPayablePage() {
           open={paymentDialogOpen}
           onOpenChange={setPaymentDialogOpen}
           onSubmit={handlePaymentSubmit}
-          maxAmount={parseFloat(paymentBill.balanceDue || paymentBill.totalAmount)}
+          maxAmount={parseFloat(paymentBill.balanceDue || paymentBill.totalAmount) || 0}
           billNumber={paymentBill.billNumber}
           isLoading={paymentMutation.isPending}
         />

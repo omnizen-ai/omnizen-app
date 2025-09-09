@@ -340,7 +340,7 @@ export default function AccountsReceivablePage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${parseFloat(stats.totalOutstanding).toLocaleString()}
+                ${(parseFloat(stats.totalOutstanding) || 0).toLocaleString()}
               </div>
             </CardContent>
           </Card>
@@ -351,7 +351,7 @@ export default function AccountsReceivablePage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-500">
-                ${parseFloat(stats.totalOverdue).toLocaleString()}
+                ${(parseFloat(stats.totalOverdue) || 0).toLocaleString()}
               </div>
             </CardContent>
           </Card>
@@ -362,7 +362,7 @@ export default function AccountsReceivablePage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${parseFloat(stats.totalDraft).toLocaleString()}
+                ${(parseFloat(stats.totalDraft) || 0).toLocaleString()}
               </div>
             </CardContent>
           </Card>
