@@ -8,7 +8,11 @@ import { NextRequest } from 'next/server';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   return withAuth(async (session) => {
-    const organizationId = session.user.organizationId || '11111111-1111-1111-1111-111111111111';
+    // Require organization ID from session - no fallbacks
+    const organizationId = session.user.organizationId;
+    if (!organizationId) {
+      return ApiResponse.badRequest('Organization ID not found in session');
+    }
     
     const { searchParams } = new URL(request.url);
     const filters = {
@@ -35,8 +39,17 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 export const POST = withErrorHandler(async (request: NextRequest) => {
   return withAuth(async (session) => {
     const body = await request.json();
-    const organizationId = session.user.organizationId || '11111111-1111-1111-1111-111111111111';
-    const workspaceId = session.user.workspaceId || '22222222-2222-2222-2222-222222222222';
+    
+    // Require organization ID and workspace ID from session - no fallbacks
+    const organizationId = session.user.organizationId;
+    const workspaceId = session.user.workspaceId;
+    
+    if (!organizationId) {
+      return ApiResponse.badRequest('Organization ID not found in session');
+    }
+    if (!workspaceId) {
+      return ApiResponse.badRequest('Workspace ID not found in session');
+    }
     
     // Validate required fields (invoiceNumber is now optional - will be auto-generated)
     if (!body.customerId || !body.issueDate || !body.dueDate || !body.totalAmount) {

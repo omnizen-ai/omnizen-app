@@ -174,7 +174,7 @@ async function handleChatMessage(request: Request) {
     // Get database tools with user context
     const userContext = {
       userId: session.user.id,
-      orgId: session.user.organizationId || '11111111-1111-1111-1111-111111111111', // Use test org ID
+      orgId: session.user.organizationId!,
       workspaceId: session.user.workspaceId,
       role: session.user.role || 'user',
     };

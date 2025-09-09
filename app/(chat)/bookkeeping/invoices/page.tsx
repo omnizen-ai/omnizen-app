@@ -288,11 +288,11 @@ export default function AccountsReceivablePage() {
         ...data,
       });
     } else {
-      // For demo, using a test customer ID
-      await createMutation.mutateAsync({
-        ...data,
-        customerId: data.customerId || '44444444-4444-4444-4444-444444444444',
-      });
+      // Validate customer ID is provided
+      if (!data.customerId) {
+        throw new Error('Customer ID is required');
+      }
+      await createMutation.mutateAsync(data);
     }
     setFormOpen(false);
     setSelectedInvoice(null);

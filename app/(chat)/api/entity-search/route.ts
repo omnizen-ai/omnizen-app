@@ -19,9 +19,17 @@ export async function GET(request: NextRequest) {
     }
 
     // Use session data for user context (RLS will handle filtering)
+    const organizationId = session.user.organizationId;
+    if (!organizationId) {
+      return NextResponse.json(
+        { success: false, error: 'Organization ID not found in session' },
+        { status: 400 }
+      );
+    }
+
     const userContext: UserContext = {
       userId: session.user.id,
-      orgId: session.user.organizationId || '11111111-1111-1111-1111-111111111111', // Fallback for dev
+      orgId: organizationId,
       workspaceId: session.user.workspaceId,
       role: session.user.role || 'user'
     };
@@ -73,9 +81,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Use session data for user context (RLS will handle filtering)
+    const organizationId = session.user.organizationId;
+    if (!organizationId) {
+      return NextResponse.json(
+        { success: false, error: 'Organization ID not found in session' },
+        { status: 400 }
+      );
+    }
+
     const userContext: UserContext = {
       userId: session.user.id,
-      orgId: session.user.organizationId || '11111111-1111-1111-1111-111111111111', // Fallback for dev
+      orgId: organizationId,
       workspaceId: session.user.workspaceId,
       role: session.user.role || 'user'
     };

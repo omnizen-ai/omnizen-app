@@ -260,11 +260,11 @@ export default function AccountsPayablePage() {
         ...data,
       });
     } else {
-      // For demo, using a test vendor ID
-      await createMutation.mutateAsync({
-        ...data,
-        vendorId: data.vendorId || '33333333-3333-3333-3333-333333333333',
-      });
+      // Validate vendor ID is provided
+      if (!data.vendorId) {
+        throw new Error('Vendor ID is required');
+      }
+      await createMutation.mutateAsync(data);
     }
     setFormOpen(false);
     setSelectedBill(null);

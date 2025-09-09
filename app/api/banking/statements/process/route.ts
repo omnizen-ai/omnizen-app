@@ -13,7 +13,10 @@ const processStatementSchema = z.object({
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   return withAuth(async (session) => {
-    const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
+    const organizationId = session.user?.organizationId;
+    if (!organizationId) {
+      return ApiResponse.badRequest('Organization ID not found in session');
+    }
 
     try {
       // Parse multipart form data

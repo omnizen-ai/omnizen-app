@@ -138,7 +138,10 @@ async function submitFeedback(request: NextRequest): Promise<ApiResponse<any>> {
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   return withAuth(async (session) => {
-    const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
+    const organizationId = session.user?.organizationId;
+    if (!organizationId) {
+      return ApiResponse.badRequest('Organization ID not found in session');
+    }
 
     try {
       const { searchParams } = new URL(request.url);
@@ -181,7 +184,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   return withAuth(async (session) => {
-    const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
+    const organizationId = session.user?.organizationId;
+    if (!organizationId) {
+      return ApiResponse.badRequest('Organization ID not found in session');
+    }
 
     try {
       const body = await request.json();

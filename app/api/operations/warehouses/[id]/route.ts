@@ -62,7 +62,10 @@ type RouteParams = {
 
 export const GET = withErrorHandler(async (request: NextRequest, { params }: RouteParams) => {
   return withAuth(async (session) => {
-    const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
+    const organizationId = session.user?.organizationId;
+    if (!organizationId) {
+      return ApiResponse.badRequest('Organization ID not found in session');
+    }
     const { id } = await params;
     
     const warehouse = await getWarehouseById(id, organizationId);
@@ -77,7 +80,10 @@ export const GET = withErrorHandler(async (request: NextRequest, { params }: Rou
 
 export const PUT = withErrorHandler(async (request: NextRequest, { params }: RouteParams) => {
   return withAuth(async (session) => {
-    const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
+    const organizationId = session.user?.organizationId;
+    if (!organizationId) {
+      return ApiResponse.badRequest('Organization ID not found in session');
+    }
     const { id } = await params;
     
     const body = await request.json();
@@ -95,7 +101,10 @@ export const PUT = withErrorHandler(async (request: NextRequest, { params }: Rou
 
 export const DELETE = withErrorHandler(async (request: NextRequest, { params }: RouteParams) => {
   return withAuth(async (session) => {
-    const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
+    const organizationId = session.user?.organizationId;
+    if (!organizationId) {
+      return ApiResponse.badRequest('Organization ID not found in session');
+    }
     const { id } = await params;
     
     // First check if the warehouse exists

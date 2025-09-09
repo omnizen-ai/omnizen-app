@@ -7,10 +7,21 @@ import { NextRequest } from 'next/server';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   return withAuth(async (session) => {
-    // Use a proper UUID for testing - in production this would come from session
-    const organizationId = session.user.organizationId || '11111111-1111-1111-1111-111111111111';
+    // Require organization ID from session - no fallbacks
+    const organizationId = session.user.organizationId;
+    if (!organizationId) {
+      return ApiResponse.badRequest('Organization ID not found in session');
+    }
+    
+    console.log('[Accounts API] Debug info:', {
+      sessionUserId: session.user?.id,
+      sessionOrgId: session.user?.organizationId,
+      usingOrgId: organizationId
+    });
     
     const accounts = await getChartOfAccounts(organizationId);
+    console.log('[Accounts API] Query result:', { accountCount: accounts?.length || 0, organizationId });
+    
     return ApiResponse.success(accounts);
   });
 });
@@ -18,8 +29,17 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 export const POST = withErrorHandler(async (request: NextRequest) => {
   return withAuth(async (session) => {
     const body = await request.json();
-    const organizationId = session.user.organizationId || '11111111-1111-1111-1111-111111111111';
-    const workspaceId = session.user.workspaceId || '22222222-2222-2222-2222-222222222222';
+    
+    // Require organization ID and workspace ID from session - no fallbacks
+    const organizationId = session.user.organizationId;
+    const workspaceId = session.user.workspaceId;
+    
+    if (!organizationId) {
+      return ApiResponse.badRequest('Organization ID not found in session');
+    }
+    if (!workspaceId) {
+      return ApiResponse.badRequest('Workspace ID not found in session');
+    }
     
     // Validate required fields
     if (!body.code || !body.name || !body.type) {

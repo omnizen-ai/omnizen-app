@@ -30,7 +30,10 @@ const createBankAccountSchema = z.object({
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   return withAuth(async (session) => {
-    const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
+    const organizationId = session.user?.organizationId;
+    if (!organizationId) {
+      return ApiResponse.badRequest('Organization ID not found in session');
+    }
     
     const accounts = await getBankAccounts(organizationId);
     return ApiResponse.success(accounts);
@@ -39,7 +42,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   return withAuth(async (session) => {
-    const organizationId = session.user?.organizationId || '11111111-1111-1111-1111-111111111111';
+    const organizationId = session.user?.organizationId;
+    if (!organizationId) {
+      return ApiResponse.badRequest('Organization ID not found in session');
+    }
     const workspaceId = session.user?.workspaceId || null;
     
     const body = await request.json();

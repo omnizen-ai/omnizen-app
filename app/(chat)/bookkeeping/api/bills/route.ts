@@ -71,7 +71,7 @@ export const POST = withErrorHandler(
       vendorInvoiceNumber: body.vendorInvoiceNumber || null,
       notes: body.notes || null,
       organizationId: context.orgId,  // From RLS context
-      workspaceId: context.workspaceId || '22222222-2222-2222-2222-222222222222',
+      workspaceId: context.workspaceId,
       billNumber: body.billNumber,    // Optional - will be auto-generated
       userId: context.userId,         // For audit tracking
     });
