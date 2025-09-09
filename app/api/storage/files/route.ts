@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth, withErrorHandler, ApiResponse } from '@/lib/api/base';
+import { withRLS, withErrorHandler, ApiResponse, RLSContext } from '@/lib/api/base';
 import { documentStorage } from '@/lib/storage/document-storage';
 import { z } from 'zod';
 
@@ -18,8 +18,8 @@ const uploadFileSchema = z.object({
   overwrite: z.boolean().optional().default(false),
 });
 
-async function listFiles(request: NextRequest): Promise<ApiResponse<any>> {
-  const { organizationId } = request as any;
+async function listFiles(request: NextRequest, context: RLSContext): Promise<ApiResponse<any>> {
+  const { organizationId } = context;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -72,8 +72,8 @@ async function listFiles(request: NextRequest): Promise<ApiResponse<any>> {
   }
 }
 
-async function uploadFile(request: NextRequest): Promise<ApiResponse<any>> {
-  const { organizationId, session } = request as any;
+async function uploadFile(request: NextRequest, context: RLSContext): Promise<ApiResponse<any>> {
+  const { organizationId, session } = context;
 
   try {
     // Parse multipart form data
@@ -132,5 +132,5 @@ async function uploadFile(request: NextRequest): Promise<ApiResponse<any>> {
   }
 }
 
-export const GET = withAuth(withErrorHandler(listFiles));
-export const POST = withAuth(withErrorHandler(uploadFile));
+export const GET = withRLS(withErrorHandler(listFiles));
+export const POST = withRLS(withErrorHandler(uploadFile));

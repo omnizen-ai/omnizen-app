@@ -50,6 +50,13 @@
       "when": 1757258439467,
       "tag": "0006_strong_gorilla_man",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1757390941170,
+      "tag": "0007_youthful_nitro",
+      "breakpoints": true
     }
   ]
 }

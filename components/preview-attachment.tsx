@@ -1,7 +1,8 @@
 import type { Attachment } from '@/lib/types';
 import { Loader } from './elements/loader';
-import { CrossSmallIcon, } from './icons';
+import { CrossSmallIcon } from './icons';
 import { Button } from './ui/button';
+import { VoiceMessagePreview } from './voice-message-preview';
 
 export const PreviewAttachment = ({
   attachment,
@@ -14,7 +15,21 @@ export const PreviewAttachment = ({
   onRemove?: () => void;
   onEdit?: () => void;
 }) => {
-  const { name, url, contentType } = attachment;
+  const { name, url, contentType, metadata } = attachment;
+
+  // Check if this is a voice message
+  const isVoiceMessage = metadata?.isVoiceMessage || contentType?.startsWith('audio/');
+
+  // If it's a voice message, use the dedicated component
+  if (isVoiceMessage) {
+    return (
+      <VoiceMessagePreview
+        attachment={attachment}
+        isUploading={isUploading}
+        onRemove={onRemove}
+      />
+    );
+  }
 
   return (
     <div data-testid="input-attachment-preview" className="group relative size-16 rounded-lg overflow-hidden bg-muted border">

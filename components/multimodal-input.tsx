@@ -39,6 +39,7 @@ import { FileUploadHandler } from './input/file-upload-handler';
 import { VoiceRecorder } from './input/voice-recorder';
 import { useDocumentProcessor } from './input/document-processor';
 import { EnhancedTextarea } from './autocomplete';
+import { transcriptionService } from '@/lib/ai/transcription';
 
 function PureMultimodalInput({
   chatId,
@@ -183,6 +184,104 @@ function PureMultimodalInput({
     setIsRecording(true);
   };
 
+  const uploadVoiceMessage = async (audioFile: File): Promise<Attachment | null> => {
+    try {
+      // Upload audio file to voice-messages bucket
+      const formData = new FormData();
+      formData.append('file', audioFile);
+      formData.append('options', JSON.stringify({
+        bucket: 'voice-messages',
+        category: 'voice-messages',
+      }));
+
+      const response = await fetch('/api/storage/files', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || 'Upload failed');
+      }
+
+      // Start transcription in background
+      const transcriptionPromise = transcriptionService.transcribeAudio(
+        new Uint8Array(await audioFile.arrayBuffer())
+      );
+
+      // Create attachment immediately with audio file
+      const attachment: Attachment = {
+        name: audioFile.name,
+        url: result.data.publicUrl || result.data.filePath,
+        contentType: audioFile.type,
+        size: audioFile.size,
+        metadata: {
+          bucket: 'voice-messages',
+          duration: 0, // Will be updated after transcription
+          isVoiceMessage: true,
+          transcribing: true,
+        }
+      };
+
+      // Handle transcription result asynchronously
+      transcriptionPromise.then(async (transcriptionResult) => {
+        if (transcriptionResult.success && transcriptionResult.transcript) {
+          // Update attachment with transcript
+          const updatedAttachment: Attachment = {
+            ...attachment,
+            metadata: {
+              ...attachment.metadata,
+              transcript: transcriptionResult.transcript,
+              transcriptSegments: transcriptionResult.segments,
+              duration: transcriptionResult.duration,
+              transcriptionConfidence: transcriptionResult.confidence,
+              transcribing: false,
+            }
+          };
+
+          // Update the attachments state to reflect transcription completion
+          setAttachments(prev => 
+            prev.map(att => 
+              att.url === attachment.url ? updatedAttachment : att
+            )
+          );
+
+          // Show success toast
+          toast.success('Voice message transcribed successfully');
+        } else {
+          // Update attachment to show transcription failed
+          const updatedAttachment: Attachment = {
+            ...attachment,
+            metadata: {
+              ...attachment.metadata,
+              transcribing: false,
+              transcriptionError: transcriptionResult.error,
+            }
+          };
+
+          setAttachments(prev => 
+            prev.map(att => 
+              att.url === attachment.url ? updatedAttachment : att
+            )
+          );
+
+          toast.error('Failed to transcribe voice message');
+        }
+      });
+
+      return attachment;
+
+    } catch (error) {
+      console.error('Voice message upload failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to upload voice message');
+      return null;
+    }
+  };
+
   const handleRecordingStop = async (audioBlob: Blob) => {
     setIsRecording(false);
     
@@ -190,9 +289,10 @@ function PureMultimodalInput({
       type: 'audio/wav',
     });
     
-    const attachment = await uploadFile(audioFile);
+    const attachment = await uploadVoiceMessage(audioFile);
     if (attachment) {
       setAttachments(prev => [...prev, attachment]);
+      toast.success('Voice message uploaded');
     }
   };
 

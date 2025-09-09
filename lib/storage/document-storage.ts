@@ -101,6 +101,23 @@ export class DocumentStorageService {
       ],
       maxFileSize: 100 * 1024 * 1024, // 100MB
       retentionDays: 7 // Auto-cleanup after 1 week
+    },
+    'voice-messages': {
+      name: 'voice-messages',
+      public: false,
+      allowedMimeTypes: [
+        'audio/wav',
+        'audio/mpeg', // mp3
+        'audio/mp4',  // m4a
+        'audio/webm',
+        'audio/ogg',
+        'audio/x-m4a',
+        'video/mp4',  // for video messages
+        'video/webm',
+        'video/quicktime', // mov
+      ],
+      maxFileSize: 25 * 1024 * 1024, // 25MB - reasonable for voice messages
+      retentionDays: 365 // 1 year retention for voice messages
     }
   };
 
@@ -847,6 +864,7 @@ export class DocumentStorageService {
       'receipts': { minRole: 'user', minRoleLevel: 1, allowedOperations: ['read', 'write'] },
       'contracts': { minRole: 'manager', minRoleLevel: 2, allowedOperations: ['read', 'write'] },
       'temp-uploads': { minRole: 'user', minRoleLevel: 1, allowedOperations: ['read', 'write', 'delete'] },
+      'voice-messages': { minRole: 'user', minRoleLevel: 1, allowedOperations: ['read', 'write'] },
     };
 
     return permissionsMap[bucket] || { minRole: 'admin', minRoleLevel: 3, allowedOperations: [] };

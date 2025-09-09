@@ -10,6 +10,7 @@ import {
   uniqueIndex,
   integer,
   decimal,
+  real,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
@@ -29,8 +30,10 @@ export const documentTypeEnum = pgEnum('document_type', [
   'invoice',
   'contract',
   'statement',
+  'audio', // Voice messages and audio files
+  'video', // Video files
   'other'
-]);
+]);;
 
 // Document processing status
 export const documentStatusEnum = pgEnum('document_status', [
@@ -71,6 +74,14 @@ export const documentsTable = pgTable('documents', {
   textLength: integer('text_length'), // Length of extracted text
   language: text('language').default('en'), // Detected language
   
+  // Audio transcription (for voice messages)
+  transcript: text('transcript'), // Audio transcription text
+  transcriptSegments: jsonb('transcript_segments'), // Array of transcript segments with timestamps
+  audioDuration: real('audio_duration'), // Duration in seconds
+  transcriptionConfidence: real('transcription_confidence'), // Average confidence score
+  transcriptionProvider: text('transcription_provider'), // openai, deepgram, etc.
+  transcribedAt: timestamp('transcribed_at'),
+  
   // Document metadata
   metadata: jsonb('metadata').notNull().default({}),
   // Expected metadata structure:
@@ -109,7 +120,7 @@ export const documentsTable = pgTable('documents', {
   categoryIdx: index('doc_category_idx').on(table.category),
   createdIdx: index('doc_created_idx').on(table.createdAt),
   storageKeyIdx: uniqueIndex('doc_storage_key_idx').on(table.storageKey),
-}));
+}));;
 
 // Document embeddings table - Vector embeddings for semantic search
 export const documentEmbeddings = pgTable('document_embeddings', {
