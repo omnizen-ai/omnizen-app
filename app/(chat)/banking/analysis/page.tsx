@@ -68,12 +68,6 @@ export default function FinancialAnalysisPage() {
     <div className="flex flex-col min-w-0 h-dvh bg-background">
       <div className="flex-1 overflow-y-auto">
         <div className="container max-w-6xl mx-auto py-8 px-4">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold">Financial Analysis</h2>
-            <p className="text-muted-foreground mt-2">
-              Comprehensive financial metrics and ratio analysis.
-            </p>
-          </div>
 
           {/* Key Performance Indicators */}
           <div className="grid gap-4 md:grid-cols-5 mb-8">

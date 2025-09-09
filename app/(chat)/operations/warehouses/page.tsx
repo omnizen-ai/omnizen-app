@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { DataTableCrud } from '@/components/ui/data-table-crud';
+import { WarehouseForm } from '@/components/operations/warehouse-form';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -200,12 +201,6 @@ export default function WarehousesPage() {
     <div className="flex flex-col min-w-0 h-dvh bg-background">
       <div className="flex-1 overflow-y-auto">
         <div className="container max-w-6xl mx-auto py-8 px-4">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold">Warehouses</h2>
-            <p className="text-muted-foreground mt-2">
-              Manage warehouse locations, track storage capacity, and organize inventory distribution.
-            </p>
-          </div>
 
           {/* Summary Cards */}
           {summary && (
@@ -270,24 +265,14 @@ export default function WarehousesPage() {
         </div>
       </div>
 
-      {/* Warehouse Form Dialog */}
-      {formOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">
-              {selectedWarehouse ? 'Edit Warehouse' : 'New Warehouse'}
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              Warehouse form functionality coming soon...
-            </p>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setFormOpen(false)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Warehouse Form */}
+      <WarehouseForm
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        onSubmit={handleFormSubmit}
+        warehouse={selectedWarehouse}
+        isLoading={createMutation.isPending || updateMutation.isPending}
+      />
     </div>
   );
 }

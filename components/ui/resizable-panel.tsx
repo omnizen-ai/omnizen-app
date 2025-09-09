@@ -4,6 +4,7 @@ import * as React from 'react';
 import { X, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePanelState } from '@/lib/hooks/use-panel-state';
+import { QuickCreateMenu } from '@/components/ui/quick-create-menu';
 
 interface ResizablePanelProps {
   children: React.ReactNode;
@@ -13,6 +14,24 @@ interface ResizablePanelProps {
   defaultWidth?: number;
 }
 
+// Panel title mapping
+const panelTitles: Record<string, string> = {
+  'bookkeeping/general-ledger': 'General Ledger',
+  'bookkeeping/bills': 'Bills',
+  'bookkeeping/invoices': 'Invoices',
+  'banking/payment-methods': 'Payment Methods',
+  'banking/transactions': 'Transactions',
+  'sales/crm': 'CRM',
+  'sales/orders': 'Sales Orders',
+  'sales/quotations': 'Quotations',
+  'operations/inventory': 'Inventory',
+  'operations/products': 'Products',
+  'operations/warehouses': 'Warehouses',
+  'purchasing/orders': 'Purchase Orders',
+  'purchasing/vendors': 'Vendors',
+  'purchasing/receipts': 'Purchase Receipts',
+};
+
 export function ResizableSidePanel({
   children,
   className,
@@ -20,8 +39,9 @@ export function ResizableSidePanel({
   maxWidth = 80, // percentage
   defaultWidth = 600,
 }: ResizablePanelProps) {
-  const { isOpen, closePanel, setPanelWidth } = usePanelState();
+  const { isOpen, closePanel, setPanelWidth, panelType } = usePanelState();
   const [width, setWidth] = React.useState(defaultWidth);
+  const panelTitle = panelType ? panelTitles[panelType] || 'Panel' : 'Panel';
 
   React.useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -80,19 +100,27 @@ export function ResizableSidePanel({
 
       {/* Panel Content */}
       <div className="flex-1 bg-background border-l shadow-lg overflow-hidden relative">
-        {/* Close Button */}
-        <div className="absolute right-4 top-4 z-10">
-          <button
-            onClick={closePanel}
-            className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-background/80 backdrop-blur-sm p-2 shadow-sm"
-          >
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
-          </button>
+        {/* Professional Header */}
+        <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
+          <div className="flex items-center justify-between px-6 py-4">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">{panelTitle}</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <QuickCreateMenu />
+              <button
+                onClick={closePanel}
+                className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 p-2"
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Content with consistent top padding */}
-        <div className="h-full overflow-y-auto pt-16">
+        {/* Content */}
+        <div className="h-full overflow-y-auto" style={{ height: 'calc(100% - 73px)' }}>
           {children}
         </div>
       </div>

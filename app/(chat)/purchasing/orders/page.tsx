@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { DataTableCrud } from '@/components/ui/data-table-crud';
+import { PurchaseOrderForm } from '@/components/purchasing/purchase-order-form';
+import { VendorForm } from '@/components/purchasing/vendor-form';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,6 +25,7 @@ import {
   useDeletePurchaseOrder,
   usePurchaseOrdersSummary
 } from '@/lib/hooks/use-purchase-orders';
+import { useContacts, useCreateContact } from '@/lib/hooks/use-sales';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,13 +38,17 @@ import {
 export default function PurchaseOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [showNoVendorDialog, setShowNoVendorDialog] = useState(false);
+  const [showVendorForm, setShowVendorForm] = useState(false);
 
   // React Query hooks
   const { data: orders = [], isLoading: ordersLoading, refetch } = usePurchaseOrders();
   const { data: summary } = usePurchaseOrdersSummary();
+  const { data: vendors = [], isLoading: vendorsLoading } = useContacts({ type: 'vendor' });
   const createMutation = useCreatePurchaseOrder();
   const updateMutation = useUpdatePurchaseOrder();
   const deleteMutation = useDeletePurchaseOrder();
+  const createContactMutation = useCreateContact();
 
   // Columns definition for purchase orders table
   const orderColumns: ColumnDef<any>[] = [
@@ -176,6 +183,10 @@ export default function PurchaseOrdersPage() {
 
   // Handlers
   const handleAdd = () => {
+    if (vendors.length === 0) {
+      setShowNoVendorDialog(true);
+      return;
+    }
     setSelectedOrder(null);
     setFormOpen(true);
   };
@@ -204,16 +215,24 @@ export default function PurchaseOrdersPage() {
     }
   };
 
+  const handleCreateVendor = () => {
+    setShowVendorForm(true);
+  };
+
+  const handleVendorSubmit = async (data: any) => {
+    await createContactMutation.mutateAsync({ ...data, type: 'vendor' });
+    setShowVendorForm(false);
+    // After creating a vendor, open the purchase order form
+    setTimeout(() => {
+      setSelectedOrder(null);
+      setFormOpen(true);
+    }, 200);
+  };
+
   return (
     <div className="flex flex-col min-w-0 h-dvh bg-background">
       <div className="flex-1 overflow-y-auto">
         <div className="container max-w-6xl mx-auto py-8 px-4">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold">Purchase Orders</h2>
-            <p className="text-muted-foreground mt-2">
-              Create purchase orders, track deliveries, and manage vendor relationships.
-            </p>
-          </div>
 
           {/* Summary Cards */}
           {summary && (
@@ -280,23 +299,45 @@ export default function PurchaseOrdersPage() {
         </div>
       </div>
 
-      {/* Purchase Order Form Dialog */}
-      {formOpen && (
+      {/* No Vendor Dialog */}
+      {showNoVendorDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">
-              {selectedOrder ? 'Edit Purchase Order' : 'New Purchase Order'}
-            </h3>
+            <h3 className="text-lg font-semibold mb-4">No Vendors Found</h3>
             <p className="text-muted-foreground mb-4">
-              Purchase order form functionality coming soon...
+              You need to create a vendor before you can create a purchase order.
             </p>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setFormOpen(false)}>
+              <Button variant="outline" onClick={() => setShowNoVendorDialog(false)}>
                 Cancel
+              </Button>
+              <Button onClick={handleCreateVendor}>
+                Create Vendor
               </Button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Vendor Form */}
+      <VendorForm
+        open={showVendorForm}
+        onOpenChange={setShowVendorForm}
+        onSubmit={handleVendorSubmit}
+        vendor={null}
+        isLoading={createContactMutation.isPending}
+      />
+
+      {/* Purchase Order Form */}
+      {vendors.length > 0 && (
+        <PurchaseOrderForm
+          open={formOpen}
+          onOpenChange={setFormOpen}
+          onSubmit={handleFormSubmit}
+          purchaseOrder={selectedOrder}
+          vendors={vendors}
+          isLoading={createMutation.isPending || updateMutation.isPending}
+        />
       )}
     </div>
   );

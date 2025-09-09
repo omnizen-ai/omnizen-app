@@ -196,12 +196,6 @@ export default function ProductsPage() {
     <div className="flex flex-col min-w-0 h-dvh bg-background">
       <div className="flex-1 overflow-y-auto">
         <div className="container max-w-6xl mx-auto py-8 px-4">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold">Product Management</h2>
-            <p className="text-muted-foreground mt-2">
-              Manage your product catalog, pricing, and inventory information.
-            </p>
-          </div>
 
           {/* Summary Cards */}
           {summary && (

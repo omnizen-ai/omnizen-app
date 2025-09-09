@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { DataTableCrud } from '@/components/ui/data-table-crud';
+import { VendorForm } from '@/components/purchasing/vendor-form';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,12 +20,11 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  useVendors,
-  useCreateVendor,
-  useUpdateVendor,
-  useDeleteVendor,
-  useVendorsSummary
-} from '@/lib/hooks/use-vendors';
+  useContacts,
+  useCreateContact,
+  useUpdateContact,
+  useDeleteContact,
+} from '@/lib/hooks/use-sales';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,11 +39,22 @@ export default function VendorsPage() {
   const [formOpen, setFormOpen] = useState(false);
 
   // React Query hooks
-  const { data: vendors = [], isLoading: vendorsLoading, refetch } = useVendors();
-  const { data: summary } = useVendorsSummary();
-  const createMutation = useCreateVendor();
-  const updateMutation = useUpdateVendor();
-  const deleteMutation = useDeleteVendor();
+  const { data: vendors = [], isLoading: vendorsLoading, refetch } = useContacts({ type: 'vendor' });
+  const createMutation = useCreateContact();
+  const updateMutation = useUpdateContact();
+  const deleteMutation = useDeleteContact();
+
+  // Calculate summary from vendors data
+  const summary = {
+    totalVendors: vendors.length,
+    activeVendors: vendors.filter((v: any) => v.isActive).length,
+    recentVendors: vendors.filter((v: any) => {
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      return new Date(v.createdAt) > oneMonthAgo;
+    }).length,
+    totalPurchases: 0, // This would come from purchase orders data
+  };
 
   // Columns definition for vendors table
   const vendorColumns: ColumnDef<any>[] = [
@@ -63,10 +74,10 @@ export default function VendorsPage() {
         return (
           <div>
             <div className="font-medium">
-              {vendor.companyName || vendor.displayName}
+              {vendor.companyName || vendor.name}
             </div>
             <div className="text-sm text-muted-foreground">
-              {vendor.companyName ? vendor.displayName : vendor.email}
+              {vendor.companyName ? vendor.name : vendor.email}
             </div>
           </div>
         );
@@ -104,8 +115,8 @@ export default function VendorsPage() {
         return address ? (
           <div className="text-sm">
             <div>{address}</div>
-            {vendor.postalCode && (
-              <div className="text-muted-foreground">{vendor.postalCode}</div>
+            {vendor.zipCode && (
+              <div className="text-muted-foreground">{vendor.zipCode}</div>
             )}
           </div>
         ) : (
@@ -195,14 +206,14 @@ export default function VendorsPage() {
         ...data,
       });
     } else {
-      await createMutation.mutateAsync(data);
+      await createMutation.mutateAsync({ ...data, type: 'vendor' });
     }
     setFormOpen(false);
     setSelectedVendor(null);
   };
 
   const handleDelete = async (vendor: any) => {
-    const vendorName = vendor.companyName || vendor.displayName;
+    const vendorName = vendor.companyName || vendor.name;
     if (confirm(`Are you sure you want to delete vendor ${vendorName}?`)) {
       await deleteMutation.mutateAsync(vendor.id);
     }
@@ -212,12 +223,6 @@ export default function VendorsPage() {
     <div className="flex flex-col min-w-0 h-dvh bg-background">
       <div className="flex-1 overflow-y-auto">
         <div className="container max-w-6xl mx-auto py-8 px-4">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold">Vendors</h2>
-            <p className="text-muted-foreground mt-2">
-              Manage vendor information, track performance, and maintain contact details.
-            </p>
-          </div>
 
           {/* Summary Cards */}
           {summary && (
@@ -282,24 +287,14 @@ export default function VendorsPage() {
         </div>
       </div>
 
-      {/* Vendor Form Dialog */}
-      {formOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">
-              {selectedVendor ? 'Edit Vendor' : 'New Vendor'}
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              Vendor form functionality coming soon...
-            </p>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setFormOpen(false)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Vendor Form */}
+      <VendorForm
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        onSubmit={handleFormSubmit}
+        vendor={selectedVendor}
+        isLoading={createMutation.isPending || updateMutation.isPending}
+      />
     </div>
   );
 }

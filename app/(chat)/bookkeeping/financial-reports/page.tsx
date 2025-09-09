@@ -60,12 +60,6 @@ export default function FinancialReportsPage() {
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="container max-w-6xl mx-auto py-8 px-4">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold">Financial Reporting Suite</h2>
-            <p className="text-muted-foreground mt-2">
-              Generate and analyze comprehensive financial reports for your organization.
-            </p>
-          </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {reports.map((report, index) => {

@@ -277,12 +277,6 @@ export default function InventoryPage() {
     <div className="flex flex-col min-w-0 h-dvh bg-background">
       <div className="flex-1 overflow-y-auto">
         <div className="container max-w-6xl mx-auto py-8 px-4">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold">Inventory Management</h2>
-            <p className="text-muted-foreground mt-2">
-              Track and manage inventory levels across all warehouses.
-            </p>
-          </div>
 
           {/* Summary Cards */}
           <div className="grid gap-4 md:grid-cols-5 mb-8">
