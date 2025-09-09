@@ -53,25 +53,86 @@ export async function getUser(email: string): Promise<Array<User>> {
   }
 }
 
-export async function createUser(email: string, password: string) {
+export async function createUser(email: string, password: string, organizationName: string) {
   const hashedPassword = generateHashedPassword(password);
 
   try {
-    const result = await db.insert(user).values({ email, password: hashedPassword }).returning({
-      id: user.id,
-      email: user.email,
-      name: user.name,
+    // Use database transaction to ensure atomic operations
+    const result = await db.transaction(async (tx) => {
+      // 1. Create user first
+      const [newUser] = await tx.insert(user).values({ 
+        email, 
+        password: hashedPassword 
+      }).returning({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      });
+
+      // 2. Import required modules
+      const { generateSlug, generateUniqueSlug } = await import('@/lib/utils');
+      const { organizations } = await import('@/lib/db/schema/core/organizations');
+      const { organizationMembers } = await import('@/lib/db/schema/core/users');
+
+      // 3. Generate base slug and ensure uniqueness
+      const baseSlug = generateSlug(organizationName);
+      const uniqueSlug = await generateUniqueSlug(baseSlug, async (slug) => {
+        const existing = await tx.select({ id: organizations.id })
+          .from(organizations)
+          .where(eq(organizations.slug, slug))
+          .limit(1);
+        return existing.length > 0;
+      });
+
+      // 4. Create organization (let schema defaults handle most values)
+      const [newOrg] = await tx.insert(organizations).values({
+        name: organizationName,
+        slug: uniqueSlug,
+        // All other values use schema defaults
+      }).returning({
+        id: organizations.id,
+        name: organizations.name,
+        slug: organizations.slug,
+      });
+
+      // 5. Add user as organization admin
+      await tx.insert(organizationMembers).values({
+        organizationId: newOrg.id,
+        userId: newUser.id,
+        role: 'admin',
+        permissions: {},
+        isActive: true,
+      });
+
+      console.log(`[Registration] Created organization "${newOrg.name}" (${newOrg.slug}) for user ${newUser.email}`);
+      
+      return { newUser, newOrg };
     });
 
-    // Create user in Supabase auth.users for RLS (one-time operation during signup)
-    if (result[0]) {
-      const { authBridge } = await import('@/lib/auth/auth-bridge');
-      await authBridge.createSupabaseAuthUser(result[0]);
-    }
+    // 6. Create user in Supabase auth.users for RLS (outside transaction)
+    const { authBridge } = await import('@/lib/auth/auth-bridge');
+    await authBridge.createSupabaseAuthUser(result.newUser);
 
-    return result;
+    console.log(`[Registration] Created Supabase auth user for ${result.newUser.email}`);
+
+    return [result.newUser];
   } catch (error) {
-    throw new ChatSDKError('bad_request:database', 'Failed to create user');
+    console.error('Failed to create user and organization:', error);
+    
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes('unique constraint') && error.message.includes('email')) {
+        throw new ChatSDKError('bad_request:database', 'An account with this email already exists');
+      }
+      if (error.message.includes('unique constraint') && error.message.includes('slug')) {
+        throw new ChatSDKError('bad_request:database', 'Organization name is not available');
+      }
+      if (error.message.includes('organization')) {
+        throw new ChatSDKError('bad_request:database', 'Failed to create organization');
+      }
+    }
+    
+    throw new ChatSDKError('bad_request:database', 'Failed to create account');
   }
 }
 

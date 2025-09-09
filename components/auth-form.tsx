@@ -7,15 +7,39 @@ export function AuthForm({
   action,
   children,
   defaultEmail = '',
+  showOrganizationField = false,
 }: {
   action: NonNullable<
     string | ((formData: FormData) => void | Promise<void>) | undefined
   >;
   children: React.ReactNode;
   defaultEmail?: string;
+  showOrganizationField?: boolean;
 }) {
   return (
     <Form action={action} className="flex flex-col gap-4 px-4 sm:px-16">
+      {showOrganizationField && (
+        <div className="flex flex-col gap-2">
+          <Label
+            htmlFor="organizationName"
+            className="text-zinc-600 font-normal dark:text-zinc-400"
+          >
+            Organization Name
+          </Label>
+
+          <Input
+            id="organizationName"
+            name="organizationName"
+            className="bg-muted text-md md:text-sm"
+            type="text"
+            placeholder="Acme Corp"
+            autoComplete="organization"
+            required
+            autoFocus
+          />
+        </div>
+      )}
+
       <div className="flex flex-col gap-2">
         <Label
           htmlFor="email"
@@ -32,7 +56,7 @@ export function AuthForm({
           placeholder="user@acme.com"
           autoComplete="email"
           required
-          autoFocus
+          autoFocus={!showOrganizationField}
           defaultValue={defaultEmail}
         />
       </div>
