@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
 import { ArrowUpIcon } from './icons';
-import { Share2Icon, FileTextIcon } from '@radix-ui/react-icons';
+import { FileTextIcon } from '@radix-ui/react-icons';
 import { SquareIcon, ArrowDown } from 'lucide-react';
 import { Button } from './ui/button';
 import { QuickActions } from './quick-actions';
@@ -171,73 +171,11 @@ function PureMultimodalInput({
     }
   });
 
-  // Handle file uploads from both drag/drop and file picker
-  const uploadFile = async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await fetch('/api/files/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const { url, pathname, contentType } = data;
-
-        return {
-          url,
-          name: pathname,
-          contentType: contentType,
-        };
-      }
-      const { error } = await response.json();
-      return null;
-    } catch (error) {
-      return null;
-    }
-  };
 
   const handleFileSelect = async (files: File[]) => {
-    // Separate documents from regular files
-    const documentFiles: File[] = [];
-    const regularFiles: File[] = [];
-
-    files.forEach(file => {
-      const documentTypes = [
-        'application/pdf',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'text/csv',
-        'text/plain',
-      ];
-      
-      if (documentTypes.includes(file.type)) {
-        documentFiles.push(file);
-      } else {
-        regularFiles.push(file);
-      }
-    });
-
-    // Process documents
-    const processedAttachments = await documentProcessor.processMultipleFiles(documentFiles);
-
-    // Upload regular files
-    const uploadPromises = regularFiles.map(uploadFile);
-    const uploadResults = await Promise.allSettled(uploadPromises);
-    
-    const uploadedAttachments = uploadResults
-      .filter((result): result is PromiseFulfilledResult<Attachment | null> => 
-        result.status === 'fulfilled' && result.value !== null
-      )
-      .map(result => result.value!);
-
-    // Add all attachments
-    const allAttachments = [...uploadedAttachments];
-    if (allAttachments.length > 0) {
-      setAttachments(prev => [...prev, ...allAttachments]);
-    }
+    // Process all files through the document processor
+    // The processor will handle documents with AI processing and images/other files as basic attachments
+    await documentProcessor.processMultipleFiles(files);
   };
 
   // Voice recording handlers
@@ -353,7 +291,6 @@ function PureMultimodalInput({
                 {/* Empty left side */}
               </PromptInputTools>
               <div className="flex items-center gap-1">
-                <AttachmentsButton onFileSelect={openFileDialog} status={status} />
                 <DocumentUploadButton onFileSelect={openFileDialog} status={status} />
                 <VoiceRecorder
                   isRecording={isRecording}
@@ -405,30 +342,6 @@ export const MultimodalInput = memo(
   },
 );
 
-function PureAttachmentsButton({
-  onFileSelect,
-  status,
-}: {
-  onFileSelect: () => void;
-  status: UseChatHelpers<ChatMessage>['status'];
-}) {
-  return (
-    <Button
-      data-testid="attachments-button"
-      className="bg-primary hover:bg-primary/90 text-primary-foreground size-8"
-      onClick={(event) => {
-        event.preventDefault();
-        onFileSelect();
-      }}
-      disabled={status !== 'ready'}
-      size="sm"
-    >
-      <Share2Icon className="size-4" />
-    </Button>
-  );
-}
-
-const AttachmentsButton = memo(PureAttachmentsButton);
 
 function PureStopButton({
   stop,
@@ -474,7 +387,7 @@ function PureDocumentUploadButton({
       }}
       disabled={status !== 'ready'}
       size="sm"
-      title="Upload documents (PDF, DOCX, XLSX, CSV, TXT) for AI processing"
+      title="Upload files (PDF, DOCX, XLSX, CSV, TXT, images) - documents get AI processing"
     >
       <FileTextIcon className="size-4" />
     </Button>
