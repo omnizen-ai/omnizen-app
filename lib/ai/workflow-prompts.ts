@@ -96,7 +96,26 @@ const DEFAULT_WORKFLOWS = {
 8. **Commission Calculation**: Calculate and record sales commissions
 9. **Revenue Reports**: Generate revenue reports, forecasts, and analytics
 
-**Key Considerations**: Ensure compliance with accounting standards, validate contract terms, maintain supporting documentation`
+**Key Considerations**: Ensure compliance with accounting standards, validate contract terms, maintain supporting documentation`,
+
+  'onboarding': `Business Onboarding Workflow:
+1. **System Understanding**: Use 'schemaInfo' tool to understand database structure and available tables
+2. **Current State Assessment**: Use 'dbRead' to check existing organization settings and any current chart of accounts
+3. **Business Discovery**: Ask targeted questions about business type, revenue streams, major expenses, and accounting needs
+4. **Industry Analysis**: Understand specific requirements based on business model (service, product, manufacturing, freelance, etc.)
+5. **Chart of Accounts Design**: Use 'dbWrite' to create essential accounts tailored to their specific business operations
+6. **Organization Configuration**: Use 'dbWrite' to update organization settings (currency, fiscal year, accounting mode, feature flags)
+7. **Feature Activation**: Enable appropriate modules based on business complexity and immediate needs
+8. **Setup Validation**: Use 'dbRead' to verify all accounts are created and organization is properly configured
+9. **Completion Confirmation**: Ensure user can immediately create invoices and perform basic accounting operations
+
+**Database Schema Knowledge**:
+- organizations table: currency, fiscal_year_start, accounting_mode, feature_flags (JSON object)
+- chart_accounts table: code (NOT account_code), name, type (NOT account_type) (asset/liability/equity/income/expense), normal_balance (debit/credit), organization_id
+- Account types: asset, liability, equity, income, expense, contra_asset, contra_liability, other
+- Normal balances: assets/expenses = debit, liabilities/equity/income = credit
+
+**Key Considerations**: Every business is unique - discover specific needs through conversation, create accounts that match actual operations, ensure immediate system usability, validate setup completeness`
 };
 
 /**
