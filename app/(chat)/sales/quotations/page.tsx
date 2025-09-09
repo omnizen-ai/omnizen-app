@@ -13,7 +13,6 @@ import {
   Send,
   Clock,
   CheckCircle,
-  XCircle,
   MoreHorizontal
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,6 +31,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { QuotationForm } from '@/components/sales/quotation-form';
 
 export default function QuotationsPage() {
   const [selectedQuotation, setSelectedQuotation] = useState<any>(null);
@@ -315,24 +315,13 @@ export default function QuotationsPage() {
         </div>
       </div>
 
-      {/* Quotation Form Dialog */}
-      {formOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">
-              {selectedQuotation ? 'Edit Quotation' : 'New Quotation'}
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              Quotation form functionality coming soon...
-            </p>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setFormOpen(false)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <QuotationForm
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        onSubmit={handleFormSubmit}
+        quotation={selectedQuotation}
+        isLoading={createMutation.isPending || updateMutation.isPending}
+      />
     </div>
   );
 }

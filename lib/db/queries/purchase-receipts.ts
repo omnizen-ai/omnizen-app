@@ -227,8 +227,8 @@ export async function getPurchaseReceiptSummary(organizationId: string) {
     .select({
       totalReceipts: sql<number>`COUNT(*)`,
       pendingReceipts: sql<number>`COUNT(CASE WHEN status = 'pending' THEN 1 END)`,
-      completedReceipts: sql<number>`COUNT(CASE WHEN status = 'completed' THEN 1 END)`,
-      totalValue: sql<number>`COALESCE(SUM(${purchaseReceipts.totalAmount}), 0)`,
+      receivedReceipts: sql<number>`COUNT(CASE WHEN status = 'received' THEN 1 END)`,
+      acceptedReceipts: sql<number>`COUNT(CASE WHEN status = 'accepted' THEN 1 END)`,
     })
     .from(purchaseReceipts)
     .where(eq(purchaseReceipts.organizationId, organizationId));
@@ -236,7 +236,7 @@ export async function getPurchaseReceiptSummary(organizationId: string) {
   return result[0] || {
     totalReceipts: 0,
     pendingReceipts: 0,
-    completedReceipts: 0,
-    totalValue: 0,
+    receivedReceipts: 0,
+    acceptedReceipts: 0,
   };
 }

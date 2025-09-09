@@ -9,10 +9,8 @@ import { cn } from '@/lib/utils';
 import { 
   ArrowUpDown, 
   Package,
-  FileText,
   Truck,
   CheckCircle,
-  XCircle,
   Clock,
   MoreHorizontal
 } from 'lucide-react';
@@ -32,6 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { PurchaseReceiptForm } from '@/components/purchasing/purchase-receipt-form';
 
 export default function PurchaseReceiptsPage() {
   const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
@@ -271,25 +270,23 @@ export default function PurchaseReceiptsPage() {
               
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Completed</CardTitle>
-                  <CheckCircle className="size-4 text-green-500" />
+                  <CardTitle className="text-sm font-medium">Received</CardTitle>
+                  <Truck className="size-4 text-blue-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">{summary.completedReceipts}</div>
-                  <p className="text-xs text-muted-foreground">Processed receipts</p>
+                  <div className="text-2xl font-bold text-blue-600">{summary.receivedReceipts}</div>
+                  <p className="text-xs text-muted-foreground">Goods received</p>
                 </CardContent>
               </Card>
               
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-                  <Truck className="size-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium">Accepted</CardTitle>
+                  <CheckCircle className="size-4 text-green-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
-                    ${summary.totalValue.toLocaleString()}
-                  </div>
-                  <p className="text-xs text-muted-foreground">Receipt value</p>
+                  <div className="text-2xl font-bold text-green-600">{summary.acceptedReceipts}</div>
+                  <p className="text-xs text-muted-foreground">Quality approved</p>
                 </CardContent>
               </Card>
             </div>
@@ -309,24 +306,13 @@ export default function PurchaseReceiptsPage() {
         </div>
       </div>
 
-      {/* Receipt Form Dialog */}
-      {formOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">
-              {selectedReceipt ? 'Edit Receipt' : 'New Receipt'}
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              Receipt form functionality coming soon...
-            </p>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setFormOpen(false)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <PurchaseReceiptForm
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        onSubmit={handleFormSubmit}
+        receipt={selectedReceipt}
+        isLoading={createMutation.isPending || updateMutation.isPending}
+      />
     </div>
   );
 }

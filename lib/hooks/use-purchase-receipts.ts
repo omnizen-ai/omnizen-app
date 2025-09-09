@@ -90,8 +90,8 @@ export function usePurchaseReceiptsSummary() {
     queryFn: () => apiClient.get<{
       totalReceipts: number;
       pendingReceipts: number;
-      completedReceipts: number;
-      totalValue: number;
+      receivedReceipts: number;
+      acceptedReceipts: number;
     }>('/api/purchasing/receipts?summary=true'),
   });
 }
