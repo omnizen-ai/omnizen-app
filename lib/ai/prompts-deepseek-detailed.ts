@@ -79,10 +79,10 @@ export const OMNIZEN_COMPLETE_SCHEMA = `
 **chart_accounts** - GL accounts
 - id: UUID primary key
 - organization_id: UUID (automatically set by triggers)
-- account_code: Text unique
-- account_name: Text
-- account_type: 'asset' | 'liability' | 'equity' | 'revenue' | 'expense'
-- parent_account_id: UUID (self-reference for sub-accounts)
+- code: Text unique (NOT account_code!)
+- name: Text (NOT account_name!)
+- type: 'asset' | 'liability' | 'equity' | 'income' | 'expense' | 'contra_asset' | 'contra_liability' | 'other'
+- parent_id: UUID (self-reference for sub-accounts, NOT parent_account_id!)
 - current_balance: Decimal
 
 **warehouses** - Inventory locations
