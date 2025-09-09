@@ -1,7 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { DataTableCrud } from '@/components/ui/data-table-crud';
+import { ProductForm } from '@/components/operations/product-form';
+import { NoInventoryDialog } from '@/components/operations/no-inventory-dialog';
+import { WarehouseForm } from '@/components/operations/warehouse-form';
+import {
+  useProducts,
+  useCreateProduct,
+  useUpdateProduct,
+  useDeleteProduct,
+} from '@/lib/hooks/use-products';
+import {
+  useWarehouses,
+  useCreateWarehouse,
+} from '@/lib/hooks/use-warehouses';
+import {
+  useInventoryLevels,
+  useInventorySummary,
+} from '@/lib/hooks/use-inventory';
+import type { Product, Warehouse } from '@/lib/db/schema/index';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,102 +34,105 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-// Mock data for inventory
-const mockInventory = [
-  {
-    id: '1',
-    productSku: 'SKU001',
-    productName: 'Wireless Mouse',
-    category: 'Electronics',
-    warehouse: 'Main Warehouse',
-    quantityOnHand: 150,
-    quantityAvailable: 120,
-    quantityReserved: 30,
-    reorderPoint: 50,
-    reorderQuantity: 100,
-    unitCost: 15.00,
-    totalValue: 2250,
-    status: 'in_stock',
-    stockLevel: 75,
-  },
-  {
-    id: '2',
-    productSku: 'SKU002',
-    productName: 'USB-C Cable',
-    category: 'Accessories',
-    warehouse: 'Main Warehouse',
-    quantityOnHand: 45,
-    quantityAvailable: 45,
-    quantityReserved: 0,
-    reorderPoint: 50,
-    reorderQuantity: 200,
-    unitCost: 8.50,
-    totalValue: 382.50,
-    status: 'low_stock',
-    stockLevel: 45,
-  },
-  {
-    id: '3',
-    productSku: 'SKU003',
-    productName: 'Mechanical Keyboard',
-    category: 'Electronics',
-    warehouse: 'Secondary Warehouse',
-    quantityOnHand: 0,
-    quantityAvailable: 0,
-    quantityReserved: 0,
-    reorderPoint: 20,
-    reorderQuantity: 50,
-    unitCost: 45.00,
-    totalValue: 0,
-    status: 'out_of_stock',
-    stockLevel: 0,
-  },
-  {
-    id: '4',
-    productSku: 'SKU004',
-    productName: 'Monitor Stand',
-    category: 'Furniture',
-    warehouse: 'Main Warehouse',
-    quantityOnHand: 200,
-    quantityAvailable: 180,
-    quantityReserved: 20,
-    reorderPoint: 30,
-    reorderQuantity: 50,
-    unitCost: 25.00,
-    totalValue: 5000,
-    status: 'in_stock',
-    stockLevel: 100,
-  },
-  {
-    id: '5',
-    productSku: 'SKU005',
-    productName: 'Desk Lamp',
-    category: 'Furniture',
-    warehouse: 'Secondary Warehouse',
-    quantityOnHand: 75,
-    quantityAvailable: 70,
-    quantityReserved: 5,
-    reorderPoint: 25,
-    reorderQuantity: 40,
-    unitCost: 35.00,
-    totalValue: 2625,
-    status: 'in_stock',
-    stockLevel: 75,
-  },
-];
 
 export default function InventoryPage() {
-  const [inventory] = useState(mockInventory);
+  const [showNoInventoryDialog, setShowNoInventoryDialog] = useState(false);
+  const [showProductForm, setShowProductForm] = useState(false);
+  const [showWarehouseForm, setShowWarehouseForm] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  // Calculate summary statistics
-  const totalItems = inventory.length;
-  const totalValue = inventory.reduce((sum, item) => sum + item.totalValue, 0);
-  const totalQuantity = inventory.reduce((sum, item) => sum + item.quantityOnHand, 0);
-  const lowStockItems = inventory.filter(item => item.status === 'low_stock').length;
-  const outOfStockItems = inventory.filter(item => item.status === 'out_of_stock').length;
+  // React Query hooks
+  const { data: products = [], isLoading: productsLoading } = useProducts();
+  const { data: warehouses = [], isLoading: warehousesLoading } = useWarehouses();
+  const { data: inventoryData, isLoading: inventoryLoading, error: inventoryError, refetch } = useInventoryLevels();
+  const { data: summary, error: summaryError } = useInventorySummary();
+  const createProductMutation = useCreateProduct();
+  const updateProductMutation = useUpdateProduct();
+  const deleteProductMutation = useDeleteProduct();
+  const createWarehouseMutation = useCreateWarehouse();
+
+  // Helper functions for data transformation
+  const getInventoryStatus = (inventory: any) => {
+    if (inventory.quantityOnHand === 0) return 'out_of_stock';
+    if (inventory.quantityOnHand <= inventory.reorderPoint) return 'low_stock';
+    return 'in_stock';
+  };
+
+  const getStockLevel = (inventory: any) => {
+    if (inventory.quantityOnHand === 0) return 0;
+    const maxLevel = Math.max(inventory.reorderPoint * 2, 100);
+    return Math.min((inventory.quantityOnHand / maxLevel) * 100, 100);
+  };
+
+  const transformInventoryDataToTableFormat = (data: any[]) => {
+    return data.map((item: any) => ({
+      id: item.inventory.id,
+      productSku: item.product?.sku || 'N/A',
+      productName: item.product?.name || 'Unknown Product',
+      category: item.product?.category || 'Uncategorized',
+      warehouse: item.warehouse?.name || 'Unknown Warehouse',
+      quantityOnHand: item.inventory.quantityOnHand || 0,
+      quantityAvailable: item.inventory.quantityAvailable || 0,
+      quantityReserved: item.inventory.quantityReserved || 0,
+      reorderPoint: item.inventory.reorderPoint || 0,
+      reorderQuantity: item.inventory.reorderQuantity || 0,
+      unitCost: item.inventory.averageCost || 0,
+      totalValue: (item.inventory.quantityOnHand || 0) * (item.inventory.averageCost || 0),
+      status: getInventoryStatus(item.inventory),
+      stockLevel: getStockLevel(item.inventory),
+    }));
+  };
+
+  // Transform inventory data for the table
+  const inventory = React.useMemo(() => {
+    if (!inventoryData) return [];
+    return transformInventoryDataToTableFormat(inventoryData);
+  }, [inventoryData]);
+
+  // Handlers following banking pattern
+  const handleAdd = () => {
+    if (products.length === 0 && warehouses.length === 0) {
+      setShowNoInventoryDialog(true);
+      return;
+    }
+    // If we have prerequisites, show product form directly
+    setSelectedProduct(null);
+    setShowProductForm(true);
+  };
+
+  const handleCreateProduct = () => {
+    setShowProductForm(true);
+  };
+
+  const handleCreateWarehouse = () => {
+    setShowWarehouseForm(true);
+  };
+
+  const handleProductSubmit = async (data: Partial<Product>) => {
+    if (selectedProduct) {
+      await updateProductMutation.mutateAsync({
+        id: selectedProduct.id,
+        ...data,
+      });
+    } else {
+      await createProductMutation.mutateAsync(data);
+    }
+    setShowProductForm(false);
+    setSelectedProduct(null);
+  };
+
+  const handleWarehouseSubmit = async (data: Partial<Warehouse>) => {
+    await createWarehouseMutation.mutateAsync(data);
+    setShowWarehouseForm(false);
+    // After creating a warehouse, optionally open the product form
+    setTimeout(() => {
+      setSelectedProduct(null);
+      setShowProductForm(true);
+    }, 200);
+  };
 
   // Columns definition
-  const columns: ColumnDef<typeof mockInventory[0]>[] = [
+  const columns: ColumnDef<any>[] = [
     {
       accessorKey: 'productSku',
       header: ({ column }) => {
@@ -279,94 +300,122 @@ export default function InventoryPage() {
         <div className="container max-w-6xl mx-auto py-8 px-4">
 
           {/* Summary Cards */}
-          <div className="grid gap-4 md:grid-cols-5 mb-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Items</CardTitle>
-                <Package className="size-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{totalItems}</div>
-                <p className="text-xs text-muted-foreground">
-                  Unique products
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Quantity</CardTitle>
-                <Package className="size-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {totalQuantity.toLocaleString()}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Units on hand
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-                <Package className="size-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  ${totalValue.toLocaleString()}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Inventory value
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Low Stock</CardTitle>
-                <AlertTriangle className="size-4 text-orange-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-orange-600">
-                  {lowStockItems}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Items need reorder
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Out of Stock</CardTitle>
-                <TrendingDown className="size-4 text-red-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-600">
-                  {outOfStockItems}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Items unavailable
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+          {(summary || !summaryError) && (
+            <div className="grid gap-4 md:grid-cols-5 mb-8">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Items</CardTitle>
+                  <Package className="size-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{summary?.totalItems || inventory.length}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Unique products
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Quantity</CardTitle>
+                  <Package className="size-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {(summary?.totalQuantity || inventory.reduce((sum, item) => sum + item.quantityOnHand, 0)).toLocaleString()}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Units on hand
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Value</CardTitle>
+                  <Package className="size-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    ${(summary?.totalValue || inventory.reduce((sum, item) => sum + item.totalValue, 0)).toLocaleString()}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Inventory value
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Low Stock</CardTitle>
+                  <AlertTriangle className="size-4 text-orange-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-orange-600">
+                    {summary?.lowStockItems || inventory.filter(item => item.status === 'low_stock').length}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Items need reorder
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Out of Stock</CardTitle>
+                  <TrendingDown className="size-4 text-red-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-red-600">
+                    {summary?.outOfStockItems || inventory.filter(item => item.status === 'out_of_stock').length}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Items unavailable
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
           <DataTableCrud
             columns={columns}
             data={inventory}
             searchKey="productSku"
             searchPlaceholder="Search products..."
-            onAdd={() => alert('Add inventory functionality coming soon')}
-            onRefresh={() => {}}
-            isLoading={false}
+            onAdd={handleAdd}
+            onRefresh={refetch}
+            isLoading={inventoryLoading || productsLoading || warehousesLoading}
             addButtonLabel="Add Product"
             showActions={false}
           />
         </div>
       </div>
+
+      {/* No Inventory Dialog */}
+      <NoInventoryDialog
+        open={showNoInventoryDialog}
+        onOpenChange={setShowNoInventoryDialog}
+        onCreateProduct={handleCreateProduct}
+        onCreateWarehouse={handleCreateWarehouse}
+      />
+
+      {/* Warehouse Form */}
+      <WarehouseForm
+        open={showWarehouseForm}
+        onOpenChange={setShowWarehouseForm}
+        onSubmit={handleWarehouseSubmit}
+        warehouse={null}
+        isLoading={createWarehouseMutation.isPending}
+      />
+
+      {/* Product Form */}
+      <ProductForm
+        open={showProductForm}
+        onOpenChange={setShowProductForm}
+        onSubmit={handleProductSubmit}
+        product={selectedProduct}
+        isLoading={createProductMutation.isPending || updateProductMutation.isPending}
+      />
     </div>
   );
 }

@@ -290,7 +290,7 @@ export async function getInventorySummary(organizationId: string) {
     .select({
       totalItems: sql<number>`COUNT(DISTINCT ${inventoryLevels.productId})`,
       totalQuantity: sql<number>`COALESCE(SUM(${inventoryLevels.quantityOnHand}), 0)`,
-      totalValue: sql<number>`COALESCE(SUM(${inventoryLevels.quantityOnHand} * ${inventoryLevels.unitCost}), 0)`,
+      totalValue: sql<number>`COALESCE(SUM(${inventoryLevels.quantityOnHand} * ${inventoryLevels.averageCost}), 0)`,
       lowStockItems: sql<number>`COUNT(CASE WHEN ${inventoryLevels.quantityOnHand} <= ${inventoryLevels.reorderPoint} THEN 1 END)`,
       outOfStockItems: sql<number>`COUNT(CASE WHEN ${inventoryLevels.quantityOnHand} = 0 THEN 1 END)`,
     })
