@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { DataTableCrud } from '@/components/ui/data-table-crud';
 import { SalesOrderForm } from '@/components/sales/sales-order-form';
 import { ContactForm } from '@/components/sales/contact-form';
+import { NoCustomerDialog } from '@/components/sales/no-customer-dialog';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -283,24 +284,11 @@ export default function SalesOrdersPage() {
       </div>
 
       {/* No Customer Dialog */}
-      {showNoCustomerDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">No Customers Found</h3>
-            <p className="text-muted-foreground mb-4">
-              You need to create a customer before you can create a sales order.
-            </p>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowNoCustomerDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreateCustomer}>
-                Create Customer
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <NoCustomerDialog
+        open={showNoCustomerDialog}
+        onOpenChange={setShowNoCustomerDialog}
+        onCreateCustomer={handleCreateCustomer}
+      />
 
       {/* Customer Form */}
       <ContactForm

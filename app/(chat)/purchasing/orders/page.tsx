@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { DataTableCrud } from '@/components/ui/data-table-crud';
 import { PurchaseOrderForm } from '@/components/purchasing/purchase-order-form';
 import { VendorForm } from '@/components/purchasing/vendor-form';
+import { NoVendorDialog } from '@/components/purchasing/no-vendor-dialog';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -300,24 +301,11 @@ export default function PurchaseOrdersPage() {
       </div>
 
       {/* No Vendor Dialog */}
-      {showNoVendorDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">No Vendors Found</h3>
-            <p className="text-muted-foreground mb-4">
-              You need to create a vendor before you can create a purchase order.
-            </p>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowNoVendorDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreateVendor}>
-                Create Vendor
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <NoVendorDialog
+        open={showNoVendorDialog}
+        onOpenChange={setShowNoVendorDialog}
+        onCreateVendor={handleCreateVendor}
+      />
 
       {/* Vendor Form */}
       <VendorForm

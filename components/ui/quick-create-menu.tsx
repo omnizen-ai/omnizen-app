@@ -18,16 +18,30 @@ import { ContactForm } from '@/components/sales/contact-form';
 import { SalesOrderForm } from '@/components/sales/sales-order-form';
 import { PurchaseOrderForm } from '@/components/purchasing/purchase-order-form';
 import { VendorForm } from '@/components/purchasing/vendor-form';
+import { PurchaseReceiptForm } from '@/components/purchasing/purchase-receipt-form';
 import { WarehouseForm } from '@/components/operations/warehouse-form';
+import { ProductForm } from '@/components/operations/product-form';
 import { TransactionForm } from '@/components/banking/transaction-form';
+import { BankAccountForm } from '@/components/banking/bank-account-form';
+import { InvoiceForm } from '@/components/accounting/invoice-form';
+import { BillForm } from '@/components/accounting/bill-form';
+
+// Import dialog components
+import { NoCustomerDialog } from '@/components/sales/no-customer-dialog';
+import { NoVendorDialog } from '@/components/purchasing/no-vendor-dialog';
+import { NoBankAccountDialog } from '@/components/banking/no-bank-account-dialog';
 
 // Import hooks
 import { useContacts, useCreateContact } from '@/lib/hooks/use-sales';
 import { useCreateQuotation } from '@/lib/hooks/use-quotations';
 import { useCreateSalesOrder } from '@/lib/hooks/use-sales-orders';
 import { useCreatePurchaseOrder } from '@/lib/hooks/use-purchase-orders';
+import { useCreatePurchaseReceipt } from '@/lib/hooks/use-purchase-receipts';
 import { useCreateWarehouse } from '@/lib/hooks/use-warehouses';
-import { useBankAccounts, useCreateBankTransaction } from '@/lib/hooks/use-banking';
+import { useCreateProduct } from '@/lib/hooks/use-products';
+import { useBankAccounts, useCreateBankTransaction, useCreateBankAccount } from '@/lib/hooks/use-banking';
+import { useCreateInvoice } from '@/lib/hooks/use-invoices';
+import { useCreateBill } from '@/lib/hooks/use-bills';
 
 interface QuickCreateMenuProps {
   className?: string;
@@ -35,19 +49,23 @@ interface QuickCreateMenuProps {
 
 export function QuickCreateMenu({ className }: QuickCreateMenuProps) {
   // Form states
+  const [invoiceFormOpen, setInvoiceFormOpen] = useState(false);
+  const [billFormOpen, setBillFormOpen] = useState(false);
   const [quotationFormOpen, setQuotationFormOpen] = useState(false);
   const [customerFormOpen, setCustomerFormOpen] = useState(false);
   const [salesOrderFormOpen, setSalesOrderFormOpen] = useState(false);
   const [purchaseOrderFormOpen, setPurchaseOrderFormOpen] = useState(false);
   const [vendorFormOpen, setVendorFormOpen] = useState(false);
+  const [receiptFormOpen, setReceiptFormOpen] = useState(false);
+  const [productFormOpen, setProductFormOpen] = useState(false);
   const [warehouseFormOpen, setWarehouseFormOpen] = useState(false);
   const [transactionFormOpen, setTransactionFormOpen] = useState(false);
+  const [bankAccountFormOpen, setBankAccountFormOpen] = useState(false);
   
   // Dependency dialogs
   const [showNoCustomerDialog, setShowNoCustomerDialog] = useState(false);
   const [showNoVendorDialog, setShowNoVendorDialog] = useState(false);
   const [showNoBankAccountDialog, setShowNoBankAccountDialog] = useState(false);
-  const [showCreateBankAccountDialog, setShowCreateBankAccountDialog] = useState(false);
 
   // Data hooks
   const { data: customers = [] } = useContacts({ type: 'customer' });
@@ -56,11 +74,16 @@ export function QuickCreateMenu({ className }: QuickCreateMenuProps) {
 
   // Mutation hooks
   const createContactMutation = useCreateContact();
+  const createInvoiceMutation = useCreateInvoice();
+  const createBillMutation = useCreateBill();
   const createQuotationMutation = useCreateQuotation();
   const createSalesOrderMutation = useCreateSalesOrder();
   const createPurchaseOrderMutation = useCreatePurchaseOrder();
+  const createReceiptMutation = useCreatePurchaseReceipt();
+  const createProductMutation = useCreateProduct();
   const createWarehouseMutation = useCreateWarehouse();
   const createTransactionMutation = useCreateBankTransaction();
+  const createBankAccountMutation = useCreateBankAccount();
 
   // Handlers
   const handleQuotationClick = () => {
@@ -107,7 +130,7 @@ export function QuickCreateMenu({ className }: QuickCreateMenuProps) {
 
   const handleCreateBankAccount = () => {
     setShowNoBankAccountDialog(false);
-    setShowCreateBankAccountDialog(true);
+    setBankAccountFormOpen(true);
   };
 
   const handleCustomerSubmit = async (data: any) => {
@@ -145,6 +168,48 @@ export function QuickCreateMenu({ className }: QuickCreateMenuProps) {
     setTransactionFormOpen(false);
   };
 
+  const handleInvoiceSubmit = async (data: any) => {
+    await createInvoiceMutation.mutateAsync(data);
+    setInvoiceFormOpen(false);
+  };
+
+  const handleBillSubmit = async (data: any) => {
+    await createBillMutation.mutateAsync(data);
+    setBillFormOpen(false);
+  };
+
+  const handleProductSubmit = async (data: any) => {
+    await createProductMutation.mutateAsync(data);
+    setProductFormOpen(false);
+  };
+
+  const handleReceiptSubmit = async (data: any) => {
+    await createReceiptMutation.mutateAsync(data);
+    setReceiptFormOpen(false);
+  };
+
+  const handleBankAccountSubmit = async (data: any) => {
+    await createBankAccountMutation.mutateAsync(data);
+    setBankAccountFormOpen(false);
+  };
+
+  // Click handlers for dependency checks
+  const handleInvoiceClick = () => {
+    if (customers.length === 0) {
+      setShowNoCustomerDialog(true);
+      return;
+    }
+    setInvoiceFormOpen(true);
+  };
+
+  const handleBillClick = () => {
+    if (vendors.length === 0) {
+      setShowNoVendorDialog(true);
+      return;
+    }
+    setBillFormOpen(true);
+  };
+
   return (
     <>
       <DropdownMenu>
@@ -157,10 +222,10 @@ export function QuickCreateMenu({ className }: QuickCreateMenuProps) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel>Finance</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => console.log('Invoice coming soon')}>
+          <DropdownMenuItem onClick={handleInvoiceClick}>
             New Invoice
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => console.log('Bill coming soon')}>
+          <DropdownMenuItem onClick={handleBillClick}>
             New Bill
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => console.log('Payment coming soon')}>
@@ -190,13 +255,13 @@ export function QuickCreateMenu({ className }: QuickCreateMenuProps) {
           <DropdownMenuItem onClick={handlePurchaseOrderClick}>
             New Purchase Order
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => console.log('Receipt coming soon')}>
+          <DropdownMenuItem onClick={() => setReceiptFormOpen(true)}>
             New Receipt
           </DropdownMenuItem>
 
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Operations</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => console.log('Product coming soon')}>
+          <DropdownMenuItem onClick={() => setProductFormOpen(true)}>
             New Product
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setWarehouseFormOpen(true)}>
@@ -208,7 +273,7 @@ export function QuickCreateMenu({ className }: QuickCreateMenuProps) {
 
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Banking</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => console.log('Bank Account coming soon')}>
+          <DropdownMenuItem onClick={() => setBankAccountFormOpen(true)}>
             New Bank Account
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleTransactionClick}>
@@ -218,62 +283,23 @@ export function QuickCreateMenu({ className }: QuickCreateMenuProps) {
       </DropdownMenu>
 
       {/* Dependency Dialogs */}
-      {showNoCustomerDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">No Customers Found</h3>
-            <p className="text-muted-foreground mb-4">
-              You need to create a customer first.
-            </p>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowNoCustomerDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreateCustomer}>
-                Create Customer
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <NoCustomerDialog
+        open={showNoCustomerDialog}
+        onOpenChange={setShowNoCustomerDialog}
+        onCreateCustomer={handleCreateCustomer}
+      />
 
-      {showNoVendorDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">No Vendors Found</h3>
-            <p className="text-muted-foreground mb-4">
-              You need to create a vendor first.
-            </p>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowNoVendorDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreateVendor}>
-                Create Vendor
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <NoVendorDialog
+        open={showNoVendorDialog}
+        onOpenChange={setShowNoVendorDialog}
+        onCreateVendor={handleCreateVendor}
+      />
 
-      {showNoBankAccountDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">No Bank Accounts Found</h3>
-            <p className="text-muted-foreground mb-4">
-              You need to create a bank account first.
-            </p>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowNoBankAccountDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreateBankAccount}>
-                Create Bank Account
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <NoBankAccountDialog
+        open={showNoBankAccountDialog}
+        onOpenChange={setShowNoBankAccountDialog}
+        onCreateAccount={handleCreateBankAccount}
+      />
 
       {/* Forms */}
       <ContactForm
@@ -342,6 +368,53 @@ export function QuickCreateMenu({ className }: QuickCreateMenuProps) {
           isLoading={createTransactionMutation.isPending}
         />
       )}
+
+      {/* Finance Forms - Dependent on customers/vendors */}
+      {customers.length > 0 && (
+        <InvoiceForm
+          open={invoiceFormOpen}
+          onOpenChange={setInvoiceFormOpen}
+          onSubmit={handleInvoiceSubmit}
+          invoice={null}
+          isLoading={createInvoiceMutation.isPending}
+        />
+      )}
+
+      {vendors.length > 0 && (
+        <BillForm
+          open={billFormOpen}
+          onOpenChange={setBillFormOpen}
+          onSubmit={handleBillSubmit}
+          bill={null}
+          isLoading={createBillMutation.isPending}
+        />
+      )}
+
+      {/* Operations Forms */}
+      <ProductForm
+        open={productFormOpen}
+        onOpenChange={setProductFormOpen}
+        onSubmit={handleProductSubmit}
+        product={null}
+        isLoading={createProductMutation.isPending}
+      />
+
+      <PurchaseReceiptForm
+        open={receiptFormOpen}
+        onOpenChange={setReceiptFormOpen}
+        onSubmit={handleReceiptSubmit}
+        receipt={null}
+        isLoading={createReceiptMutation.isPending}
+      />
+
+      {/* Banking Forms */}
+      <BankAccountForm
+        open={bankAccountFormOpen}
+        onOpenChange={setBankAccountFormOpen}
+        onSubmit={handleBankAccountSubmit}
+        account={null}
+        isLoading={createBankAccountMutation.isPending}
+      />
     </>
   );
 }
