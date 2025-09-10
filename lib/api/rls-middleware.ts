@@ -47,8 +47,47 @@ export function withRLSContext<T extends (...args: any[]) => Promise<any>>(
       return await handler(context, request, ...args);
     } catch (error) {
       console.error('RLS Middleware Error:', error);
+      
+      // Provide more specific error messages for debugging
+      if (error instanceof Error) {
+        // Check for specific auth context errors
+        if (error.message.includes('auth_org_id') || error.message.includes('RLS')) {
+          console.error('RLS Context Error - auth_org_id() may be returning NULL');
+          return NextResponse.json(
+            { 
+              error: { 
+                code: 'RLS_CONTEXT_ERROR', 
+                message: 'Organization context not available. Please ensure you are properly authenticated and have organization access.',
+                details: process.env.NODE_ENV === 'development' ? error.message : undefined
+              } 
+            },
+            { status: 403 }
+          );
+        }
+        
+        // Check for database connection errors
+        if (error.message.includes('database') || error.message.includes('connection')) {
+          return NextResponse.json(
+            { 
+              error: { 
+                code: 'DATABASE_ERROR', 
+                message: 'Database connection failed',
+                details: process.env.NODE_ENV === 'development' ? error.message : undefined
+              } 
+            },
+            { status: 503 }
+          );
+        }
+      }
+      
       return NextResponse.json(
-        { error: { code: 'INTERNAL_ERROR', message: 'Request failed' } },
+        { 
+          error: { 
+            code: 'INTERNAL_ERROR', 
+            message: 'Request failed',
+            details: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : String(error) : undefined
+          } 
+        },
         { status: 500 }
       );
     }
@@ -63,18 +102,51 @@ export async function withRLSTransaction<T>(
   context: RLSContext,
   operation: (tx: any) => Promise<T>
 ): Promise<T> {
-  return await db.transaction(async (tx) => {
-    // Set auth context in transaction (same pattern as database tools)
-    await tx.execute(sql`
-      SELECT set_config('auth.user_id', ${context.userId}, true),
-             set_config('auth.org_id', ${context.orgId}, true),
-             set_config('auth.workspace_id', ${context.workspaceId || ''}, true),
-             set_config('auth.role', ${context.role}, true)
-    `);
-    
-    // Execute operation in same transaction with context set
-    return await operation(tx);
-  });
+  try {
+    return await db.transaction(async (tx) => {
+      // Set auth context in transaction (same pattern as database tools)
+      try {
+        await tx.execute(sql`
+          SELECT set_config('auth.user_id', ${context.userId}, true),
+                 set_config('auth.org_id', ${context.orgId}, true),
+                 set_config('auth.workspace_id', ${context.workspaceId || ''}, true),
+                 set_config('auth.role', ${context.role}, true)
+        `);
+        
+        // Log successful context setting in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ RLS context set successfully:', {
+            userId: context.userId,
+            orgId: context.orgId,
+            workspaceId: context.workspaceId,
+            role: context.role
+          });
+        }
+      } catch (contextError) {
+        console.error('❌ Failed to set RLS context:', contextError);
+        throw new Error(`RLS context setup failed: ${contextError instanceof Error ? contextError.message : 'Unknown error'}`);
+      }
+      
+      // Execute operation in same transaction with context set
+      try {
+        return await operation(tx);
+      } catch (operationError) {
+        console.error('❌ RLS transaction operation failed:', operationError);
+        
+        // Check if this is an RLS policy violation
+        if (operationError instanceof Error && 
+            (operationError.message.includes('auth_org_id() returned NULL') || 
+             operationError.message.includes('RLS policy'))) {
+          throw new Error(`RLS policy violation: Organization context not available. This usually means auth_org_id() returned NULL.`);
+        }
+        
+        throw operationError;
+      }
+    });
+  } catch (transactionError) {
+    console.error('❌ RLS transaction failed:', transactionError);
+    throw transactionError;
+  }
 }
 
 /**

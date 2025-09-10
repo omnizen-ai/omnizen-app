@@ -6,6 +6,8 @@ import { documentsTable, documentProcessingJobs, documentEmbeddings } from '@/li
 import type { DocumentRow, DocumentEmbeddingRow, DocumentProcessingJobRow } from '@/lib/types/database';
 import { VectorService } from './vector-utils';
 import { eq } from 'drizzle-orm';
+import { withRLSTransaction } from '@/lib/api/base';
+import type { RLSContext } from '@/lib/api/base';
 
 export interface ProcessingOptions {
   organizationId: string;
@@ -50,6 +52,107 @@ export class DocumentProcessor {
    */
   async processDocument(
     fileInfo: FileInfo,
+    options: ProcessingOptions,
+    rlsContext?: RLSContext
+  ): Promise<ProcessingResult> {
+    const startTime = Date.now();
+    let documentId: string | undefined;
+
+    try {
+      // If RLS context is provided, use RLS transaction for all database operations
+      if (rlsContext) {
+        return await withRLSTransaction(rlsContext, async (tx) => {
+          return await this.processDocumentInTransaction(tx, fileInfo, options);
+        });
+      } else {
+        // Fallback to direct operations (for backward compatibility)
+        return await this.processDocumentDirect(fileInfo, options);
+      }
+    } catch (error) {
+      const processingTime = Date.now() - startTime;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      if (documentId) {
+        await this.updateDocumentStatus(documentId, 'failed', errorMessage);
+      }
+
+      return {
+        success: false,
+        error: errorMessage,
+        processingTime,
+      };
+    }
+  }
+
+  /**
+   * Process document using RLS transaction (recommended)
+   */
+  private async processDocumentInTransaction(
+    tx: any,
+    fileInfo: FileInfo,
+    options: ProcessingOptions
+  ): Promise<ProcessingResult> {
+    const startTime = Date.now();
+    
+    // Create document record
+    const documentResult = await this.createDocumentRecordInTx(tx, fileInfo, options);
+    const documentId = documentResult.id;
+
+    // Create processing job
+    const jobId = await this.createProcessingJobInTx(
+      tx,
+      documentId,
+      options.organizationId,
+      'extract_text'
+    );
+
+    // Extract text based on file type
+    const extractedText = await this.extractText(fileInfo, options);
+    
+    if (!extractedText?.trim()) {
+      throw new Error('No text could be extracted from the document');
+    }
+
+    // Update document with extracted text
+    await this.updateDocumentTextInTx(tx, documentId, extractedText);
+
+    // Generate chunks and embeddings if requested
+    let chunks = 0;
+    if (options.generateEmbeddings !== false) {
+      chunks = await this.generateEmbeddingsInTx(
+        tx,
+        documentId,
+        extractedText,
+        options
+      );
+    }
+
+    // Mark processing job as completed
+    await this.completeProcessingJobInTx(tx, jobId, {
+      textLength: extractedText.length,
+      chunks,
+    }, startTime);
+
+    // Update document status
+    await this.updateDocumentStatusInTx(tx, documentId, 'processed');
+
+    const processingTime = Date.now() - startTime;
+
+    return {
+      success: true,
+      documentId,
+      extractedText,
+      textLength: extractedText.length,
+      chunks,
+      processingTime,
+    };
+  }
+
+  /**
+   * Process document directly (legacy fallback)
+   */
+  private async processDocumentDirect(
+    fileInfo: FileInfo,
     options: ProcessingOptions
   ): Promise<ProcessingResult> {
     const startTime = Date.now();
@@ -91,7 +194,7 @@ export class DocumentProcessor {
       await this.completeProcessingJob(jobId, {
         textLength: extractedText.length,
         chunks,
-      });
+      }, startTime);
 
       // Update document status
       await this.updateDocumentStatus(documentId, 'processed');
@@ -288,6 +391,40 @@ export class DocumentProcessor {
   }
 
   /**
+   * Generate embeddings within RLS transaction
+   */
+  private async generateEmbeddingsInTx(
+    tx: any,
+    documentId: string,
+    text: string,
+    options: ProcessingOptions
+  ): Promise<number> {
+    const chunkSize = options.chunkSize || 1000;
+    const chunkOverlap = options.chunkOverlap || 200;
+    
+    const chunks = this.chunkText(text, chunkSize, chunkOverlap);
+    const embeddingPromises: Promise<void>[] = [];
+
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      
+      embeddingPromises.push(
+        this.createEmbeddingRecordInTx(
+          tx,
+          documentId,
+          chunk,
+          i,
+          chunks.length,
+          options
+        )
+      );
+    }
+
+    await Promise.all(embeddingPromises);
+    return chunks.length;
+  }
+
+  /**
    * Create embedding record with vector
    */
   private async createEmbeddingRecord(
@@ -305,6 +442,49 @@ export class DocumentProcessor {
       const contentHash = await this.vectorService.hashContent(content);
 
       await db.insert(documentEmbeddings).values({
+        id: uuidv4(),
+        organizationId: options.organizationId,
+        workspaceId: options.workspaceId,
+        documentId,
+        chunkIndex,
+        chunkCount,
+        content,
+        contentHash,
+        embedding,
+        metadata: {
+          chunkSize: content.length,
+          startChar: chunkIndex * (options.chunkSize || 1000),
+          endChar: (chunkIndex * (options.chunkSize || 1000)) + content.length,
+        },
+        documentType: this.getFileType('', ''),
+        category: options.category,
+        searchText: content.toLowerCase(),
+      });
+    } catch (error) {
+      console.error(`Failed to create embedding for chunk ${chunkIndex}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create embedding record with vector within RLS transaction
+   */
+  private async createEmbeddingRecordInTx(
+    tx: any,
+    documentId: string,
+    content: string,
+    chunkIndex: number,
+    chunkCount: number,
+    options: ProcessingOptions
+  ): Promise<void> {
+    try {
+      // Generate embedding
+      const embedding = await this.vectorService.generateEmbedding(content);
+      
+      // Create hash for deduplication
+      const contentHash = await this.vectorService.hashContent(content);
+
+      await tx.insert(documentEmbeddings).values({
         id: uuidv4(),
         organizationId: options.organizationId,
         workspaceId: options.workspaceId,
@@ -411,6 +591,41 @@ export class DocumentProcessor {
   }
 
   /**
+   * Create document record within RLS transaction
+   */
+  private async createDocumentRecordInTx(
+    tx: any,
+    fileInfo: FileInfo,
+    options: ProcessingOptions
+  ) {
+    const documentId = uuidv4();
+    const fileType = this.getFileType(fileInfo.originalName, fileInfo.mimeType);
+
+    const [document] = await tx.insert(documentsTable).values({
+      id: documentId,
+      organizationId: options.organizationId,
+      workspaceId: options.workspaceId,
+      title: path.parse(fileInfo.originalName).name,
+      fileName: fileInfo.originalName,
+      fileType: fileType as any,
+      fileSize: fileInfo.size,
+      mimeType: fileInfo.mimeType,
+      storageUrl: fileInfo.storageUrl || '',
+      storageKey: fileInfo.storageKey || '',
+      status: 'processing',
+      metadata: {
+        originalName: fileInfo.originalName,
+        uploadedAt: new Date().toISOString(),
+      },
+      category: options.category,
+      tags: options.tags || [],
+      createdBy: options.userId,
+    }).returning();
+
+    return document;
+  }
+
+  /**
    * Create processing job record
    */
   private async createProcessingJob(
@@ -421,6 +636,29 @@ export class DocumentProcessor {
     const jobId = uuidv4();
     
     await db.insert(documentProcessingJobs).values({
+      id: jobId,
+      organizationId,
+      documentId,
+      jobType,
+      status: 'running',
+      startedAt: new Date(),
+    });
+
+    return jobId;
+  }
+
+  /**
+   * Create processing job record within RLS transaction
+   */
+  private async createProcessingJobInTx(
+    tx: any,
+    documentId: string,
+    organizationId: string,
+    jobType: string
+  ): Promise<string> {
+    const jobId = uuidv4();
+    
+    await tx.insert(documentProcessingJobs).values({
       id: jobId,
       organizationId,
       documentId,
@@ -451,6 +689,25 @@ export class DocumentProcessor {
   }
 
   /**
+   * Update document with extracted text within RLS transaction
+   */
+  private async updateDocumentTextInTx(
+    tx: any,
+    documentId: string,
+    extractedText: string
+  ): Promise<void> {
+    await tx
+      .update(documentsTable)
+      .set({
+        extractedText,
+        textLength: extractedText.length,
+        searchText: extractedText.toLowerCase(),
+        updatedAt: new Date(),
+      })
+      .where(eq(documentsTable.id, documentId));
+  }
+
+  /**
    * Update document status
    */
   private async updateDocumentStatus(
@@ -470,19 +727,64 @@ export class DocumentProcessor {
   }
 
   /**
+   * Update document status within RLS transaction
+   */
+  private async updateDocumentStatusInTx(
+    tx: any,
+    documentId: string,
+    status: 'uploaded' | 'processing' | 'processed' | 'failed' | 'archived',
+    error?: string
+  ): Promise<void> {
+    await tx
+      .update(documentsTable)
+      .set({
+        status,
+        processedAt: status === 'processed' ? new Date() : undefined,
+        processingError: error,
+        updatedAt: new Date(),
+      })
+      .where(eq(documentsTable.id, documentId));
+  }
+
+  /**
    * Complete processing job
    */
   private async completeProcessingJob(
     jobId: string,
-    result: any
+    result: any,
+    startTime?: number
   ): Promise<void> {
+    const duration = startTime ? Date.now() - startTime : null;
+    
     await db
       .update(documentProcessingJobs)
       .set({
         status: 'completed',
         result,
         completedAt: new Date(),
-        duration: Date.now(),
+        duration,
+      })
+      .where(eq(documentProcessingJobs.id, jobId));
+  }
+
+  /**
+   * Complete processing job within RLS transaction
+   */
+  private async completeProcessingJobInTx(
+    tx: any,
+    jobId: string,
+    result: any,
+    startTime?: number
+  ): Promise<void> {
+    const duration = startTime ? Date.now() - startTime : null;
+    
+    await tx
+      .update(documentProcessingJobs)
+      .set({
+        status: 'completed',
+        result,
+        completedAt: new Date(),
+        duration,
       })
       .where(eq(documentProcessingJobs.id, jobId));
   }

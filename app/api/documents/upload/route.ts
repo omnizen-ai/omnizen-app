@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth, withErrorHandler, ApiResponse } from '@/lib/api/base';
+import { withRLS, withErrorHandler, ApiResponse } from '@/lib/api/base';
 import { documentProcessor, type ProcessingOptions, type FileInfo } from '@/lib/ai/document-processor';
 import { createClient } from '@supabase/supabase-js';
 import { db } from '@/lib/db';
 import { documentsTable } from '@/lib/db/schema/documents/documents';
 import { eq, and, desc } from 'drizzle-orm';
 import { z } from 'zod';
+import type { RLSContext } from '@/lib/api/base';
 
 // Supabase client for file storage
 const supabase = createClient(
@@ -23,12 +24,9 @@ const uploadSchema = z.object({
   chunkOverlap: z.number().min(0).max(500).optional().default(200),
 });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
-  return withAuth(async (session) => {
-    const organizationId = request.headers.get('x-organization-id') || session.user.organizationId;
-    if (!organizationId) {
-      return ApiResponse.badRequest('Organization ID required');
-    }
+export const POST = withRLS(withErrorHandler(async (context: RLSContext, request: NextRequest) => {
+    // Organization ID is automatically available from RLS context
+    const organizationId = context.orgId;
 
     // Parse multipart form data
     const formData = await request.formData();
@@ -71,7 +69,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       options = {
         ...validatedOptions,
         organizationId,
-        userId: session.user.id,
+        userId: context.userId,
       };
     } catch (error) {
       return ApiResponse.badRequest('Invalid options format');
@@ -114,7 +112,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       storageUrl: publicUrlData.publicUrl,
       storageKey: storagePath,
     };
-    const processingResult = await documentProcessor.processDocument(fileInfo, options);
+    const processingResult = await documentProcessor.processDocument(fileInfo, options, context);
     const processingTime = Date.now() - processingStartTime;
 
     if (!processingResult.success) {
@@ -137,15 +135,11 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       processingTime,
       storageUrl: publicUrlData.publicUrl,
     });
-  });
-});
+}));
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
-  return withAuth(async (session) => {
-    const organizationId = request.headers.get('x-organization-id') || session.user.organizationId;
-    if (!organizationId) {
-      return ApiResponse.badRequest('Organization ID required');
-    }
+export const GET = withRLS(withErrorHandler(async (context: RLSContext, request: NextRequest) => {
+    // Organization ID is automatically available from RLS context
+    const organizationId = context.orgId;
 
     // Get query parameters
     const { searchParams } = new URL(request.url);
@@ -203,5 +197,4 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
         hasMore: documents.length === limit,
       },
     });
-  });
-});
+}));
