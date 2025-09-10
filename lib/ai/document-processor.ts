@@ -1,9 +1,7 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import * as path from 'node:path';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '@/lib/db';
 import { documentsTable, documentProcessingJobs, documentEmbeddings } from '@/lib/db/schema/documents/documents';
-import type { DocumentRow, DocumentEmbeddingRow, DocumentProcessingJobRow } from '@/lib/types/database';
 import { VectorService } from './vector-utils';
 import { eq } from 'drizzle-orm';
 import { withRLSTransaction } from '@/lib/api/base';
@@ -527,7 +525,7 @@ export class DocumentProcessor {
         
         // Create overlap by keeping some text from the end of current chunk
         const overlapText = this.getOverlapText(currentChunk, overlap);
-        currentChunk = overlapText + ' ' + sentence;
+        currentChunk = `${overlapText} ${sentence}`;
         currentSize = currentChunk.length;
       } else {
         currentChunk += (currentChunk ? '. ' : '') + sentence;

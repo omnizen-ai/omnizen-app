@@ -18,8 +18,8 @@ const uploadFileSchema = z.object({
   overwrite: z.boolean().optional().default(false),
 });
 
-async function listFiles(request: NextRequest, context: RLSContext): Promise<ApiResponse<any>> {
-  const { organizationId } = context;
+async function listFiles(context: RLSContext, request: NextRequest): Promise<NextResponse> {
+  const organizationId = context.orgId;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -72,8 +72,8 @@ async function listFiles(request: NextRequest, context: RLSContext): Promise<Api
   }
 }
 
-async function uploadFile(request: NextRequest, context: RLSContext): Promise<ApiResponse<any>> {
-  const { organizationId, session } = context;
+async function uploadFile(context: RLSContext, request: NextRequest): Promise<NextResponse> {
+  const organizationId = context.orgId;
 
   try {
     // Parse multipart form data
