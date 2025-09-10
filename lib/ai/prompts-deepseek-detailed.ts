@@ -22,12 +22,24 @@ export const OMNIZEN_COMPLETE_SCHEMA = `
 - customer_id: UUID -> contacts.id (NOT contact_id!)
 - issue_date: Timestamp (NOT invoice_date!)
 - due_date: Timestamp
-- status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
+- status: invoice_status enum (see enum list above)
+- currency_code: Text (default 'USD')
+- exchange_rate: Decimal (if foreign currency)
 - subtotal: Decimal
+- discount_amount: Decimal (default 0)
 - tax_amount: Decimal
 - total_amount: Decimal
 - paid_amount: Decimal (default 0)
 - balance_due: Decimal (calculated: total_amount - paid_amount)
+- po_number: Text (customer's purchase order number)
+- journal_entry_id: UUID -> journal_entries.id (accounting entry)
+- notes: Text (internal notes)
+- terms: Text (payment terms)
+- footer: Text (invoice footer text)
+- sent_at: Timestamp (when invoice was sent)
+- viewed_at: Timestamp (when customer viewed it)
+- paid_at: Timestamp (when fully paid)
+- custom_fields: JSONB (additional custom data)
 
 **contacts** - Unified customers and vendors
 - id: UUID primary key
@@ -58,23 +70,45 @@ export const OMNIZEN_COMPLETE_SCHEMA = `
 **payments** - Payment records
 - id: UUID primary key
 - organization_id: UUID (automatically set by triggers)
+- payment_number: Text (unique identifier)
 - payment_date: Timestamp
+- direction: Text ('incoming' for customer payments, 'outgoing' for vendor payments)
+- contact_id: UUID -> contacts.id (customer/vendor who paid/was paid)
 - amount: Decimal
-- payment_method: Text
-- reference_number: Text
-- invoice_id: UUID -> invoices.id (optional)
-- bill_id: UUID -> bills.id (optional)
+- currency_code: Text (default 'USD')
+- exchange_rate: Decimal (if foreign currency)
+- method: payment_method enum (see enum list above)
+- reference_number: Text (check number, transaction ID, etc.)
+- bank_account_id: UUID -> chart_accounts.id (for reconciliation)
+- status: Text ('draft' | 'posted' | 'reconciled' | 'void')
+- journal_entry_id: UUID -> journal_entries.id (accounting entry)
+- memo: Text (notes/description)
 
 **bills** - Vendor bills
 - id: UUID primary key
 - organization_id: UUID (automatically set by triggers)
 - bill_number: Text
-- vendor_id: UUID -> contacts.id (where contact_type='vendor')
+- vendor_id: UUID -> contacts.id (where type='vendor')
 - bill_date: Timestamp
 - due_date: Timestamp
+- currency_code: Text (default 'USD')
 - total_amount: Decimal
 - paid_amount: Decimal
-- status: Text
+- status: 'draft' | 'submitted' | 'approved' | 'paid' | 'cancelled'
+
+**organizations** - Organization settings
+- id: UUID primary key
+- name: Text (organization name)
+- slug: Text (unique identifier)
+- plan_tier: 'starter' | 'professional' | 'enterprise' | 'custom' | 'personal-free' | 'personal-plus' | 'personal-pro' | 'family'
+- organization_type: 'business' | 'personal' | 'hybrid'
+- accounting_mode: 'simple' | 'standard' | 'strict' (NOT 'accrual'!)
+- currency: Text (default 'USD')
+- base_currency: Text (default 'USD')
+- fiscal_year_start: Integer (month number 1-12)
+- is_personal_finance: Boolean
+- enforce_balance_on_post: Boolean
+- require_approval_workflow: Boolean
 
 **chart_accounts** - GL accounts
 - id: UUID primary key
@@ -131,6 +165,73 @@ export const OMNIZEN_COMPLETE_SCHEMA = `
 - status: Text
 - total_amount: Decimal
 
+### ENUM VALUES (CRITICAL - MUST USE EXACT VALUES)
+
+**accounting_mode** enum:
+- 'simple' (default)
+- 'standard' 
+- 'strict'
+❌ NEVER use: 'accrual', 'cash', 'basic'
+
+**plan_tier** enum:
+- 'starter' (default)
+- 'professional'
+- 'enterprise'
+- 'custom'
+- 'personal-free'
+- 'personal-plus'
+- 'personal-pro'
+- 'family'
+
+**organization_type** enum:
+- 'business' (default)
+- 'personal'
+- 'hybrid'
+
+**contact_type** enum:
+- 'customer'
+- 'vendor'
+- 'customer_vendor'
+- 'employee'
+- 'other'
+❌ NEVER use: 'both', 'client', 'supplier'
+
+**payment_method** enum:
+- 'cash'
+- 'check'
+- 'credit_card'
+- 'debit_card'
+- 'bank_transfer'
+- 'ach'
+- 'wire'
+- 'paypal'
+- 'stripe'
+- 'other'
+❌ NEVER use: 'digital_wallet', 'crypto', 'bank_wire'
+
+**invoice_status** enum:
+- 'draft'
+- 'sent'
+- 'viewed'
+- 'partially_paid'
+- 'paid'
+- 'overdue'
+- 'cancelled'
+- 'void'
+❌ NEVER use: 'pending', 'processing', 'completed', 'active', 'inactive'
+
+**bill_status** enum:
+- 'draft'
+- 'received' (NOT 'submitted'!)
+- 'approved'
+- 'partially_paid'
+- 'paid'
+- 'overdue'
+- 'disputed'
+- 'cancelled'
+- 'void'
+❌ NEVER use: 'submitted', 'pending', 'processing', 'completed', 'rejected'
+
 ### CRITICAL RULES
 
 1. **NEVER include organization_id, user_id, workspace_id in queries - they are automatically handled**
@@ -140,6 +241,41 @@ export const OMNIZEN_COMPLETE_SCHEMA = `
 3. **Use correct foreign key names (customer_id NOT contact_id)**
 4. **Join tables have table-prefixed names when ambiguous**
 5. **Date columns vary: issue_date, bill_date, payment_date (NOT always 'date')**
+6. **ALWAYS use exact enum values from the list above - NEVER guess or abbreviate**
+
+### ENUM VALIDATION EXAMPLES
+
+**✅ CORRECT Invoice Status Queries:**
+\`\`\`sql
+-- Update invoice status correctly
+UPDATE invoices SET status = 'sent' WHERE invoice_number = 'INV-001';
+UPDATE invoices SET status = 'partially_paid' WHERE id = 'uuid-here';
+SELECT * FROM invoices WHERE status = 'overdue';
+\`\`\`
+
+**❌ INCORRECT Invoice Status Queries:**
+\`\`\`sql
+-- These will FAIL with enum errors:
+UPDATE invoices SET status = 'pending';     -- 'pending' doesn't exist
+UPDATE invoices SET status = 'completed';   -- 'completed' doesn't exist
+SELECT * FROM invoices WHERE status = 'active';  -- 'active' doesn't exist
+\`\`\`
+
+**✅ CORRECT Payment Method Queries:**
+\`\`\`sql
+-- Insert payment with correct method
+INSERT INTO payments (method, amount) VALUES ('credit_card', 100.00);
+INSERT INTO payments (method, amount) VALUES ('ach', 500.00);
+SELECT * FROM payments WHERE method = 'bank_transfer';
+\`\`\`
+
+**❌ INCORRECT Payment Method Queries:**
+\`\`\`sql
+-- These will FAIL with enum errors:
+INSERT INTO payments (method) VALUES ('digital_wallet');  -- doesn't exist
+INSERT INTO payments (method) VALUES ('crypto');          -- doesn't exist
+UPDATE payments SET method = 'bank_wire';                 -- use 'wire' instead
+\`\`\`
 
 ### Common Query Patterns
 
